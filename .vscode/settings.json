@@ -1,0 +1,4 @@
+{
+  // CSS Modules の `composes` を未知のプロパティとして警告しないようにする
+  "css.lint.unknownProperties": "ignore"
+}

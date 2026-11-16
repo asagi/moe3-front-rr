@@ -1,0 +1,628 @@
+/* grid positions on the board image */
+:root {
+  --pos-x-01: 4.7%;
+  --pos-x-03: 13.9%;
+  --pos-x-04: 18.5%;
+  --pos-x-05: 22.9%;
+  --pos-x-07: 32%;
+  --pos-x-08: 36.4%;
+  --pos-x-09: 41%;
+  --pos-x-10: 45.5%;
+  --pos-x-11: 50%;
+  --pos-x-13: 59.2%;
+  --pos-x-14: 63.5%;
+  --pos-x-15: 68.4%;
+  --pos-x-16: 73%;
+  --pos-x-17: 77.4%;
+  --pos-x-18: 82%;
+  --pos-x-19: 86.6%;
+  --pos-y-01: 5.3%;
+  --pos-y-02: 10.1%;
+  --pos-y-04: 20.2%;
+  --pos-y-05: 25.3%;
+  --pos-y-06: 30.3%;
+  --pos-y-07: 35.3%;
+  --pos-y-08: 40.1%;
+  --pos-y-10: 50.2%;
+  --pos-y-11: 55.2%;
+  --pos-y-12: 60.2%;
+  --pos-y-13: 65%;
+  --pos-y-14: 70.5%;
+  --pos-y-15: 75%;
+  --pos-y-16: 80.2%;
+  --pos-y-17: 85.2%;
+  --pos-y-18: 90.2%;
+  --pos-y-19: 95.1%;
+}
+
+/* for svg tags */
+.base {
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+.frame {
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+.province {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  stroke: #1a1a1a;
+  pointer-events: fill;
+}
+
+/* for province images */
+.sea {
+  fill: #a0a3dfff;
+}
+.free-province {
+  fill: #ebdaadff;
+}
+.austrian-province {
+  fill: #ff9999ff;
+}
+.english-province {
+  fill: #99b4ffff;
+}
+.french-province {
+  fill: #99ffffff;
+}
+.german-province {
+  fill: #b5b5b5ff;
+}
+.italian-province {
+  fill: #99ff99ff;
+}
+.russian-province {
+  fill: #ffffffff;
+}
+.turkish-province {
+  fill: #f7ff66ff;
+}
+
+/* for supply center images */
+.free-supply-center {
+  fill: #28200aff;
+}
+.austrian-supply-center {
+  fill: #330000ff;
+}
+.english-supply-center {
+  fill: #000d33ff;
+}
+.french-supply-center {
+  fill: #003333dd;
+}
+.german-supply-center {
+  fill: #191919ff;
+}
+.italian-supply-center {
+  fill: #003300ff;
+}
+.russian-supply-center {
+  fill: #030303ff;
+}
+.turkish-supply-center {
+  fill: #303300ff;
+}
+
+.supply-center {
+  pointer-events: none;
+  position: absolute;
+  width: 12px;
+  height: 12px;
+}
+.supply-center-on-edi {
+  composes: supply-center;
+  top: var(--pos-y-01);
+  left: var(--pos-x-04);
+}
+.supply-center-on-lvp {
+  composes: supply-center;
+  top: var(--pos-y-02);
+  left: var(--pos-x-03);
+}
+.supply-center-on-lon {
+  composes: supply-center;
+  top: var(--pos-y-05);
+  left: var(--pos-x-04);
+}
+.supply-center-on-bre {
+  composes: supply-center;
+  top: var(--pos-y-07);
+  left: var(--pos-x-03);
+}
+.supply-center-on-par {
+  composes: supply-center;
+  top: var(--pos-y-08);
+  left: var(--pos-x-05);
+}
+.supply-center-on-mar {
+  composes: supply-center;
+  top: var(--pos-y-11);
+  left: var(--pos-x-04);
+}
+.supply-center-on-kie {
+  composes: supply-center;
+  top: var(--pos-y-05);
+  left: var(--pos-x-10);
+}
+.supply-center-on-ber {
+  composes: supply-center;
+  top: var(--pos-y-06);
+  left: var(--pos-x-13);
+}
+.supply-center-on-mun {
+  composes: supply-center;
+  top: var(--pos-y-10);
+  left: var(--pos-x-08);
+}
+.supply-center-on-ven {
+  composes: supply-center;
+  top: var(--pos-y-12);
+  left: var(--pos-x-11);
+}
+.supply-center-on-rom {
+  composes: supply-center;
+  top: var(--pos-y-15);
+  left: var(--pos-x-10);
+}
+.supply-center-on-nap {
+  composes: supply-center;
+  top: var(--pos-y-17);
+  left: var(--pos-x-09);
+}
+.supply-center-on-vie {
+  composes: supply-center;
+  top: var(--pos-y-11);
+  left: var(--pos-x-14);
+}
+.supply-center-on-tri {
+  composes: supply-center;
+  top: var(--pos-y-12);
+  left: var(--pos-x-13);
+}
+.supply-center-on-bud {
+  composes: supply-center;
+  top: var(--pos-y-13);
+  left: var(--pos-x-14);
+}
+.supply-center-on-stp {
+  composes: supply-center;
+  top: var(--pos-y-01);
+  left: var(--pos-x-19);
+}
+.supply-center-on-war {
+  composes: supply-center;
+  top: var(--pos-y-08);
+  left: var(--pos-x-16);
+}
+.supply-center-on-mos {
+  composes: supply-center;
+  top: var(--pos-y-06);
+  left: var(--pos-x-19);
+}
+.supply-center-on-sev {
+  composes: supply-center;
+  top: var(--pos-y-14);
+  left: var(--pos-x-18);
+}
+.supply-center-on-con {
+  composes: supply-center;
+  top: var(--pos-y-17);
+  left: var(--pos-x-17);
+}
+.supply-center-on-ank {
+  composes: supply-center;
+  top: var(--pos-y-16);
+  left: var(--pos-x-19);
+}
+.supply-center-on-smy {
+  composes: supply-center;
+  top: var(--pos-y-19);
+  left: var(--pos-x-19);
+}
+
+/* neutral supply centers (initial values computed from province geometry; adjust visually) */
+.supply-center-on-bel {
+  composes: supply-center;
+  top: var(--pos-y-06);
+  left: var(--pos-x-08);
+}
+.supply-center-on-hol {
+  composes: supply-center;
+  top: var(--pos-y-05);
+  left: var(--pos-x-09);
+}
+.supply-center-on-den {
+  composes: supply-center;
+  top: var(--pos-y-04);
+  left: var(--pos-x-11);
+}
+.supply-center-on-nwy {
+  composes: supply-center;
+  top: var(--pos-y-01);
+  left: var(--pos-x-10);
+}
+.supply-center-on-swe {
+  composes: supply-center;
+  top: var(--pos-y-02);
+  left: var(--pos-x-13);
+}
+.supply-center-on-por {
+  composes: supply-center;
+  top: var(--pos-y-13);
+  left: var(--pos-x-01);
+}
+.supply-center-on-spa {
+  composes: supply-center;
+  top: var(--pos-y-12);
+  left: var(--pos-x-01);
+}
+.supply-center-on-tun {
+  composes: supply-center;
+  top: var(--pos-y-18);
+  left: var(--pos-x-07);
+}
+.supply-center-on-gre {
+  composes: supply-center;
+  top: var(--pos-y-17);
+  left: var(--pos-x-14);
+}
+.supply-center-on-ser {
+  composes: supply-center;
+  top: var(--pos-y-15);
+  left: var(--pos-x-14);
+}
+.supply-center-on-rum {
+  composes: supply-center;
+  top: var(--pos-y-12);
+  left: var(--pos-x-17);
+}
+.supply-center-on-bul {
+  composes: supply-center;
+  top: var(--pos-y-16);
+  left: var(--pos-x-15);
+}
+
+/* for unit images for svg */
+.unit {
+  filter: drop-shadow(0 0 1px #000000) drop-shadow(1px 1px 2px #000000) drop-shadow(0 0 1px #000000);
+  position: absolute;
+  width: 16px;
+  height: 16px;
+}
+@media (min-width: 640px) {
+  .unit {
+    width: 24px;
+    height: 24px;
+  }
+}
+.austrian-unit {
+  composes: unit;
+  fill: #ff1865;
+}
+.english-unit {
+  composes: unit;
+  fill: #58aaff;
+}
+.french-unit {
+  composes: unit;
+  fill: #00f8ff;
+}
+.german-unit {
+  composes: unit;
+  fill: #b0b0b0;
+}
+.italian-unit {
+  composes: unit;
+  fill: #6f6;
+}
+.russian-unit {
+  composes: unit;
+  fill: #ffffff;
+}
+.turkish-unit {
+  composes: unit;
+  fill: #ffe700;
+}
+
+/* unit position for svg tag */
+.unit-on-nat {
+  composes: unit;
+}
+.unit-on-nrg {
+  composes: unit;
+}
+.unit-on-bar {
+  composes: unit;
+}
+.unit-on-nth {
+  composes: unit;
+}
+.unit-on-ska {
+  composes: unit;
+}
+.unit-on-iri {
+  composes: unit;
+}
+.unit-on-bot {
+  composes: unit;
+}
+.unit-on-hel {
+  composes: unit;
+}
+.unit-on-bal {
+  composes: unit;
+}
+.unit-on-eng {
+  composes: unit;
+}
+.unit-on-mid {
+  composes: unit;
+}
+.unit-on-gol {
+  composes: unit;
+}
+.unit-on-tyn {
+  composes: unit;
+}
+.unit-on-adr {
+  composes: unit;
+}
+.unit-on-wes {
+  composes: unit;
+}
+.unit-on-bla {
+  composes: unit;
+}
+.unit-on-aeg {
+  composes: unit;
+}
+.unit-on-ion {
+  composes: unit;
+}
+.unit-on-eas {
+  composes: unit;
+}
+.unit-on-cly {
+  composes: unit;
+}
+.unit-on-edi {
+  composes: unit;
+  top: 9%;
+  left: 18.5%;
+}
+.unit-on-lvp {
+  composes: unit;
+  top: 13.5%;
+  left: 13.5%;
+}
+.unit-on-yor {
+  composes: unit;
+}
+.unit-on-wal {
+  composes: unit;
+}
+.unit-on-lon {
+  composes: unit;
+  top: 25.3%;
+  left: 22%;
+}
+.unit-on-bre {
+  composes: unit;
+  top: 38%;
+  left: 16%;
+}
+.unit-on-pic {
+  composes: unit;
+}
+.unit-on-par {
+  composes: unit;
+  top: 43%;
+  left: 25%;
+}
+.unit-on-bur {
+  composes: unit;
+}
+.unit-on-gas {
+  composes: unit;
+}
+.unit-on-mar {
+  composes: unit;
+  top: 57.5%;
+  left: 29%;
+}
+.unit-on-kie {
+  composes: unit;
+  top: 33%;
+  left: 49%;
+}
+.unit-on-ber {
+  composes: unit;
+  top: 33%;
+  left: 61.5%;
+}
+.unit-on-pru {
+  composes: unit;
+}
+.unit-on-ruh {
+  composes: unit;
+}
+.unit-on-mun {
+  composes: unit;
+  top: 48%;
+  left: 49%;
+}
+.unit-on-sil {
+  composes: unit;
+}
+.unit-on-pie {
+  composes: unit;
+}
+.unit-on-ven {
+  composes: unit;
+  top: 63%;
+  left: 52.5%;
+}
+.unit-on-tus {
+  composes: unit;
+}
+.unit-on-rom {
+  composes: unit;
+  top: 78%;
+  left: 45.7%;
+}
+.unit-on-apu {
+  composes: unit;
+}
+.unit-on-nap {
+  composes: unit;
+  top: 85.5%;
+  left: 44.5%;
+}
+.unit-on-tyr {
+  composes: unit;
+}
+.unit-on-boh {
+  composes: unit;
+}
+.unit-on-gal {
+  composes: unit;
+}
+.unit-on-vie {
+  composes: unit;
+  top: 57.2%;
+  left: 65.5%;
+}
+.unit-on-tri {
+  composes: unit;
+  top: 67%;
+  left: 59.2%;
+}
+.unit-on-bud {
+  composes: unit;
+  top: 68%;
+  left: 68.5%;
+}
+.unit-on-fin {
+  composes: unit;
+}
+.unit-on-stp {
+  composes: unit;
+  top: 16%;
+  left: 91%;
+}
+.unit-on-lvn {
+  composes: unit;
+}
+.unit-on-war {
+  composes: unit;
+  top: 43%;
+  left: 75.5%;
+}
+.unit-on-mos {
+  composes: unit;
+  top: 38%;
+  left: 91%;
+}
+.unit-on-ukr {
+  composes: unit;
+}
+.unit-on-sev {
+  composes: unit;
+  top: 65.5%;
+  left: 91%;
+}
+.unit-on-con {
+  composes: unit;
+  top: 85.5%;
+  left: 80%;
+}
+.unit-on-ank {
+  composes: unit;
+  top: 82.9%;
+  left: 88.8%;
+}
+.unit-on-smy {
+  composes: unit;
+  top: 95%;
+  left: 92%;
+}
+.unit-on-arm {
+  composes: unit;
+}
+.unit-on-syr {
+  composes: unit;
+}
+.unit-on-nwy {
+  composes: unit;
+}
+.unit-on-swe {
+  composes: unit;
+}
+.unit-on-den {
+  composes: unit;
+}
+.unit-on-hol {
+  composes: unit;
+}
+.unit-on-bel {
+  composes: unit;
+}
+.unit-on-spa {
+  composes: unit;
+}
+.unit-on-por {
+  composes: unit;
+}
+.unit-on-naf {
+  composes: unit;
+}
+.unit-on-tun {
+  composes: unit;
+}
+.unit-on-alb {
+  composes: unit;
+}
+.unit-on-ser {
+  composes: unit;
+}
+.unit-on-gre {
+  composes: unit;
+}
+.unit-on-rum {
+  composes: unit;
+}
+.unit-on-bul {
+  composes: unit;
+}
+
+/* anchor position for svg tag */
+.anchor {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+}
+@media (min-width: 640px) {
+  .anchor {
+    width: 18px;
+    height: 18px;
+  }
+}
+.anchor-on-stpsc {
+  composes: anchor;
+  top: 22%;
+  left: 87%;
+}
