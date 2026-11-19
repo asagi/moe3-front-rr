@@ -100,13 +100,13 @@ export default function Board({ boardData }: BoardProps): JSX.Element {
           {Lands}
         </svg>
 
-        {/* supply centers */}
-        <div className='supply-centers'>{SupplyCenters}</div>
-
         {/* board frame */}
         <svg className={styles.frame}>
           <use xlinkHref='#board-frame'></use>
         </svg>
+
+        {/* supply centers */}
+        <div className='supply-centers'>{SupplyCenters}</div>
 
         {/* units */}
         <div className='units'>
