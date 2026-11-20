@@ -418,8 +418,8 @@
   filter: drop-shadow(0 0 1px #000000) drop-shadow(1px 1px 2px #000000)
     drop-shadow(0 0 1px #000000);
   position: absolute;
-  width: 5%;
-  height: 5%;
+  width: 4%;
+  height: 4%;
 }
 .austrian-unit {
   composes: unit;
@@ -453,60 +453,98 @@
 /* unit position for svg tag */
 .unit-on-nat {
   composes: unit;
+  top: var(--pos-u-y-03);
+  left: var(--pos-u-x-02);
 }
 .unit-on-nrg {
   composes: unit;
+  top: var(--pos-u-y-01);
+  left: var(--pos-u-x-15);
 }
 .unit-on-bar {
   composes: unit;
+  top: var(--pos-u-y-01);
+  left: var(--pos-u-x-40);
 }
 .unit-on-nth {
   composes: unit;
+  top: var(--pos-u-y-06);
+  left: var(--pos-u-x-15);
 }
 .unit-on-ska {
   composes: unit;
+  top: var(--pos-u-y-06);
+  left: var(--pos-u-x-25);
 }
 .unit-on-iri {
   composes: unit;
+  top: var(--pos-u-y-09);
+  left: var(--pos-u-x-04);
 }
 .unit-on-bot {
   composes: unit;
+  top: var(--pos-u-y-08);
+  left: var(--pos-u-x-32);
 }
 .unit-on-hel {
   composes: unit;
+  top: var(--pos-u-y-09);
+  left: var(--pos-u-x-20);
 }
 .unit-on-bal {
   composes: unit;
+  top: var(--pos-u-y-11);
+  left: var(--pos-u-x-30);
 }
 .unit-on-eng {
   composes: unit;
+  top: var(--pos-u-y-13);
+  left: var(--pos-u-x-10);
 }
 .unit-on-mid {
   composes: unit;
+  top: var(--pos-u-y-19);
+  left: var(--pos-u-x-03);
 }
 .unit-on-gol {
   composes: unit;
+  top: var(--pos-u-y-28);
+  left: var(--pos-u-x-13);
 }
 .unit-on-tyn {
   composes: unit;
+  top: var(--pos-u-y-31);
+  left: var(--pos-u-x-18);
 }
 .unit-on-adr {
   composes: unit;
+  top: var(--pos-u-y-32);
+  left: var(--pos-u-x-25);
 }
 .unit-on-wes {
   composes: unit;
+  top: var(--pos-u-y-33);
+  left: var(--pos-u-x-13);
 }
 .unit-on-bla {
   composes: unit;
+  top: var(--pos-u-y-31);
+  left: var(--pos-u-x-39);
 }
 .unit-on-aeg {
   composes: unit;
+  top: var(--pos-u-y-37);
+  left: var(--pos-u-x-32);
 }
 .unit-on-ion {
   composes: unit;
+  top: var(--pos-u-y-38);
+  left: var(--pos-u-x-23);
 }
 .unit-on-eas {
   composes: unit;
+  top: var(--pos-u-y-39);
+  left: var(--pos-u-x-35);
 }
 .unit-on-cly {
   composes: unit;
@@ -801,8 +839,33 @@
     height: 18px;
   }
 }
+.anchor-on-spanc {
+  composes: anchor;
+  top: 60.7%;
+  left: 10%;
+}
+.anchor-on-spasc {
+  composes: anchor;
+  top: 81.4%;
+  left: 15%;
+}
+.anchor-on-stpnc {
+  composes: anchor;
+  top: 5.8%;
+  left: 91.8%;
+}
 .anchor-on-stpsc {
   composes: anchor;
-  top: 22%;
-  left: 87%;
+  top: 21.4%;
+  left: 86.8%;
+}
+.anchor-on-bulec {
+  composes: anchor;
+  top: 81.4%;
+  left: 78.7%;
+}
+.anchor-on-bulsc {
+  composes: anchor;
+  top: 86.4%;
+  left: 69.2%;
 }
