@@ -1,5 +1,8 @@
 /* grid positions on the board image */
 :root {
+  --board-width: 660;
+  --board-height: 600;
+
   --pos-x-01: 4.7%;
   --pos-x-03: 13.9%;
   --pos-x-04: 18.5%;
@@ -16,6 +19,7 @@
   --pos-x-17: 77.4%;
   --pos-x-18: 82%;
   --pos-x-19: 86.6%;
+
   --pos-y-01: 5.3%;
   --pos-y-02: 10.1%;
   --pos-y-04: 20.2%;
@@ -33,6 +37,119 @@
   --pos-y-17: 85.2%;
   --pos-y-18: 90.2%;
   --pos-y-19: 95.1%;
+
+  --pos-u-x-01: 0%;
+  --pos-u-x-02: 2.27%;
+  --pos-u-x-03: 4.54%;
+  --pos-u-x-04: 6.81%;
+  --pos-u-x-05: 9.08%;
+  --pos-u-x-06: 11.35%;
+  --pos-u-x-07: 13.62%;
+  --pos-u-x-08: 15.89%;
+  --pos-u-x-09: 18.16%;
+  --pos-u-x-10: 20.43%;
+  --pos-u-x-11: 22.7%;
+  --pos-u-x-12: 24.97%;
+  --pos-u-x-13: 27.24%;
+  --pos-u-x-14: 29.51%;
+  --pos-u-x-15: 31.78%;
+  --pos-u-x-16: 34.05%;
+  --pos-u-x-17: 36.32%;
+  --pos-u-x-18: 38.59%;
+  --pos-u-x-19: 40.86%;
+  --pos-u-x-20: 43.13%;
+  --pos-u-x-21: 45.4%;
+  --pos-u-x-22: 47.67%;
+  --pos-u-x-23: 49.94%;
+  --pos-u-x-24: 52.21%;
+  --pos-u-x-25: 54.48%;
+  --pos-u-x-26: 56.75%;
+  --pos-u-x-27: 59.02%;
+  --pos-u-x-28: 61.29%;
+  --pos-u-x-29: 63.56%;
+  --pos-u-x-30: 65.83%;
+  --pos-u-x-31: 68.1%;
+  --pos-u-x-32: 70.37%;
+  --pos-u-x-33: 72.64%;
+  --pos-u-x-34: 74.91%;
+  --pos-u-x-35: 77.18%;
+  --pos-u-x-36: 79.45%;
+  --pos-u-x-37: 81.72%;
+  --pos-u-x-38: 83.99%;
+  --pos-u-x-39: 86.26%;
+  --pos-u-x-40: 88.53%;
+  --pos-u-x-41: 90.8%;
+  --pos-u-x-42: 93.07%;
+  --pos-u-x-43: 95.34%;
+
+  --pos-u-y-01: 0%;
+  --pos-u-y-02: 2.5%;
+  --pos-u-y-03: 5%;
+  --pos-u-y-04: 7.5%;
+  --pos-u-y-05: 10%;
+  --pos-u-y-06: 12.5%;
+  --pos-u-y-07: 15%;
+  --pos-u-y-08: 17.5%;
+  --pos-u-y-09: 20%;
+  --pos-u-y-10: 22.5%;
+  --pos-u-y-11: 25%;
+  --pos-u-y-12: 27.5%;
+  --pos-u-y-13: 30%;
+  --pos-u-y-14: 32.5%;
+  --pos-u-y-15: 35%;
+  --pos-u-y-16: 37.5%;
+  --pos-u-y-17: 40%;
+  --pos-u-y-18: 42.5%;
+  --pos-u-y-19: 45%;
+  --pos-u-y-20: 47.5%;
+  --pos-u-y-21: 50%;
+  --pos-u-y-22: 52.5%;
+  --pos-u-y-23: 55%;
+  --pos-u-y-24: 57.5%;
+  --pos-u-y-25: 60%;
+  --pos-u-y-26: 62.5%;
+  --pos-u-y-27: 65%;
+  --pos-u-y-28: 67.5%;
+  --pos-u-y-29: 70%;
+  --pos-u-y-30: 72.5%;
+  --pos-u-y-31: 75%;
+  --pos-u-y-32: 77.5%;
+  --pos-u-y-33: 80%;
+  --pos-u-y-34: 82.5%;
+  --pos-u-y-35: 85%;
+  --pos-u-y-36: 87.5%;
+  --pos-u-y-37: 90%;
+  --pos-u-y-38: 92.5%;
+  --pos-u-y-39: 95%;
+  --pos-u-y-40: 97.5%;
+}
+
+/* board container: units / supply centers are positioned relative to this */
+.board {
+  display: block;
+  position: relative;
+  max-width: calc(var(--board-width) * 1px);
+  max-height: calc(var(--board-height) * 1px);
+  width: 100%;
+  height: 0;
+  padding-top: min(
+    calc(var(--board-height) / var(--board-width) * 100%),
+    calc(var(--board-height) * 1px)
+  );
+  min-height: calc(
+    var(--board-height) / var(--board-width) * var(--min-width, 375px)
+  );
+}
+
+/* overlay layers covering the whole board */
+.supply-centers,
+.units {
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
 
 /* for svg tags */
@@ -298,16 +415,11 @@
 
 /* for unit images for svg */
 .unit {
-  filter: drop-shadow(0 0 1px #000000) drop-shadow(1px 1px 2px #000000) drop-shadow(0 0 1px #000000);
+  filter: drop-shadow(0 0 1px #000000) drop-shadow(1px 1px 2px #000000)
+    drop-shadow(0 0 1px #000000);
   position: absolute;
-  width: 16px;
-  height: 16px;
-}
-@media (min-width: 640px) {
-  .unit {
-    width: 24px;
-    height: 24px;
-  }
+  width: 5%;
+  height: 5%;
 }
 .austrian-unit {
   composes: unit;
@@ -398,215 +510,283 @@
 }
 .unit-on-cly {
   composes: unit;
+  top: var(--pos-u-y-03);
+  left: var(--pos-u-x-06);
 }
 .unit-on-edi {
   composes: unit;
-  top: 9%;
-  left: 18.5%;
+  top: var(--pos-u-y-04);
+  left: var(--pos-u-x-09);
 }
 .unit-on-lvp {
   composes: unit;
-  top: 13.5%;
-  left: 13.5%;
+  top: var(--pos-u-y-06);
+  left: var(--pos-u-x-07);
 }
 .unit-on-yor {
   composes: unit;
+  top: var(--pos-u-y-08);
+  left: var(--pos-u-x-09);
 }
 .unit-on-wal {
   composes: unit;
+  top: var(--pos-u-y-10);
+  left: var(--pos-u-x-07);
 }
 .unit-on-lon {
   composes: unit;
-  top: 25.3%;
-  left: 22%;
+  top: var(--pos-u-y-11);
+  left: var(--pos-u-x-10);
 }
 .unit-on-bre {
   composes: unit;
-  top: 38%;
-  left: 16%;
+  top: var(--pos-u-y-16);
+  left: var(--pos-u-x-08);
 }
 .unit-on-pic {
   composes: unit;
+  top: var(--pos-u-y-15);
+  left: var(--pos-u-x-13);
 }
 .unit-on-par {
   composes: unit;
-  top: 43%;
-  left: 25%;
+  top: var(--pos-u-y-18);
+  left: var(--pos-u-x-12);
 }
 .unit-on-bur {
   composes: unit;
+  top: var(--pos-u-y-21);
+  left: var(--pos-u-x-13);
 }
 .unit-on-gas {
   composes: unit;
+  top: var(--pos-u-y-20);
+  left: var(--pos-u-x-08);
 }
 .unit-on-mar {
   composes: unit;
-  top: 57.5%;
-  left: 29%;
+  top: var(--pos-u-y-24);
+  left: var(--pos-u-x-13);
 }
 .unit-on-kie {
   composes: unit;
-  top: 33%;
-  left: 49%;
+  top: var(--pos-u-y-14);
+  left: var(--pos-u-x-23);
 }
 .unit-on-ber {
   composes: unit;
-  top: 33%;
-  left: 61.5%;
+  top: var(--pos-u-y-14);
+  left: var(--pos-u-x-28);
 }
 .unit-on-pru {
   composes: unit;
+  top: var(--pos-u-y-14);
+  left: var(--pos-u-x-33);
 }
 .unit-on-ruh {
   composes: unit;
+  top: var(--pos-u-y-19);
+  left: var(--pos-u-x-18);
 }
 .unit-on-mun {
   composes: unit;
-  top: 48%;
-  left: 49%;
+  top: var(--pos-u-y-20);
+  left: var(--pos-u-x-23);
 }
 .unit-on-sil {
   composes: unit;
+  top: var(--pos-u-y-17);
+  left: var(--pos-u-x-30);
 }
 .unit-on-pie {
   composes: unit;
+  top: var(--pos-u-y-25);
+  left: var(--pos-u-x-19);
 }
 .unit-on-ven {
   composes: unit;
-  top: 63%;
-  left: 52.5%;
+  top: var(--pos-u-y-26);
+  left: var(--pos-u-x-24);
 }
 .unit-on-tus {
   composes: unit;
+  top: var(--pos-u-y-28);
+  left: var(--pos-u-x-21);
 }
 .unit-on-rom {
   composes: unit;
-  top: 78%;
-  left: 45.7%;
+  top: var(--pos-u-y-32);
+  left: var(--pos-u-x-21);
 }
 .unit-on-apu {
   composes: unit;
+  top: var(--pos-u-y-34);
+  left: var(--pos-u-x-23);
 }
 .unit-on-nap {
   composes: unit;
-  top: 85.5%;
-  left: 44.5%;
+  top: var(--pos-u-y-35);
+  left: var(--pos-u-x-20);
 }
 .unit-on-tyr {
   composes: unit;
+  top: var(--pos-u-y-20);
+  left: var(--pos-u-x-28);
 }
 .unit-on-boh {
   composes: unit;
+  top: var(--pos-u-y-23);
+  left: var(--pos-u-x-24);
 }
 .unit-on-gal {
   composes: unit;
+  top: var(--pos-u-y-21);
+  left: var(--pos-u-x-32);
 }
 .unit-on-vie {
   composes: unit;
-  top: 57.2%;
-  left: 65.5%;
+  top: var(--pos-u-y-23);
+  left: var(--pos-u-x-30);
 }
 .unit-on-tri {
   composes: unit;
-  top: 67%;
-  left: 59.2%;
+  top: var(--pos-u-y-28);
+  left: var(--pos-u-x-27);
 }
 .unit-on-bud {
   composes: unit;
-  top: 68%;
-  left: 68.5%;
+  top: var(--pos-u-y-28);
+  left: var(--pos-u-x-31);
 }
 .unit-on-fin {
   composes: unit;
+  top: var(--pos-u-y-06);
+  left: var(--pos-u-x-36);
 }
 .unit-on-stp {
   composes: unit;
-  top: 16%;
-  left: 91%;
+  top: var(--pos-u-y-07);
+  left: var(--pos-u-x-41);
 }
 .unit-on-lvn {
   composes: unit;
+  top: var(--pos-u-y-14);
+  left: var(--pos-u-x-37);
 }
 .unit-on-war {
   composes: unit;
-  top: 43%;
-  left: 75.5%;
+  top: var(--pos-u-y-18);
+  left: var(--pos-u-x-34);
 }
 .unit-on-mos {
   composes: unit;
-  top: 38%;
-  left: 91%;
+  top: var(--pos-u-y-23);
+  left: var(--pos-u-x-37);
 }
 .unit-on-ukr {
   composes: unit;
+  top: var(--pos-u-y-16);
+  left: var(--pos-u-x-41);
 }
 .unit-on-sev {
   composes: unit;
-  top: 65.5%;
-  left: 91%;
+  top: var(--pos-u-y-27);
+  left: var(--pos-u-x-41);
 }
 .unit-on-con {
   composes: unit;
-  top: 85.5%;
-  left: 80%;
+  top: var(--pos-u-y-35);
+  left: var(--pos-u-x-36);
 }
 .unit-on-ank {
   composes: unit;
-  top: 82.9%;
-  left: 88.8%;
+  top: var(--pos-u-y-34);
+  left: var(--pos-u-x-40);
 }
 .unit-on-smy {
   composes: unit;
-  top: 95%;
-  left: 92%;
+  top: var(--pos-u-y-37);
+  left: var(--pos-u-x-38);
 }
 .unit-on-arm {
   composes: unit;
+  top: var(--pos-u-y-34);
+  left: var(--pos-u-x-43);
 }
 .unit-on-syr {
   composes: unit;
+  top: var(--pos-u-y-39);
+  left: var(--pos-u-x-41);
 }
 .unit-on-nwy {
   composes: unit;
+  top: var(--pos-u-y-03);
+  left: var(--pos-u-x-28);
 }
 .unit-on-swe {
   composes: unit;
+  top: var(--pos-u-y-07);
+  left: var(--pos-u-x-28);
 }
 .unit-on-den {
   composes: unit;
+  top: var(--pos-u-y-09);
+  left: var(--pos-u-x-24);
 }
 .unit-on-hol {
   composes: unit;
+  top: var(--pos-u-y-13);
+  left: var(--pos-u-x-19);
 }
 .unit-on-bel {
   composes: unit;
+  top: var(--pos-u-y-15);
+  left: var(--pos-u-x-17);
 }
 .unit-on-spa {
   composes: unit;
+  top: var(--pos-u-y-29);
+  left: var(--pos-u-x-07);
 }
 .unit-on-por {
   composes: unit;
+  top: var(--pos-u-y-29);
+  left: var(--pos-u-x-03);
 }
 .unit-on-naf {
   composes: unit;
+  top: var(--pos-u-y-38);
+  left: var(--pos-u-x-07);
 }
 .unit-on-tun {
   composes: unit;
+  top: var(--pos-u-y-38);
+  left: var(--pos-u-x-15);
 }
 .unit-on-alb {
   composes: unit;
+  top: var(--pos-u-y-34);
+  left: var(--pos-u-x-27);
 }
 .unit-on-ser {
   composes: unit;
+  top: var(--pos-u-y-32);
+  left: var(--pos-u-x-29);
 }
 .unit-on-gre {
   composes: unit;
+  top: var(--pos-u-y-36);
+  left: var(--pos-u-x-29);
 }
 .unit-on-rum {
   composes: unit;
+  top: var(--pos-u-y-31);
+  left: var(--pos-u-x-33);
 }
 .unit-on-bul {
   composes: unit;
+  top: var(--pos-u-y-33);
+  left: var(--pos-u-x-33);
 }
 
 /* anchor position for svg tag */

@@ -16,8 +16,6 @@ body {
 
 :root {
   --min-width: 375px;
-  --board-width: 660;
-  --board-height: 600;
 }
 
 @layer base {
@@ -46,28 +44,4 @@ main {
   position: relative;
   max-width: 100vw;
   min-width: var(--min-width);
-}
-
-/* board */
-.board {
-  display: block;
-  position: relative;
-  max-width: calc(var(--board-width) * 1px);
-  max-height: calc(var(--board-height) * 1px);
-  width: 100%;
-  height: 0;
-  padding-top: min(
-    calc(var(--board-height) / var(--board-width) * 100%),
-    calc(var(--board-height) * 1px)
-  );
-  min-height: calc(var(--board-height) / var(--board-width) * var(--min-width));
-
-  .units {
-    pointer-events: none;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-  }
 }
