@@ -1,4 +1,4 @@
-import initialData from './initialData.json';
+import boardDefaults from './boardDefaults.json';
 import type { JSX } from 'react';
 import svgResources from './resources.svg?raw';
 import styles from '~/styles/board.module.css';
@@ -14,21 +14,31 @@ const getOwnerStyleForTarget = (target: string, owner?: string) => {
   return styles[`free-${target}`];
 };
 
-const Seas = initialData.seas.map((prov: Province, index) => {
-  return <use xlinkHref={`#${prov.code}`} className={styles.sea} key={index} />;
+// boardDefaults を土台に、boardData で指定された項目だけ置き換える
+// - units があれば initialUnits の代わりに使う
+// - territories があれば initialTerritories の代わりに使う
+const mergeBoardData = (defaults: BoardDefaults, boardData?: BoardData): BoardState => ({
+  provinces: defaults.provinces,
+  supplyCenters: defaults.supplyCenters,
+  territories: boardData?.territories ?? defaults.initialTerritories,
+  units: boardData?.units ?? defaults.initialUnits,
 });
 
-// moe3-server-rust の province.rs で supply: true の地域
-const SUPPLY_CENTER_CODES = [
-  'ank', 'bel', 'ber', 'bre', 'bud', 'bul', 'con', 'den', 'edi', 'gre', 'hol', 'kie',
-  'lon', 'lvp', 'mar', 'mos', 'mun', 'nap', 'nwy', 'par', 'por', 'rom', 'rum', 'ser',
-  'sev', 'smy', 'spa', 'stp', 'swe', 'tri', 'tun', 'ven', 'vie', 'war',
-] as const;
+// 地域の保有国は territories に従う
+const getOwnerByCode = (data: BoardState) =>
+  new Map(data.territories.map((t) => [t.code, t.power]));
 
-// 補給都市の保有国は、その地域の占領国（lands[].owner）に従う
-const loadSupplyCenters = (data: BoardData) => {
-  const ownerByCode = new Map(data.lands.map((prov) => [prov.code, prov.owner]));
-  return SUPPLY_CENTER_CODES.map((code) => {
+// 海域: kind が Water の地域
+const loadWaters = (data: BoardState) => {
+  return data.provinces
+    .filter((prov) => prov.kind === 'Water')
+    .map((prov) => <use xlinkHref={`#${prov.code}`} className={styles.water} key={prov.code} />);
+};
+
+// 補給都市の保有国は、その地域の保有国（territories）に従う
+const loadSupplyCenters = (data: BoardState) => {
+  const ownerByCode = getOwnerByCode(data);
+  return data.supplyCenters.map((code) => {
     const ownerStyle = getOwnerStyleForTarget('supply-center', ownerByCode.get(code));
     const positionStyle = styles[`supply-center-on-${code}`];
     return (
@@ -39,14 +49,18 @@ const loadSupplyCenters = (data: BoardData) => {
   });
 };
 
-const loadLands = (data: BoardData) => {
-  return data.lands.map((prov: Province, index) => {
-    const ownerStyle = getOwnerStyleForTarget('province', prov.owner);
-    return <use xlinkHref={`#${prov.code}`} className={ownerStyle} key={index} />;
-  });
+// 陸地: Water 以外の地域（bul_ec などの沿岸区分は除く）
+const loadLands = (data: BoardState) => {
+  const ownerByCode = getOwnerByCode(data);
+  return data.provinces
+    .filter((prov) => prov.kind !== 'Water' && !prov.code.includes('_'))
+    .map((prov) => {
+      const ownerStyle = getOwnerStyleForTarget('province', ownerByCode.get(prov.code));
+      return <use xlinkHref={`#${prov.code}`} className={ownerStyle} key={prov.code} />;
+    });
 };
 
-const loadUnits = (data: BoardData) => {
+const loadUnits = (data: BoardState) => {
   return data.units.map((unit: Unit, index) => {
     const unitKind = ((kind) => {
       if (kind === 'a') return 'army';
@@ -54,8 +68,8 @@ const loadUnits = (data: BoardData) => {
       return null;
     })(unit.kind);
     if (!unitKind) return;
-    const prov = unit.province.split('_');
-    const ownerStyle = getOwnerStyleForTarget('unit', unit.owner);
+    const prov = unit.location.split('_');
+    const ownerStyle = getOwnerStyleForTarget('unit', unit.power);
     const positionStyle = styles[`unit-on-${prov[0]}`];
     return (
       <svg className={`${ownerStyle} ${positionStyle}`} key={index}>
@@ -65,9 +79,9 @@ const loadUnits = (data: BoardData) => {
   });
 };
 
-const loadAnchors = (data: BoardData) => {
+const loadAnchors = (data: BoardState) => {
   return data.units.map((unit: Unit, index) => {
-    const prov = unit.province.split('_');
+    const prov = unit.location.split('_');
     const positionStyle = styles[`anchor-on-${prov[0]}${prov[1] || ''}`];
     return (
       prov[1] && (
@@ -80,10 +94,12 @@ const loadAnchors = (data: BoardData) => {
 };
 
 export default function Board({ boardData }: BoardProps): JSX.Element {
-  const Lands = loadLands(boardData || initialData);
-  const Units = loadUnits(boardData || initialData);
-  const SupplyCenters = loadSupplyCenters(boardData || initialData);
-  const Anchors = loadAnchors(boardData || initialData);
+  const data = mergeBoardData(boardDefaults, boardData);
+  const Waters = loadWaters(data);
+  const Lands = loadLands(data);
+  const Units = loadUnits(data);
+  const SupplyCenters = loadSupplyCenters(data);
+  const Anchors = loadAnchors(data);
 
   return (
     <>
@@ -96,7 +112,7 @@ export default function Board({ boardData }: BoardProps): JSX.Element {
 
         {/* provinces */}
         <svg className={styles.province}>
-          {Seas}
+          {Waters}
           {Lands}
         </svg>
 
