@@ -27,13 +27,13 @@ const QUOTE_SOURCE = {
 /** トップページの歓迎メッセージ */
 export const Greeting = () => (
   <section aria-labelledby="greeting-title" className="w-full px-4 py-8">
-    <div className="mx-auto max-w-160 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+    <div className="mx-auto max-w-160 rounded-xl bg-white p-6 shadow-sm ring-1 ring-black/5">
       <h2 id="greeting-title" className="text-xl font-bold text-gray-900">
         Diplomacy MOE へようこそ
       </h2>
 
       <figure className="mt-5">
-        <blockquote className="space-y-4 border-l-4 border-[#555ab9] pl-4">
+        <blockquote className="space-y-4 border-l-4 border-brand pl-4">
           {QUOTE_LINES.map((line) => (
             <p
               key={line.ja}
@@ -50,7 +50,7 @@ export const Greeting = () => (
               href={QUOTE_SOURCE.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="underline underline-offset-2 hover:text-[#555ab9]"
+              className="underline underline-offset-2 hover:text-brand"
             >
               {QUOTE_SOURCE.name}
             </a>

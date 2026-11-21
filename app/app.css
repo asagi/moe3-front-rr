@@ -3,11 +3,15 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  /* サイト共通のアクセントカラー（Discord Blurple に合わせる） */
+  --color-brand: #5865f2;
+  --color-brand-hover: #4752c4;
 }
 
 html,
 body {
-  @apply bg-white dark:bg-gray-950;
+  @apply bg-gray-100 dark:bg-gray-950;
 
   @media (prefers-color-scheme: dark) {
     color-scheme: dark;

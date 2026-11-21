@@ -175,37 +175,37 @@
   left: 0;
   width: 100%;
   height: 100%;
-  stroke: #1a1a1a;
+  stroke: #3f3f46;
   pointer-events: fill;
 }
 
 /* for province images */
 .water {
-  fill: #a0a3dfff;
+  fill: #9db5d6;
 }
 .free-province {
-  fill: #ebdaadff;
+  fill: #ece0bf;
 }
 .austrian-province {
-  fill: #ff9999ff;
+  fill: #f39a9a;
 }
 .english-province {
-  fill: #99b4ffff;
+  fill: #87a3f5;
 }
 .french-province {
-  fill: #99ffffff;
+  fill: #8fe3ee;
 }
 .german-province {
-  fill: #b5b5b5ff;
+  fill: #b9bcc2;
 }
 .italian-province {
-  fill: #99ff99ff;
+  fill: #9ae696;
 }
 .russian-province {
-  fill: #ffffffff;
+  fill: #f8f8fb;
 }
 .turkish-province {
-  fill: #f7ff66ff;
+  fill: #f2e870;
 }
 
 /* for supply center images */
@@ -423,23 +423,23 @@
 }
 .austrian-unit {
   composes: unit;
-  fill: #ff1865;
+  fill: #f0384a;
 }
 .english-unit {
   composes: unit;
-  fill: #58aaff;
+  fill: #3b82f6;
 }
 .french-unit {
   composes: unit;
-  fill: #00f8ff;
+  fill: #06c8e0;
 }
 .german-unit {
   composes: unit;
-  fill: #b0b0b0;
+  fill: #8e939b;
 }
 .italian-unit {
   composes: unit;
-  fill: #6f6;
+  fill: #2fd05a;
 }
 .russian-unit {
   composes: unit;
@@ -447,7 +447,7 @@
 }
 .turkish-unit {
   composes: unit;
-  fill: #ffe700;
+  fill: #ffd60a;
 }
 
 /* unit position for svg tag */

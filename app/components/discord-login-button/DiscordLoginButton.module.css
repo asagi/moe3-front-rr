@@ -6,29 +6,28 @@
   cursor: pointer;
   border: 0;
   border-radius: 3em;
-  background-color: #5865f2;
+  background-color: var(--color-brand);
   padding: 10px 16px;
   color: #fff;
   font-weight: 700;
   font-size: 12px;
   line-height: 1;
-  font-family: 'Nunito Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   white-space: nowrap;
 }
 
 .button:hover {
-  background-color: #4752c4;
+  background-color: var(--color-brand-hover);
 }
 
 .button:focus-visible {
-  outline: 2px solid #5865f2;
+  outline: 2px solid var(--color-brand);
   outline-offset: 2px;
 }
 
 .button:disabled {
   cursor: not-allowed;
   opacity: 0.6;
-  background-color: #5865f2;
+  background-color: var(--color-brand);
 }
 
 .logo {
