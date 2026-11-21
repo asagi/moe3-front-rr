@@ -5,7 +5,7 @@ import pattern02 from "./fixtures/pattern02.json";
 import pattern03 from "./fixtures/pattern03.json";
 
 const meta = {
-  title: "Board",
+  title: "Components/Board",
   component: Board,
   parameters: {
     layout: "padded",

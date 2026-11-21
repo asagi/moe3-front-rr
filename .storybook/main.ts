@@ -14,6 +14,8 @@ const config: StorybookConfig = {
     "@storybook/addon-mcp"
   ],
   "framework": "@storybook/react-vite",
+  // アプリと同じく public/ を配信し、/favicon.ico などの静的ファイルを参照できるようにする
+  "staticDirs": ["../public"],
   // React Router の Vite プラグインはアプリ本体用で Storybook では動かないため除外する
   async viteFinal(config) {
     const flatten = async (plugins: unknown[]): Promise<unknown[]> =>

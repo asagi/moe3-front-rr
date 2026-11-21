@@ -1,4 +1,8 @@
 {
   // CSS Modules の `composes` を未知のプロパティとして警告しないようにする
-  "css.lint.unknownProperties": "ignore"
+  "css.lint.unknownProperties": "ignore",
+  // Tailwind CSS IntelliSense の言語モードで CSS を扱い、@theme / @apply などを認識させる
+  "files.associations": {
+    "*.css": "tailwindcss"
+  }
 }
