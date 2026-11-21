@@ -26,6 +26,7 @@ export const LoggedIn: Story = {
   args: {
     user: {
       name: "Jane Doe",
+      avatarUrl: "https://cdn.discordapp.com/embed/avatars/0.png",
     },
   },
 };

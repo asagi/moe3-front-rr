@@ -1,22 +1,19 @@
-import { Button } from "~/components/button/Button";
 import { DiscordLoginButton } from "~/components/discord-login-button/DiscordLoginButton";
+import { UserMenu } from "~/components/user-menu/UserMenu";
 import styles from "./Header.module.css";
 
-type User = {
+export type HeaderUser = {
   name: string;
+  avatarUrl?: string | null;
 };
 
 export interface HeaderProps {
-  user?: User;
+  user?: HeaderUser | null;
   onLogin?: () => void;
   onLogout?: () => void;
 }
 
-export const Header = ({
-  user,
-  onLogin,
-  onLogout,
-}: HeaderProps) => (
+export const Header = ({ user, onLogin, onLogout }: HeaderProps) => (
   <header>
     <div className={styles["header"]}>
       <div>
@@ -25,12 +22,11 @@ export const Header = ({
       </div>
       <div>
         {user ? (
-          <>
-            <span className={styles.welcome}>
-              Welcome, <b>{user.name}</b>!
-            </span>
-            <Button size="small" onClick={onLogout} label="Log out" />
-          </>
+          <UserMenu
+            name={user.name}
+            avatarUrl={user.avatarUrl}
+            onLogout={onLogout}
+          />
         ) : (
           <DiscordLoginButton onClick={onLogin} />
         )}
