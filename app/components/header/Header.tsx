@@ -17,6 +17,10 @@ export interface HeaderProps {
   /** 管理者モードが ON か。ON なら通常ヘッダの下に管理者用ヘッダを表示する */
   adminMode?: boolean;
   onAdminModeChange?: (enabled: boolean) => void;
+  /** 「視点変更」で表示中のユーザー ID（管理者用ヘッダに表示する） */
+  impersonateUserId?: string | null;
+  onImpersonate?: (userId: string) => void;
+  onClearImpersonate?: () => void;
 }
 
 export const Header = ({
@@ -25,6 +29,9 @@ export const Header = ({
   onLogout,
   adminMode = false,
   onAdminModeChange,
+  impersonateUserId,
+  onImpersonate,
+  onClearImpersonate,
 }: HeaderProps) => (
   <header>
     <div className={styles["header"]}>
@@ -47,6 +54,12 @@ export const Header = ({
         )}
       </div>
     </div>
-    {user?.isAdmin && adminMode && <AdminHeader />}
+    {user?.isAdmin && adminMode && (
+      <AdminHeader
+        impersonateUserId={impersonateUserId}
+        onImpersonate={onImpersonate}
+        onClearImpersonate={onClearImpersonate}
+      />
+    )}
   </header>
 );

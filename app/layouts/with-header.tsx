@@ -10,7 +10,11 @@ export async function loader({ request }: Route.LoaderArgs) {
   const session = await sessionStorage.getSession(request.headers.get("Cookie"));
   const accessToken = session.get("accessToken");
   if (!accessToken) {
-    return data({ user: null as HeaderUser | null, adminMode: false });
+    return data({
+      user: null as HeaderUser | null,
+      adminMode: false,
+      impersonateUserId: null as string | null,
+    });
   }
 
   try {
@@ -21,12 +25,15 @@ export async function loader({ request }: Route.LoaderArgs) {
       isAdmin: session.get("isAdmin") ?? false,
     };
     const adminMode = user.isAdmin && (session.get("adminMode") ?? false);
-    return data({ user, adminMode });
+    const impersonateUserId = adminMode
+      ? (session.get("impersonateUserId") ?? null)
+      : null;
+    return data({ user, adminMode, impersonateUserId });
   } catch (e) {
     // トークンが無効になっていればセッションを破棄してログアウト状態にする
     if (e instanceof ApiError && e.status === 401) {
       return data(
-        { user: null, adminMode: false },
+        { user: null, adminMode: false, impersonateUserId: null },
         {
           headers: {
             "Set-Cookie": await sessionStorage.destroySession(session),
@@ -36,7 +43,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     }
     // API 側の一時的な障害などではページ自体は表示する
     console.error("ユーザー情報の取得に失敗しました", e);
-    return data({ user: null, adminMode: false });
+    return data({ user: null, adminMode: false, impersonateUserId: null });
   }
 }
 
@@ -49,6 +56,15 @@ export default function WithHeaderLayout({ loaderData }: Route.ComponentProps) {
     pendingAdminMode != null
       ? pendingAdminMode === "true"
       : loaderData.adminMode;
+  const impersonateFetcher = useFetcher();
+  // 送信中は送った値を先に反映して、切替・解除の反応を待たせない
+  const impersonateUserId = (() => {
+    const form = impersonateFetcher.formData;
+    if (!adminMode) return null;
+    if (form?.get("intent") === "set") return String(form.get("userId"));
+    if (form?.get("intent") === "clear") return null;
+    return loaderData.impersonateUserId;
+  })();
 
   return (
     <>
@@ -65,6 +81,19 @@ export default function WithHeaderLayout({ loaderData }: Route.ComponentProps) {
           adminModeFetcher.submit(
             { enabled: String(enabled) },
             { method: "post", action: "/admin-mode" },
+          );
+        }}
+        impersonateUserId={impersonateUserId}
+        onImpersonate={(userId) => {
+          impersonateFetcher.submit(
+            { intent: "set", userId },
+            { method: "post", action: "/admin-impersonate" },
+          );
+        }}
+        onClearImpersonate={() => {
+          impersonateFetcher.submit(
+            { intent: "clear" },
+            { method: "post", action: "/admin-impersonate" },
           );
         }}
       />

@@ -13,7 +13,10 @@ export async function action({ request }: Route.ActionArgs) {
   }
 
   const formData = await request.formData();
-  session.set("adminMode", formData.get("enabled") === "true");
+  const enabled = formData.get("enabled") === "true";
+  session.set("adminMode", enabled);
+  // 管理者モードを抜けたら視点変更も解除する
+  if (!enabled) session.unset("impersonateUserId");
   return data(null, {
     headers: { "Set-Cookie": await sessionStorage.commitSession(session) },
   });

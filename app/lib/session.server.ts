@@ -8,6 +8,8 @@ interface SessionData {
   isAdmin: boolean;
   /** 管理者モードが ON か（isAdmin のユーザーのみ有効） */
   adminMode: boolean;
+  /** 「視点変更」で表示する対象のユーザー ID（管理者モード中のみ有効） */
+  impersonateUserId: string;
 }
 
 let storage: ReturnType<typeof createCookieSessionStorage<SessionData>>;

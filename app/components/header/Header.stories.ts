@@ -17,6 +17,8 @@ const meta = {
     onLogin: fn(),
     onLogout: fn(),
     onAdminModeChange: fn(),
+    onImpersonate: fn(),
+    onClearImpersonate: fn(),
   },
 } satisfies Meta<typeof Header>;
 
@@ -43,5 +45,13 @@ export const AdminMode: Story = {
       isAdmin: true,
     },
     adminMode: true,
+  },
+};
+
+/** 管理者モードで視点変更している状態 */
+export const AdminModeImpersonating: Story = {
+  args: {
+    ...AdminMode.args,
+    impersonateUserId: "user-123",
   },
 };
