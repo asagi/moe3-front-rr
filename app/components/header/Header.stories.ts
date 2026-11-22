@@ -16,6 +16,7 @@ const meta = {
   args: {
     onLogin: fn(),
     onLogout: fn(),
+    onAdminModeChange: fn(),
   },
 } satisfies Meta<typeof Header>;
 
@@ -32,3 +33,15 @@ export const LoggedIn: Story = {
 };
 
 export const LoggedOut: Story = {};
+
+/** 管理者モード ON では通常ヘッダの下に管理者用ヘッダを表示する */
+export const AdminMode: Story = {
+  args: {
+    user: {
+      name: "Jane Doe",
+      avatarUrl: "https://cdn.discordapp.com/embed/avatars/0.png",
+      isAdmin: true,
+    },
+    adminMode: true,
+  },
+};

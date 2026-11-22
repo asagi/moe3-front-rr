@@ -1,0 +1,14 @@
+.root {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #7f1d1d;
+  background-color: #991b1b;
+  padding: 6px 10px;
+  color: #fff;
+  font-size: 13px;
+}
+
+.label {
+  font-weight: 700;
+}

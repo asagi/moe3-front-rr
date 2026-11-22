@@ -15,6 +15,7 @@ const meta = {
     name: "Alice",
     avatarUrl: "https://cdn.discordapp.com/embed/avatars/0.png",
     onLogout: fn(),
+    onAdminModeChange: fn(),
   },
 } satisfies Meta<typeof UserMenu>;
 
@@ -38,5 +39,31 @@ export const Logout: Story = {
     await userEvent.click(canvas.getByRole("menuitem", { name: "ログアウト" }));
     await expect(args.onLogout).toHaveBeenCalled();
     await expect(canvas.queryByRole("menu")).toBeNull();
+  },
+};
+
+/** 管理者はメニューに「管理者モード」のトグルが出る */
+export const AdminToggle: Story = {
+  args: {
+    isAdmin: true,
+    adminMode: false,
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "Alice のメニュー" }));
+    const toggle = canvas.getByRole("menuitemcheckbox", { name: "管理者モード" });
+    await expect(toggle).toHaveAttribute("aria-checked", "false");
+    await userEvent.click(toggle);
+    await expect(args.onAdminModeChange).toHaveBeenCalledWith(true);
+    await expect(canvas.getByRole("menu")).toBeInTheDocument();
+  },
+};
+
+/** 管理者でなければトグルは出ない */
+export const NonAdmin: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "Alice のメニュー" }));
+    await expect(canvas.queryByRole("menuitemcheckbox")).toBeNull();
   },
 };

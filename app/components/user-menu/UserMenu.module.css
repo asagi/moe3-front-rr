@@ -76,3 +76,41 @@
   outline: none;
   background-color: var(--color-gray-100);
 }
+
+.toggleItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+/* トグルスイッチの見た目（状態は親の aria-checked で切り替える） */
+.switch {
+  position: relative;
+  flex-shrink: 0;
+  transition: background-color 0.15s;
+  border-radius: 9999px;
+  background-color: var(--color-gray-300);
+  width: 28px;
+  height: 16px;
+}
+
+.switch::after {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.15s;
+  border-radius: 50%;
+  background-color: #fff;
+  width: 12px;
+  height: 12px;
+  content: "";
+}
+
+.toggleItem[aria-checked="true"] .switch {
+  background-color: var(--color-brand);
+}
+
+.toggleItem[aria-checked="true"] .switch::after {
+  transform: translateX(12px);
+}

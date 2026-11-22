@@ -8,10 +8,23 @@ export interface UserMenuProps {
   avatarUrl?: string | null;
   /** 「ログアウト」選択時の処理 */
   onLogout?: () => void;
+  /** 管理者か。true ならメニューに「管理者モード」のトグルを表示する */
+  isAdmin?: boolean;
+  /** 管理者モードが ON か */
+  adminMode?: boolean;
+  /** 「管理者モード」切り替え時の処理（切り替え後の値を受け取る） */
+  onAdminModeChange?: (enabled: boolean) => void;
 }
 
 /** ログイン中ユーザーのアバターと、クリックで開くメニュー */
-export const UserMenu = ({ name, avatarUrl, onLogout }: UserMenuProps) => {
+export const UserMenu = ({
+  name,
+  avatarUrl,
+  onLogout,
+  isAdmin = false,
+  adminMode = false,
+  onAdminModeChange,
+}: UserMenuProps) => {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -54,6 +67,19 @@ export const UserMenu = ({ name, avatarUrl, onLogout }: UserMenuProps) => {
       {open && (
         <div id={menuId} role="menu" className={styles.menu}>
           <div className={styles.name}>{name}</div>
+          {isAdmin && (
+            // トグルは切り替え結果が見えるようにメニューを閉じない
+            <button
+              type="button"
+              role="menuitemcheckbox"
+              aria-checked={adminMode}
+              className={`${styles.item} ${styles.toggleItem}`}
+              onClick={() => onAdminModeChange?.(!adminMode)}
+            >
+              管理者モード
+              <span className={styles.switch} aria-hidden="true" />
+            </button>
+          )}
           <button
             type="button"
             role="menuitem"

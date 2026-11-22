@@ -38,6 +38,7 @@ export interface User {
   global_name: string | null;
   avatar_hash: string | null;
   avatar_url: string | null;
+  is_admin: boolean;
 }
 
 export interface AuthLoginResponse {

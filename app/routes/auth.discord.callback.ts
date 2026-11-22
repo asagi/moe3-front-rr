@@ -54,9 +54,13 @@ export async function loader({ request }: Route.LoaderArgs) {
   }
 
   let accessToken: string;
+  let isAdmin: boolean;
   try {
     const discordAccessToken = await exchangeDiscordCode(code);
-    ({ access_token: accessToken } = await login(discordAccessToken));
+    ({
+      access_token: accessToken,
+      user: { is_admin: isAdmin },
+    } = await login(discordAccessToken));
   } catch (e) {
     if (e instanceof DiscordTokenError) {
       // code の期限切れ・再利用などは 400、それ以外は Discord 側の問題として 502
@@ -76,6 +80,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     request.headers.get("Cookie"),
   );
   session.set("accessToken", accessToken);
+  session.set("isAdmin", isAdmin);
   headers.append("Set-Cookie", await sessionStorage.commitSession(session));
 
   return redirect("/", { headers });

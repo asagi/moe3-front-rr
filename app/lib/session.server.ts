@@ -4,6 +4,10 @@ import { requireEnv } from "~/lib/env.server";
 interface SessionData {
   /** API サーバーのアクセストークン */
   accessToken: string;
+  /** 管理者かどうか（ログイン時の API レスポンスの is_admin） */
+  isAdmin: boolean;
+  /** 管理者モードが ON か（isAdmin のユーザーのみ有効） */
+  adminMode: boolean;
 }
 
 let storage: ReturnType<typeof createCookieSessionStorage<SessionData>>;
