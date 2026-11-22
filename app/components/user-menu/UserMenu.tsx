@@ -6,6 +6,8 @@ export interface UserMenuProps {
   name: string;
   /** アバター画像の URL。未設定なら頭文字を表示する */
   avatarUrl?: string | null;
+  /** 「マイページ」選択時の処理 */
+  onMyPage?: () => void;
   /** 「ログアウト」選択時の処理 */
   onLogout?: () => void;
   /** 管理者か。true ならメニューに「管理者モード」のトグルを表示する */
@@ -20,6 +22,7 @@ export interface UserMenuProps {
 export const UserMenu = ({
   name,
   avatarUrl,
+  onMyPage,
   onLogout,
   isAdmin = false,
   adminMode = false,
@@ -80,6 +83,17 @@ export const UserMenu = ({
               <span className={styles.switch} aria-hidden="true" />
             </button>
           )}
+          <button
+            type="button"
+            role="menuitem"
+            className={styles.item}
+            onClick={() => {
+              setOpen(false);
+              onMyPage?.();
+            }}
+          >
+            マイページ
+          </button>
           <button
             type="button"
             role="menuitem"

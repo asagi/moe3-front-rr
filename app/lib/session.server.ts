@@ -1,4 +1,5 @@
-import { createCookieSessionStorage } from "react-router";
+import { type Session, createCookieSessionStorage } from "react-router";
+import type { ApiAuth } from "~/lib/api.server";
 import { requireEnv } from "~/lib/env.server";
 
 interface SessionData {
@@ -28,4 +29,20 @@ export const getSessionStorage = () => {
     },
   });
   return storage;
+};
+
+/**
+ * セッションから API 呼び出し用の認証情報を作る。未ログインなら null。
+ * 視点変更は管理者モード中の管理者のときだけ付ける
+ */
+export const getApiAuth = (session: Session<SessionData>): ApiAuth | null => {
+  const accessToken = session.get("accessToken");
+  if (!accessToken) return null;
+  const adminMode = !!session.get("isAdmin") && !!session.get("adminMode");
+  return {
+    accessToken,
+    impersonateUserId: adminMode
+      ? (session.get("impersonateUserId") ?? null)
+      : null,
+  };
 };

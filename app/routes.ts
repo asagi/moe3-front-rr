@@ -6,7 +6,10 @@ import {
 } from "@react-router/dev/routes";
 
 export default [
-  layout("layouts/with-header.tsx", [index("routes/home.tsx")]),
+  layout("layouts/with-header.tsx", [
+    index("routes/home.tsx"),
+    route("mypage", "routes/mypage.tsx"),
+  ]),
   route("auth/discord", "routes/auth.discord.ts"),
   route("auth/discord/callback", "routes/auth.discord.callback.ts"),
   route("auth/logout", "routes/auth.logout.ts"),

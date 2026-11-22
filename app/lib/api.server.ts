@@ -31,6 +31,31 @@ const request = async <T>(path: string, init: RequestInit): Promise<T> => {
   return (await res.json()) as T;
 };
 
+/** 認証が必要な API の呼び出しに使う情報 */
+export interface ApiAuth {
+  accessToken: string;
+  /** 管理者が「視点変更」で成り代わるユーザーの Discord ユーザー ID。未設定なら本人として呼ぶ */
+  impersonateUserId?: string | null;
+}
+
+/** 成り代わり先の指定が不正なときに API が返すエラーコード */
+export const IMPERSONATE_ERROR_CODES = [
+  "invalid_impersonate_user_id",
+  "impersonate_user_not_found",
+];
+
+/** 成り代わり先の指定が原因のエラーか */
+export const isImpersonateError = (e: unknown): e is ApiError =>
+  e instanceof ApiError && IMPERSONATE_ERROR_CODES.includes(e.code);
+
+const authHeaders = ({ accessToken, impersonateUserId }: ApiAuth) => {
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${accessToken}`,
+  };
+  if (impersonateUserId) headers["X-Impersonate-User-Id"] = impersonateUserId;
+  return headers;
+};
+
 export interface User {
   uuid: string;
   discord_user_id: string;
@@ -62,7 +87,5 @@ export interface UserMe {
 }
 
 /** GET /users/me: ログイン中ユーザーのプロフィールを取得する */
-export const getMe = (accessToken: string) =>
-  request<UserMe>("/users/me", {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
+export const getMe = (auth: ApiAuth) =>
+  request<UserMe>("/users/me", { headers: authHeaders(auth) });

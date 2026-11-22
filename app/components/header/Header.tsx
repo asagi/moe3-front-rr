@@ -14,11 +14,14 @@ export interface HeaderProps {
   user?: HeaderUser | null;
   onLogin?: () => void;
   onLogout?: () => void;
+  onMyPage?: () => void;
   /** 管理者モードが ON か。ON なら通常ヘッダの下に管理者用ヘッダを表示する */
   adminMode?: boolean;
   onAdminModeChange?: (enabled: boolean) => void;
   /** 「視点変更」で表示中のユーザー ID（管理者用ヘッダに表示する） */
   impersonateUserId?: string | null;
+  /** 視点変更の ID が不正だったときのエラーメッセージ */
+  impersonateError?: string | null;
   onImpersonate?: (userId: string) => void;
   onClearImpersonate?: () => void;
 }
@@ -27,9 +30,11 @@ export const Header = ({
   user,
   onLogin,
   onLogout,
+  onMyPage,
   adminMode = false,
   onAdminModeChange,
   impersonateUserId,
+  impersonateError,
   onImpersonate,
   onClearImpersonate,
 }: HeaderProps) => (
@@ -45,6 +50,7 @@ export const Header = ({
             name={user.name}
             avatarUrl={user.avatarUrl}
             onLogout={onLogout}
+            onMyPage={onMyPage}
             isAdmin={user.isAdmin}
             adminMode={adminMode}
             onAdminModeChange={onAdminModeChange}
@@ -57,6 +63,7 @@ export const Header = ({
     {user?.isAdmin && adminMode && (
       <AdminHeader
         impersonateUserId={impersonateUserId}
+        impersonateError={impersonateError}
         onImpersonate={onImpersonate}
         onClearImpersonate={onClearImpersonate}
       />

@@ -14,6 +14,7 @@ const meta = {
   args: {
     name: "Alice",
     avatarUrl: "https://cdn.discordapp.com/embed/avatars/0.png",
+    onMyPage: fn(),
     onLogout: fn(),
     onAdminModeChange: fn(),
   },
@@ -38,6 +39,17 @@ export const Logout: Story = {
     await userEvent.click(canvas.getByRole("button", { name: "Alice のメニュー" }));
     await userEvent.click(canvas.getByRole("menuitem", { name: "ログアウト" }));
     await expect(args.onLogout).toHaveBeenCalled();
+    await expect(canvas.queryByRole("menu")).toBeNull();
+  },
+};
+
+/** アバターをクリックしてメニューから「マイページ」を選ぶ */
+export const MyPage: Story = {
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "Alice のメニュー" }));
+    await userEvent.click(canvas.getByRole("menuitem", { name: "マイページ" }));
+    await expect(args.onMyPage).toHaveBeenCalled();
     await expect(canvas.queryByRole("menu")).toBeNull();
   },
 };

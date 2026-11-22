@@ -16,6 +16,7 @@ const meta = {
   args: {
     onLogin: fn(),
     onLogout: fn(),
+    onMyPage: fn(),
     onAdminModeChange: fn(),
     onImpersonate: fn(),
     onClearImpersonate: fn(),
@@ -52,6 +53,6 @@ export const AdminMode: Story = {
 export const AdminModeImpersonating: Story = {
   args: {
     ...AdminMode.args,
-    impersonateUserId: "user-123",
+    impersonateUserId: "1012988952082399243",
   },
 };

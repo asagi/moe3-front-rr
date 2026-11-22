@@ -7,6 +7,17 @@
   padding: 5px 10px;
 }
 
+/*
+ * 右側（ログインボタン / アバター）は中身で高さが変わらないよう固定する。
+ * 高さはいちばん高いログインボタン（36px）に合わせる。
+ * flex にしているのは、アバター画像の下にベースライン分の余白が出るのを防ぐため
+ */
+.header > div:last-child {
+  display: flex;
+  align-items: center;
+  height: 36px;
+}
+
 .header > div:first-child img {
   display: inline-block;
   vertical-align: top;
