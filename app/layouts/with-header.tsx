@@ -101,6 +101,9 @@ export default function WithHeaderLayout({ loaderData }: Route.ComponentProps) {
         onLogin={() => {
           window.location.href = "/auth/discord";
         }}
+        onHome={() => {
+          navigate("/");
+        }}
         onMyPage={() => {
           navigate("/mypage");
         }}

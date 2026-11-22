@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { fn } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 
 import { Header } from "./Header";
 
@@ -15,6 +15,7 @@ const meta = {
   },
   args: {
     onLogin: fn(),
+    onHome: fn(),
     onLogout: fn(),
     onMyPage: fn(),
     onAdminModeChange: fn(),
@@ -54,5 +55,16 @@ export const AdminModeImpersonating: Story = {
   args: {
     ...AdminMode.args,
     impersonateUserId: "1012988952082399243",
+  },
+};
+
+/** タイトルをクリックすると onHome が呼ばれる */
+export const ClickTitle: Story = {
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    const link = canvas.getByRole("link", { name: "Diplomacy MOE" });
+    await expect(link).toHaveAttribute("href", "/");
+    await userEvent.click(link);
+    await expect(args.onHome).toHaveBeenCalled();
   },
 };

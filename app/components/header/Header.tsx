@@ -13,6 +13,8 @@ export type HeaderUser = {
 export interface HeaderProps {
   user?: HeaderUser | null;
   onLogin?: () => void;
+  /** タイトル（ロゴ）クリック時の処理。未指定なら通常のリンクとして / へ遷移する */
+  onHome?: () => void;
   onLogout?: () => void;
   onMyPage?: () => void;
   /** 管理者モードが ON か。ON なら通常ヘッダの下に管理者用ヘッダを表示する */
@@ -29,6 +31,7 @@ export interface HeaderProps {
 export const Header = ({
   user,
   onLogin,
+  onHome,
   onLogout,
   onMyPage,
   adminMode = false,
@@ -41,8 +44,20 @@ export const Header = ({
   <header>
     <div className={styles["header"]}>
       <div>
-        <img src="/favicon.ico" width="24" height="24" alt="" />
-        <h1>Diplomacy MOE</h1>
+        <a
+          href="/"
+          className={styles.home}
+          onClick={(e) => {
+            // 新しいタブで開く操作（修飾キー・中クリック）はブラウザに任せる
+            if (!onHome || e.button !== 0) return;
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+            e.preventDefault();
+            onHome();
+          }}
+        >
+          <img src="/favicon.ico" width="30" height="30" alt="" />
+          <h1>Diplomacy MOE</h1>
+        </a>
       </div>
       <div>
         {user ? (
