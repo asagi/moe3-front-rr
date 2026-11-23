@@ -12,7 +12,7 @@ export function meta({}: Route.MetaArgs) {
 
 /** 管理者とその卓の卓主以外は開けないので卓情報へ戻す */
 export async function loader({ request, params, context }: Route.LoaderArgs) {
-  if (!(await canMaintainGame(request, requireGame(context)))) {
+  if (!(await canMaintainGame(request, context, requireGame(context)))) {
     throw redirect(`/games/${params.gameUuid}`);
   }
   return null;

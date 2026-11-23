@@ -1,6 +1,7 @@
 import { type RouterContextProvider, createContext, data } from "react-router";
 import { ApiError, type ApiAuth, getGame, listGames } from "~/lib/api.server";
 import type { GameDetail } from "~/lib/game";
+import { meContext } from "~/lib/me.server";
 import { getSessionStorage } from "~/lib/session.server";
 
 /**
@@ -64,11 +65,21 @@ export const requireGame = (context: Readonly<RouterContextProvider>) => {
 };
 
 /**
- * メンテナンスページを開けるか。
- * その卓の卓主か、管理者モード中の管理者（視点変更中も含む）のとき
+ * メンテナンスページを開けるか。その卓の卓主か管理者のとき。
+ * 視点変更中は切り替え先のアカウントで判定する（is_owner も切り替え先の値が返る）
  */
-export const canMaintainGame = async (request: Request, game: GameDetail) => {
+export const canMaintainGame = async (
+  request: Request,
+  context: Readonly<RouterContextProvider>,
+  game: GameDetail,
+) => {
   if (game.is_owner) return true;
+  const state = context.get(meContext);
+  if (state.kind !== "ok") return false;
+  if (state.auth.impersonateUserId) {
+    // 切り替え先が管理者か。/users/me が is_admin を返すまでは管理者ではない扱い
+    return state.me.is_admin === true;
+  }
   const session = await getSessionStorage().getSession(
     request.headers.get("Cookie"),
   );

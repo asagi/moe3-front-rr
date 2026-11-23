@@ -36,7 +36,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     gameUuid: game.game_uuid,
     numberLabel: gameNumberLabel(game),
     ordersEnabled: isStarted(game),
-    maintenanceEnabled: await canMaintainGame(request, game),
+    maintenanceEnabled: await canMaintainGame(request, context, game),
   };
 }
 

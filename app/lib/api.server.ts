@@ -85,6 +85,8 @@ export interface UserMe {
   username: string;
   global_name: string | null;
   avatar_url: string | null;
+  /** 管理者か（視点変更中は切り替え先のユーザーの値）。API が返すまでは未定義 */
+  is_admin?: boolean;
 }
 
 /** GET /users/me: ログイン中ユーザーのプロフィールを取得する */
