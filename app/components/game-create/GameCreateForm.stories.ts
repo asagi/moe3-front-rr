@@ -75,10 +75,6 @@ export const Confirm: Story = {
     await userEvent.click(canvas.getByRole("radio", { name: "合意進行" }));
     await userEvent.click(canvas.getByRole("radio", { name: "30 分" }));
     await userEvent.click(canvas.getByRole("radio", { name: "フランス" }));
-    await userEvent.selectOptions(
-      canvas.getByRole("combobox", { name: "開始時刻（分）" }),
-      "30",
-    );
     await userEvent.click(canvas.getByRole("button", { name: "確認へ進む" }));
     await expect(args.onConfirm).toHaveBeenCalledWith({
       ...DEFAULT_GAME_FORM_VALUES,
@@ -87,7 +83,6 @@ export const Confirm: Story = {
       durationType: "short",
       startDate: "2026-11-25",
       firstPeriodHour: "12",
-      firstPeriodMinute: "30",
       requestedPower: "f",
     });
   },

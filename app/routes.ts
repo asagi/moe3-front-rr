@@ -11,7 +11,14 @@ export default [
     route("mypage", "routes/mypage.tsx"),
     route("games", "routes/games.tsx"),
     route("games/new", "routes/games.new.tsx"),
-    route("games/:gameUuid", "routes/games.$gameUuid.tsx"),
+    // 卓内のページ（卓ヘッダと画面下のタブバーを共通で出す）
+    route("games/:gameUuid", "routes/games.$gameUuid.tsx", [
+      index("routes/games.$gameUuid._index.tsx"),
+      route("calendar", "routes/games.$gameUuid.calendar.tsx"),
+      route("chat", "routes/games.$gameUuid.chat.tsx"),
+      route("orders", "routes/games.$gameUuid.orders.tsx"),
+      route("maintenance", "routes/games.$gameUuid.maintenance.tsx"),
+    ]),
   ]),
   route("auth/discord", "routes/auth.discord.ts"),
   route("auth/discord/callback", "routes/auth.discord.callback.ts"),

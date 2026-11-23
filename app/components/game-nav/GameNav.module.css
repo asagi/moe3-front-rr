@@ -1,0 +1,72 @@
+/* ---- 卓ヘッダ ---- */
+
+.header {
+  border-bottom: 1px solid var(--color-gray-200);
+  background-color: #fff;
+  padding: 8px 12px;
+  text-align: center;
+}
+
+.header h2 {
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* ---- タブバー（画面下に固定） ---- */
+
+.tabBar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 20;
+  border-top: 1px solid var(--color-gray-200);
+  background-color: #fff;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.tabBar ul {
+  display: flex;
+  justify-content: space-around;
+  margin: 0 auto;
+  max-width: 480px;
+}
+
+.tabBar li {
+  flex: 1;
+}
+
+.tab {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: color 0.15s;
+  height: 56px;
+  color: var(--color-gray-500);
+}
+
+a.tab:hover {
+  color: var(--color-gray-800);
+}
+
+/* 表示中のページ */
+a.tab[aria-current="page"] {
+  color: var(--color-brand);
+}
+
+a.tab:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: -4px;
+  border-radius: 8px;
+}
+
+.tab[aria-disabled="true"] {
+  cursor: not-allowed;
+  color: var(--color-gray-300);
+}
+
+.icon {
+  width: 28px;
+  height: 28px;
+}

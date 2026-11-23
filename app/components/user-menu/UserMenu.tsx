@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { UserAvatar } from "~/components/user-avatar/UserAvatar";
 import styles from "./UserMenu.module.css";
 
 export interface UserMenuProps {
@@ -65,7 +66,7 @@ export const UserMenu = ({
         aria-controls={open ? menuId : undefined}
         onClick={() => setOpen((v) => !v)}
       >
-        <Avatar name={name} avatarUrl={avatarUrl} />
+        <UserAvatar name={name} avatarUrl={avatarUrl} size={32} />
       </button>
       {open && (
         <div id={menuId} role="menu" className={styles.menu}>
@@ -108,29 +109,5 @@ export const UserMenu = ({
         </div>
       )}
     </div>
-  );
-};
-
-const Avatar = ({
-  name,
-  avatarUrl,
-}: Pick<UserMenuProps, "name" | "avatarUrl">) => {
-  const [failed, setFailed] = useState(false);
-  if (avatarUrl && !failed) {
-    return (
-      <img
-        className={styles.avatar}
-        src={avatarUrl}
-        alt=""
-        width={32}
-        height={32}
-        onError={() => setFailed(true)}
-      />
-    );
-  }
-  return (
-    <span className={`${styles.avatar} ${styles.fallback}`} aria-hidden="true">
-      {name.slice(0, 1).toUpperCase()}
-    </span>
   );
 };

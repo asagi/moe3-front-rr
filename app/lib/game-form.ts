@@ -13,8 +13,6 @@ export interface GameFormValues {
   startDate: string;
   /** 開始時刻の時（"0"〜"23"） */
   firstPeriodHour: string;
-  /** 開始時刻の分（"0" / "15" / "30" / "45"） */
-  firstPeriodMinute: string;
   /** 鍵卓にするか */
   locked: boolean;
   /** 鍵卓のキーワード（英数字のみ） */
@@ -25,16 +23,12 @@ export interface GameFormValues {
 
 export type GameFormErrors = Partial<Record<keyof GameFormValues, string>>;
 
-/** 開始時刻の分として選べる値 */
-export const START_MINUTES = ["0", "15", "30", "45"] as const;
-
 export const DEFAULT_GAME_FORM_VALUES: GameFormValues = {
   faceType: "girls",
   progressMode: "scheduled",
   durationType: "normal",
   startDate: "",
   firstPeriodHour: "0",
-  firstPeriodMinute: "0",
   locked: false,
   keyword: "",
   requestedPower: "",
@@ -55,7 +49,6 @@ export const readGameForm = (formData: FormData): GameFormValues => {
     durationType: str(formData, "durationType") === "short" ? "short" : "normal",
     startDate: str(formData, "startDate"),
     firstPeriodHour: str(formData, "firstPeriodHour"),
-    firstPeriodMinute: str(formData, "firstPeriodMinute") || "0",
     locked: formData.get("locked") != null && str(formData, "locked") !== "",
     keyword: str(formData, "keyword").trim(),
     requestedPower: POWERS.some((p) => p.code === power)
@@ -107,10 +100,6 @@ export const validateGameForm = (
     errors.firstPeriodHour = "開始時刻が正しくありません";
   }
 
-  if (!(START_MINUTES as readonly string[]).includes(values.firstPeriodMinute)) {
-    errors.firstPeriodMinute = "開始時刻の分が正しくありません";
-  }
-
   if (values.locked) {
     if (!values.keyword) {
       errors.keyword = "キーワードを入力してください";
@@ -122,9 +111,9 @@ export const validateGameForm = (
   return errors;
 };
 
-/** 開始時刻の表示（例: "9:00"、"21:45"） */
+/** 開始時刻の表示（例: "9:00"。開始時刻は毎時 0 分のみ） */
 export const formatStartTime = (values: GameFormValues) =>
-  `${values.firstPeriodHour}:${values.firstPeriodMinute.padStart(2, "0")}`;
+  `${values.firstPeriodHour}:00`;
 
 /** 今日の日付（JST、"YYYY-MM-DD"） */
 export const todayInJst = (now = new Date()) =>

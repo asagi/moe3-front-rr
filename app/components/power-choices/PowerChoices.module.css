@@ -1,0 +1,68 @@
+.choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 12px 8px;
+}
+
+.choice {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s;
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  padding: 6px 4px;
+  font-size: 13px;
+}
+
+.choice:hover {
+  border-color: var(--color-gray-300);
+}
+
+.choice img {
+  transition:
+    filter 0.15s,
+    opacity 0.15s;
+}
+
+/* 選ばれていない選択肢はグレーにする */
+.choice[data-checked="false"] img {
+  opacity: 0.7;
+  filter: grayscale(1);
+}
+
+.choice:hover img {
+  opacity: 1;
+  filter: none;
+}
+
+.choice[data-checked="true"] {
+  border-color: var(--color-brand);
+  background-color: rgb(88 101 242 / 0.08);
+  color: var(--color-brand);
+  font-weight: 700;
+}
+
+.choice:has(input:focus-visible) {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+.choice > span {
+  white-space: nowrap;
+}
+
+/* 見た目だけ隠したネイティブの input（キーボード操作・読み上げはそのまま） */
+.visuallyHidden {
+  position: absolute;
+  opacity: 0;
+  margin: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}

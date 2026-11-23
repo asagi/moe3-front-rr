@@ -51,7 +51,6 @@ const toCreateGameBody = (values: GameFormValues): CreateGameBody => ({
   duration_type: values.durationType === "short" ? 1 : 2,
   start_date: values.startDate,
   first_period_hour: Number(values.firstPeriodHour),
-  first_period_minute: Number(values.firstPeriodMinute),
   requested_power: values.requestedPower || null,
   keyword: values.locked ? values.keyword : null,
 });

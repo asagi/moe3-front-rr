@@ -1,0 +1,330 @@
+/* ---- 共通 ---- */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sectionTitle {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.userName {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.userId {
+  color: var(--color-gray-500);
+  font-size: 12px;
+}
+
+.empty {
+  border: 1px dashed var(--color-gray-300);
+  border-radius: 6px;
+  padding: 12px;
+  color: var(--color-gray-500);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* ---- 卓主 ---- */
+
+.ownerCard {
+  border-radius: 8px;
+  background-color: #e2e8f0;
+  padding: 10px 16px 14px;
+}
+
+.ownerTitle {
+  margin-bottom: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  text-align: center;
+}
+
+.ownerBody {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 32px;
+}
+
+.ownerUser,
+.ownerPower {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ownerUser .userName {
+  margin-top: 4px;
+  max-width: 12em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ownerPower > span:last-child {
+  margin-top: 4px;
+  color: var(--color-gray-700);
+  font-size: 12px;
+}
+
+/* ---- レギュレーション ---- */
+
+.table {
+  border-radius: 6px;
+  background-color: #fff;
+  padding: 0 12px;
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 10em 1fr;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--color-gray-200);
+  padding: 10px 0;
+  font-size: 14px;
+}
+
+.tableRow:last-child {
+  border-bottom: 0;
+}
+
+.tableRow dt {
+  color: var(--color-gray-600);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* ---- 参加者 ---- */
+
+.remaining {
+  font-weight: 400;
+  font-size: 14px;
+}
+
+.players {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.player {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+  border-radius: 6px;
+  background-color: #fff;
+  padding: 8px 12px;
+}
+
+.playerName {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 8px;
+  min-width: 0;
+}
+
+.playerPower {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+/* ---- 参加登録フォーム ---- */
+
+.joinForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.joinField {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-radius: 6px;
+  background-color: #fff;
+  padding-bottom: 8px;
+}
+
+.fieldTitle {
+  border-radius: 6px 6px 0 0;
+  background-color: #e2e8f0;
+  padding: 8px 12px;
+  color: #1f2937;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.keywordRow {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.keywordRow > label {
+  padding-top: 9px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.control {
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+  border: 1px solid var(--color-gray-300);
+  border-radius: 8px;
+  background-color: #fff;
+  padding: 8px 12px;
+  width: 14em;
+  max-width: 100%;
+  color: #111;
+  font-size: 15px;
+}
+
+.control:focus {
+  outline: none;
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px rgb(88 101 242 / 0.2);
+}
+
+.control[aria-invalid="true"] {
+  border-color: #dc2626;
+}
+
+.error {
+  margin-top: 4px;
+  color: #b91c1c;
+  font-size: 12px;
+}
+
+.formError {
+  border: 1px solid #fecaca;
+  border-radius: 4px;
+  background-color: #fef2f2;
+  padding: 10px 12px;
+  color: #b91c1c;
+  font-size: 13px;
+}
+
+.loginPrompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  border-radius: 6px;
+  background-color: #fff;
+  padding: 16px 12px;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* ---- 確認ダイアログ ---- */
+
+.dialog {
+  margin: auto;
+  border: 0;
+  border-radius: 10px;
+  padding: 20px;
+  width: min(360px, calc(100vw - 32px));
+}
+
+.dialog::backdrop {
+  background-color: rgb(0 0 0 / 0.4);
+}
+
+.dialogTitle {
+  font-weight: 700;
+  font-size: 16px;
+  text-align: center;
+}
+
+.dialogPower {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 10px;
+  font-size: 14px;
+}
+
+.dialogNote {
+  margin-bottom: 16px;
+  color: #b91c1c;
+  font-size: 13px;
+  text-align: center;
+}
+
+/* ---- ボタン ---- */
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.primaryButton,
+.secondaryButton {
+  cursor: pointer;
+  border: 0;
+  border-radius: 4px;
+  padding: 10px 16px;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.primaryButton {
+  background-color: var(--color-brand);
+  color: #fff;
+}
+
+.primaryButton:hover:not(:disabled) {
+  background-color: var(--color-brand-hover);
+}
+
+.secondaryButton {
+  background-color: #cbd5e1;
+  color: #1f2937;
+}
+
+.secondaryButton:hover:not(:disabled) {
+  background-color: #b6c2d1;
+}
+
+.primaryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.primaryButton:focus-visible,
+.secondaryButton:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+/* ---- ページ全体 ---- */
+
+.success {
+  border: 1px solid #bbf7d0;
+  border-radius: 4px;
+  background-color: #f0fdf4;
+  padding: 10px 12px;
+  color: #166534;
+  font-size: 14px;
+  text-align: center;
+}

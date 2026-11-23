@@ -14,7 +14,6 @@ const meta = {
       ...DEFAULT_GAME_FORM_VALUES,
       startDate: "2026-11-25",
       firstPeriodHour: "12",
-      firstPeriodMinute: "30",
       locked: true,
       keyword: "secret123",
       requestedPower: "f",
@@ -32,7 +31,7 @@ export const Default: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByText("2026 年 11 月 25 日（水）")).toBeInTheDocument();
     await expect(canvas.getByText("フランス")).toBeInTheDocument();
-    await expect(canvas.getByText("12:30")).toBeInTheDocument();
+    await expect(canvas.getByText("12:00")).toBeInTheDocument();
     await userEvent.click(canvas.getByRole("button", { name: "この内容で作成する" }));
     await expect(args.onCreate).toHaveBeenCalled();
   },

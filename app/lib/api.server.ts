@@ -1,5 +1,5 @@
 import { requireEnv } from "~/lib/env.server";
-import type { GameSummary } from "~/lib/game";
+import type { GameDetail, GameSummary } from "~/lib/game";
 
 /** API サーバーが返すエラー形式 */
 export interface ApiErrorBody {
@@ -130,8 +130,6 @@ export interface CreateGameBody {
   start_date: string;
   /** 開始時刻の時（JST、0〜23） */
   first_period_hour: number;
-  /** 開始時刻の分（0 / 15 / 30 / 45。省略時は 0） */
-  first_period_minute: number;
   /** 希望国の 1 文字コード。希望なしは null */
   requested_power: string | null;
   /** 鍵卓のキーワード（英数字のみ）。鍵なしは null */
@@ -151,3 +149,38 @@ export const createGame = (body: CreateGameBody, auth: ApiAuth) =>
     headers: { ...authHeaders(auth), "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
+
+/** GET /games/{uuid} のレスポンス */
+export interface GetGameResponse {
+  game: GameDetail;
+}
+
+/** GET /games/{uuid}: 卓の詳細を取得する（auth を付けると is_owner が入る） */
+export const getGame = (gameUuid: string, auth?: ApiAuth | null) =>
+  request<GetGameResponse>(`/games/${encodeURIComponent(gameUuid)}`, {
+    headers: auth ? authHeaders(auth) : {},
+  });
+
+export interface JoinGameBody {
+  /** 希望国の 1 文字コード。希望なしは null */
+  requested_power: string | null;
+  /** 鍵卓のキーワード。鍵なしは null */
+  keyword: string | null;
+}
+
+export interface JoinGameResponse {
+  game_uuid: string;
+  user_uuid: string;
+  requested_power: string | null;
+}
+
+/** POST /games/{uuid}/players: 卓に参加を申請する */
+export const joinGame = (gameUuid: string, body: JoinGameBody, auth: ApiAuth) =>
+  request<JoinGameResponse>(
+    `/games/${encodeURIComponent(gameUuid)}/players`,
+    {
+      method: "POST",
+      headers: { ...authHeaders(auth), "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    },
+  );

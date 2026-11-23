@@ -4,6 +4,7 @@ import {
   FACE_TYPE_LABELS,
   POWER_LABELS,
   PROGRESS_MODE_LABELS,
+  formatDateJa,
 } from "~/lib/game";
 import { type GameFormValues, formatStartTime } from "~/lib/game-form";
 import { PowerImage } from "~/components/power-image/PowerImage";
@@ -21,15 +22,6 @@ export interface GameCreateConfirmProps {
   /** 「この内容で作成する」押下時の処理 */
   onCreate?: () => void;
 }
-
-const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
-
-/** "2026-11-25" → "2026 年 11 月 25 日（水）" */
-const formatDate = (value: string) => {
-  const [y, m, d] = value.split("-").map(Number);
-  const weekday = WEEKDAYS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
-  return `${y} 年 ${m} 月 ${d} 日（${weekday}）`;
-};
 
 /** 新規募集の確認画面 */
 export const GameCreateConfirm = ({
@@ -64,7 +56,7 @@ export const GameCreateConfirm = ({
         <Row label="メインフェイズの長さ">
           {MAIN_PHASE_LENGTH_LABELS[values.durationType]}
         </Row>
-        <Row label="開始日">{formatDate(values.startDate)}</Row>
+        <Row label="開始日">{formatDateJa(values.startDate)}</Row>
         <Row label="開始時刻">{formatStartTime(values)}</Row>
         <Row label="鍵">
           {values.locked ? `あり（キーワード: ${values.keyword}）` : "なし"}

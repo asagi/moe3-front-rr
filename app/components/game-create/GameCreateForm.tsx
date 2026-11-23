@@ -4,17 +4,14 @@ import {
   MAIN_PHASE_LENGTH_LABELS,
   FACE_TYPE_LABELS,
   type GameRegulation,
-  POWERS,
   PROGRESS_MODE_LABELS,
-  type PowerCode,
 } from "~/lib/game";
 import {
   type GameFormErrors,
   type GameFormValues,
-  START_MINUTES,
   validateGameForm,
 } from "~/lib/game-form";
-import { PowerImage } from "~/components/power-image/PowerImage";
+import { PowerChoices } from "~/components/power-choices/PowerChoices";
 import styles from "./GameCreate.module.css";
 
 export interface GameCreateFormProps {
@@ -77,21 +74,13 @@ export const GameCreateForm = ({
 
       {/* フェイスタイプに合わせて希望国のアイコンが切り替わる */}
       <Field title="希望国" titleId={`${id}-power`}>
-        <div
-          role="radiogroup"
-          aria-labelledby={`${id}-power`}
-          className={styles.powerChoices}
-        >
-          {[null, ...POWERS.map((p) => p.code)].map((code) => (
-            <PowerChoice
-              key={code ?? "none"}
-              faceType={values.faceType}
-              code={code}
-              checked={values.requestedPower === (code ?? "")}
-              onChange={() => update("requestedPower", code ?? "")}
-            />
-          ))}
-        </div>
+        <PowerChoices
+          faceType={values.faceType}
+          name="requestedPower"
+          labelledBy={`${id}-power`}
+          value={values.requestedPower}
+          onChange={(v) => update("requestedPower", v)}
+        />
       </Field>
 
       <div className={styles.grid}>
@@ -139,7 +128,7 @@ export const GameCreateForm = ({
         <Field
           title="開始時刻"
           titleId={`${id}-hour`}
-          error={errors.firstPeriodHour ?? errors.firstPeriodMinute}
+          error={errors.firstPeriodHour}
           errorId={`${id}-hour-error`}
         >
           <div className={styles.timeRow}>
@@ -161,21 +150,6 @@ export const GameCreateForm = ({
               ))}
             </select>
             <span aria-hidden="true">時</span>
-            <select
-              name="firstPeriodMinute"
-              className={`${styles.control} ${styles.timeControl}`}
-              aria-label="開始時刻（分）"
-              aria-invalid={!!errors.firstPeriodMinute}
-              value={values.firstPeriodMinute}
-              onChange={(e) => update("firstPeriodMinute", e.target.value)}
-            >
-              {START_MINUTES.map((m) => (
-                <option key={m} value={m}>
-                  {m.padStart(2, "0")}
-                </option>
-              ))}
-            </select>
-            <span aria-hidden="true">分</span>
           </div>
         </Field>
 
@@ -296,31 +270,3 @@ export const Field = ({
     </div>
   </div>
 );
-
-const PowerChoice = ({
-  faceType,
-  code,
-  checked,
-  onChange,
-}: {
-  faceType: GameRegulation["face_type"];
-  code: PowerCode | null;
-  checked: boolean;
-  onChange: () => void;
-}) => {
-  const label = code ? POWERS.find((p) => p.code === code)!.label : "希望なし";
-  return (
-    <label className={styles.imageChoice} data-checked={checked}>
-      <input
-        type="radio"
-        className={styles.visuallyHidden}
-        name="requestedPower"
-        value={code ?? ""}
-        checked={checked}
-        onChange={onChange}
-      />
-      <PowerImage faceType={faceType} code={code} size={60} />
-      <span>{label}</span>
-    </label>
-  );
-};
