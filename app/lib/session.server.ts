@@ -2,7 +2,7 @@ import { type Session, createCookieSessionStorage } from "react-router";
 import type { ApiAuth } from "~/lib/api.server";
 import { requireEnv } from "~/lib/env.server";
 
-interface SessionData {
+export interface SessionData {
   /** API サーバーのアクセストークン */
   accessToken: string;
   /** 管理者かどうか（ログイン時の API レスポンスの is_admin） */

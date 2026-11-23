@@ -1,17 +1,20 @@
 import { Outlet, data, useFetcher, useNavigate } from "react-router";
 import { Header, type HeaderUser } from "~/components/header/Header";
-import {
-  ApiError,
-  type UserMe,
-  getMe,
-  isImpersonateError,
-} from "~/lib/api.server";
-import { getApiAuth, getSessionStorage } from "~/lib/session.server";
+import { loadMe, meContext } from "~/lib/me.server";
+import { getSessionStorage } from "~/lib/session.server";
 import type { Route } from "./+types/with-header";
 
+/** ログインユーザーを 1 回だけ取得して、レイアウトと子ルートの loader に渡す */
+export const middleware: Route.MiddlewareFunction[] = [
+  async ({ request, context }) => {
+    const session = await getSessionStorage().getSession(
+      request.headers.get("Cookie"),
+    );
+    context.set(meContext, await loadMe(session));
+  },
+];
+
 const loggedOut = {
-  /** /users/me の結果（視点変更中なら成り代わり先のユーザー）。子ルートからも使う */
-  me: null as UserMe | null,
   user: null as HeaderUser | null,
   adminMode: false,
   impersonateUserId: null as string | null,
@@ -19,54 +22,43 @@ const loggedOut = {
   impersonateError: null as string | null,
 };
 
-/** セッションのトークンでログイン中ユーザーを取得する */
-export async function loader({ request }: Route.LoaderArgs) {
-  const sessionStorage = getSessionStorage();
-  const session = await sessionStorage.getSession(request.headers.get("Cookie"));
-  const auth = getApiAuth(session);
-  if (!auth) {
-    return data(loggedOut);
-  }
-
-  try {
-    let me: UserMe;
-    let impersonateError: string | null = null;
-    try {
-      me = await getMe(auth);
-    } catch (e) {
-      // ID の正常性はチェックせずに保存しているので、不正なら本人として取り直す。
-      // ここでログアウト扱いにすると管理者ヘッダが消えて解除できなくなる
-      if (!isImpersonateError(e)) throw e;
-      impersonateError = e.message;
-      me = await getMe({ ...auth, impersonateUserId: null });
-    }
-
-    const isAdmin = session.get("isAdmin") ?? false;
-    const user: HeaderUser = {
-      name: me.global_name ?? me.username,
-      avatarUrl: me.avatar_url,
-      isAdmin,
-    };
-    return data({
-      me,
-      user,
-      adminMode: isAdmin && (session.get("adminMode") ?? false),
-      impersonateUserId: auth.impersonateUserId ?? null,
-      impersonateError,
-    });
-  } catch (e) {
-    // トークンが無効になっていればセッションを破棄してログアウト状態にする
-    if (e instanceof ApiError && e.status === 401) {
+/** ヘッダ表示用のログイン中ユーザー情報を返す */
+export async function loader({ request, context }: Route.LoaderArgs) {
+  const state = context.get(meContext);
+  if (state.kind !== "ok") {
+    if (state.kind === "unauthorized") {
+      // トークンが無効になっていればセッションを破棄してログアウト状態にする
+      const sessionStorage = getSessionStorage();
+      const session = await sessionStorage.getSession(
+        request.headers.get("Cookie"),
+      );
       return data(loggedOut, {
-        headers: {
-          "Set-Cookie": await sessionStorage.destroySession(session),
-        },
+        headers: { "Set-Cookie": await sessionStorage.destroySession(session) },
       });
     }
     // API 側の一時的な障害などではページ自体は表示する
-    console.error("ユーザー情報の取得に失敗しました", e);
     return data(loggedOut);
   }
+
+  const session = await getSessionStorage().getSession(
+    request.headers.get("Cookie"),
+  );
+  const { me, auth, impersonateError } = state;
+  const isAdmin = session.get("isAdmin") ?? false;
+  const user: HeaderUser = {
+    name: me.global_name ?? me.username,
+    avatarUrl: me.avatar_url,
+    isAdmin,
+  };
+  return data({
+    user,
+    adminMode: isAdmin && (session.get("adminMode") ?? false),
+    // 不正な ID のときは auth から外してあるので、表示用にはセッションの値を返す
+    impersonateUserId: impersonateError
+      ? (session.get("impersonateUserId") ?? null)
+      : (auth.impersonateUserId ?? null),
+    impersonateError,
+  });
 }
 
 export default function WithHeaderLayout({ loaderData }: Route.ComponentProps) {

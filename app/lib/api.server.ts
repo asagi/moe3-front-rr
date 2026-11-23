@@ -1,4 +1,5 @@
 import { requireEnv } from "~/lib/env.server";
+import type { GameSummary } from "~/lib/game";
 
 /** API サーバーが返すエラー形式 */
 export interface ApiErrorBody {
@@ -89,3 +90,64 @@ export interface UserMe {
 /** GET /users/me: ログイン中ユーザーのプロフィールを取得する */
 export const getMe = (auth: ApiAuth) =>
   request<UserMe>("/users/me", { headers: authHeaders(auth) });
+
+export interface ListGamesParams {
+  /** active: Aborted・Closed 以外 / closed / aborted。未指定なら active */
+  status?: "active" | "closed" | "aborted";
+  /** 参加している卓で絞り込む Discord ユーザー ID（指定時は認証必須） */
+  user?: string;
+  page?: number;
+  /** 1〜100（デフォルト 20） */
+  per_page?: number;
+}
+
+export interface ListGamesResponse {
+  games: GameSummary[];
+  total: number;
+  page: number;
+  per_page: number;
+}
+
+/** GET /games: 卓一覧を取得する（user を指定するときは auth が必須） */
+export const listGames = (params: ListGamesParams, auth?: ApiAuth | null) => {
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value != null) query.set(key, String(value));
+  }
+  return request<ListGamesResponse>(`/games?${query}`, {
+    headers: auth ? authHeaders(auth) : {},
+  });
+};
+
+export interface CreateGameBody {
+  /** 1 = 娘, 2 = 旗 */
+  face_type: 1 | 2;
+  /** 1 = 定時進行, 2 = 合意進行（省略時は定時進行） */
+  progress_mode: 1 | 2;
+  /** 1 = 短期（メインフェイズ 30 分）, 2 = 標準（メインフェイズ 24 時間） */
+  duration_type: 1 | 2;
+  /** 開始日（JST、"YYYY-MM-DD"） */
+  start_date: string;
+  /** 開始時刻の時（JST、0〜23） */
+  first_period_hour: number;
+  /** 開始時刻の分（0 / 15 / 30 / 45。省略時は 0） */
+  first_period_minute: number;
+  /** 希望国の 1 文字コード。希望なしは null */
+  requested_power: string | null;
+  /** 鍵卓のキーワード（英数字のみ）。鍵なしは null */
+  keyword: string | null;
+}
+
+export interface CreateGameResponse {
+  game_uuid: string;
+  owner_user_uuid: string;
+  requested_power: string | null;
+}
+
+/** POST /games: 新しい卓（募集）を作成する */
+export const createGame = (body: CreateGameBody, auth: ApiAuth) =>
+  request<CreateGameResponse>("/games", {
+    method: "POST",
+    headers: { ...authHeaders(auth), "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });

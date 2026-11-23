@@ -1,0 +1,357 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ---- 見出し付きの入力欄 ---- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fieldTitle {
+  border-radius: 2px;
+  background-color: #e2e8f0;
+  padding: 9px 12px;
+  color: #1f2937;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.fieldBody {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 12px;
+}
+
+.note {
+  color: var(--color-gray-500);
+  font-size: 12px;
+}
+
+.error {
+  color: #b91c1c;
+  font-size: 12px;
+}
+
+/* 希望国より下は 2 列（スマホ幅では 1 列） */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+    column-gap: 40px;
+  }
+}
+
+.control {
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+  border: 1px solid var(--color-gray-300);
+  border-radius: 8px;
+  background-color: #fff;
+  padding: 10px 12px;
+  width: 100%;
+  max-width: 420px;
+  color: #111;
+  font-size: 15px;
+}
+
+.control:hover:not(:disabled) {
+  border-color: var(--color-gray-400);
+}
+
+.control:focus {
+  outline: none;
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px rgb(88 101 242 / 0.2);
+}
+
+.control:disabled {
+  border-color: transparent;
+  background-color: var(--color-gray-200);
+  cursor: not-allowed;
+}
+
+/* 開始時刻の「[時] 時 [分] 分」 */
+.timeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.timeControl {
+  width: auto;
+  min-width: 5.5em;
+}
+
+.control[aria-invalid="true"] {
+  border-color: #dc2626;
+}
+
+.control[aria-invalid="true"]:focus {
+  box-shadow: 0 0 0 3px rgb(220 38 38 / 0.2);
+}
+
+/* 見た目だけ隠したネイティブの input（キーボード操作・読み上げはそのまま） */
+.visuallyHidden {
+  position: absolute;
+  opacity: 0;
+  margin: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* ---- セグメントボタン（文字だけのラジオボタン） ---- */
+
+.segmented {
+  display: inline-flex;
+  align-self: flex-start;
+  gap: 2px;
+  border-radius: 9999px;
+  background-color: var(--color-gray-200);
+  padding: 3px;
+}
+
+.segment {
+  position: relative;
+}
+
+.segment > span {
+  display: block;
+  transition:
+    background-color 0.15s,
+    color 0.15s,
+    box-shadow 0.15s;
+  cursor: pointer;
+  border-radius: 9999px;
+  padding: 6px 18px;
+  color: var(--color-gray-600);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.segment:hover > span {
+  color: #111;
+}
+
+.segment > input:checked + span {
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.15);
+  background-color: #fff;
+  color: var(--color-brand);
+  font-weight: 700;
+}
+
+.segment > input:focus-visible + span {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 1px;
+}
+
+/* ---- トグルスイッチ（チェックボックス） ---- */
+
+.switchLabel {
+  display: inline-flex;
+  position: relative;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.switch {
+  position: relative;
+  flex-shrink: 0;
+  transition: background-color 0.15s;
+  border-radius: 9999px;
+  background-color: var(--color-gray-300);
+  width: 36px;
+  height: 20px;
+}
+
+.switch::after {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.15s;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
+  border-radius: 50%;
+  background-color: #fff;
+  width: 16px;
+  height: 16px;
+  content: "";
+}
+
+.switchLabel > input:checked + .switch {
+  background-color: var(--color-brand);
+}
+
+.switchLabel > input:checked + .switch::after {
+  transform: translateX(16px);
+}
+
+.switchLabel > input:focus-visible + .switch {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+/* ---- 画像付きの選択肢（希望国） ---- */
+
+.powerChoices {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 12px 8px;
+}
+
+.imageChoice {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s;
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  padding: 6px 4px;
+  font-size: 13px;
+}
+
+.imageChoice:hover {
+  border-color: var(--color-gray-300);
+}
+
+.imageChoice img {
+  transition:
+    filter 0.15s,
+    opacity 0.15s;
+}
+
+/* 選ばれていない選択肢はグレーにする */
+.imageChoice[data-checked="false"] img {
+  opacity: 0.7;
+  filter: grayscale(1);
+}
+
+.imageChoice:hover img {
+  opacity: 1;
+  filter: none;
+}
+
+.imageChoice[data-checked="true"] {
+  border-color: var(--color-brand);
+  background-color: rgb(88 101 242 / 0.08);
+  color: var(--color-brand);
+  font-weight: 700;
+}
+
+.imageChoice:has(input:focus-visible) {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+.imageChoice > span {
+  white-space: nowrap;
+}
+
+/* ---- 確認画面 ---- */
+
+.lead {
+  font-size: 14px;
+}
+
+.formError {
+  border: 1px solid #fecaca;
+  border-radius: 4px;
+  background-color: #fef2f2;
+  padding: 10px 12px;
+  color: #b91c1c;
+  font-size: 13px;
+}
+
+.summary {
+  border-top: 1px solid var(--color-gray-200);
+}
+
+.summaryRow {
+  display: grid;
+  grid-template-columns: 10.5em 1fr;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--color-gray-200);
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.summaryRow dt {
+  color: var(--color-gray-600);
+  font-weight: 700;
+}
+
+.withImage {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---- ボタン ---- */
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 8px;
+}
+
+.primaryButton,
+.secondaryButton {
+  display: inline-block;
+  cursor: pointer;
+  border: 0;
+  border-radius: 4px;
+  padding: 10px 16px;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+.primaryButton {
+  background-color: var(--color-brand);
+  color: #fff;
+}
+
+.primaryButton:hover:not(:disabled) {
+  background-color: var(--color-brand-hover);
+}
+
+.secondaryButton {
+  background-color: #cbd5e1;
+  color: #1f2937;
+}
+
+.secondaryButton:hover:not(:disabled) {
+  background-color: #b6c2d1;
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.primaryButton:focus-visible,
+.secondaryButton:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
