@@ -27,6 +27,8 @@ export interface GameSummary {
   next_update_at: string | null;
   regulation: GameRegulation;
   player_count: number;
+  /** リクエスト者がその卓の卓主か（未認証時は false） */
+  is_owner: boolean;
 }
 
 /** 1 卓あたりの最大人数 */

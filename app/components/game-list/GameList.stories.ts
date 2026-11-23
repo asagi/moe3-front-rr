@@ -19,6 +19,7 @@ const game = (overrides: Partial<GameSummary>): GameSummary => ({
     duration_type: "normal",
   },
   player_count: 7,
+  is_owner: false,
   ...overrides,
 });
 

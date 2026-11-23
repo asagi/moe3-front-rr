@@ -34,27 +34,46 @@ export async function loader({ context }: Route.LoaderArgs) {
     throw redirect("/");
   }
   if (state.kind === "failed") {
-    return { me: null, active: null, recruiting: null, past: null };
+    return {
+      me: null,
+      active: null,
+      recruiting: null,
+      past: null,
+      canCreate: false,
+    };
   }
 
   const { me, auth } = state;
   // 視点変更中は me も auth も成り代わり先になっている
   const user = me.discord_user_id;
   const [active, allActive, closed, aborted] = await Promise.all([
-    settle(listGames({ user, status: "active", per_page: LIMIT }, auth)),
-    // status で「募集中」を直接指定できないので、active から preparing を抜き出す
-    settle(listGames({ status: "active", per_page: 100 })),
+    // 卓主の卓の有無を見るので、表示件数より多めに取る
+    settle(listGames({ user, status: "active", per_page: 100 }, auth)),
+    // status で「募集中」を直接指定できないので、active から preparing を抜き出す。
+    // auth を付けると is_owner が入る
+    settle(listGames({ status: "active", per_page: 100 }, auth)),
     settle(listGames({ user, status: "closed", per_page: LIMIT }, auth)),
     settle(listGames({ user, status: "aborted", per_page: LIMIT }, auth)),
   ]);
 
+  // 参加申請中（卓主を含む）の卓は「参加中の卓」に出るので、募集中からは外す
+  const joined = new Set(active?.games.map((g) => g.game_uuid));
+
   return {
     me,
-    active: active?.games ?? null,
+    active: active?.games.slice(0, LIMIT) ?? null,
     recruiting:
       allActive?.games
-        .filter((g) => g.status === "preparing")
+        .filter(
+          (g) =>
+            g.status === "preparing" &&
+            !g.is_owner &&
+            !joined.has(g.game_uuid),
+        )
         .slice(0, LIMIT) ?? null,
+    // 自分が卓主のアクティブな卓があるうちは新しく立てられない。
+    // 参加中の卓を取れなかったときは判定できないので出さない
+    canCreate: active != null && !active.games.some((g) => g.is_owner),
     past:
       closed && aborted
         ? [...closed.games, ...aborted.games].sort(byNumberDesc).slice(0, LIMIT)
@@ -76,9 +95,7 @@ const linkButtonSecondary =
   "inline-block rounded-full px-5 py-3 text-sm leading-none font-bold text-gray-700 shadow-[inset_0_0_0_1px_rgb(0_0_0_/_0.15)] hover:bg-white";
 
 export default function MyPage({ loaderData }: Route.ComponentProps) {
-  const { me, active, recruiting, past } = loaderData;
-  // TODO: 参加中の卓に自分が卓主の卓があれば非表示にする（API に卓主情報が入ったら対応）
-  const canCreate = true;
+  const { me, active, recruiting, past, canCreate } = loaderData;
 
   return (
     <div className="flex w-full max-w-2xl flex-col gap-8 px-4 py-6">

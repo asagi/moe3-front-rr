@@ -17,6 +17,7 @@ import {
   todayInJst,
   validateGameForm,
 } from "~/lib/game-form";
+import { hasActiveOwnedGame } from "~/lib/game.server";
 import { meContext } from "~/lib/me.server";
 import type { Route } from "./+types/games.new";
 
@@ -24,11 +25,22 @@ export function meta({}: Route.MetaArgs) {
   return [{ title: "新規卓作成 | Diplomacy MOE" }];
 }
 
-/** 未ログインならトップへ戻す */
+/** 未ログインならトップへ、卓主の卓が進行中ならマイページへ戻す */
 export async function loader({ context }: Route.LoaderArgs) {
   const state = context.get(meContext);
   if (state.kind === "loggedOut" || state.kind === "unauthorized") {
     throw redirect("/");
+  }
+  if (state.kind === "ok") {
+    // 確認できなかったときは画面を出す（作成時の action でもう一度確認する）
+    const owned = await hasActiveOwnedGame(
+      state.me.discord_user_id,
+      state.auth,
+    ).catch((e) => {
+      console.error("卓主の卓の確認に失敗しました", e);
+      return false;
+    });
+    if (owned) throw redirect("/mypage");
   }
   return { today: todayInJst() };
 }
@@ -62,6 +74,13 @@ export async function action({ request, context }: Route.ActionArgs) {
   }
 
   try {
+    // API 側では制限していないので、ここで 1 人 1 卓に絞る
+    if (await hasActiveOwnedGame(state.me.discord_user_id, state.auth)) {
+      return data(
+        { error: "卓主として進行中の卓があるため、新しい卓は作成できません。" },
+        { status: 409 },
+      );
+    }
     const { game_uuid } = await createGame(toCreateGameBody(values), state.auth);
     return redirect(`/games/${game_uuid}`);
   } catch (e) {
