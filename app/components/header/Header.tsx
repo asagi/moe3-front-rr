@@ -20,11 +20,11 @@ export interface HeaderProps {
   /** 管理者モードが ON か。ON なら通常ヘッダの下に管理者用ヘッダを表示する */
   adminMode?: boolean;
   onAdminModeChange?: (enabled: boolean) => void;
-  /** 「視点変更」で表示中のユーザー ID（管理者用ヘッダに表示する） */
-  impersonateUserId?: string | null;
-  /** 視点変更の ID が不正だったときのエラーメッセージ */
+  /** 「視点変更」で表示中のユーザー名（管理者用ヘッダに表示する） */
+  impersonateUsername?: string | null;
+  /** 視点変更のユーザー名が不正だったときのエラーメッセージ */
   impersonateError?: string | null;
-  onImpersonate?: (userId: string) => void;
+  onImpersonate?: (username: string) => void;
   onClearImpersonate?: () => void;
 }
 
@@ -36,7 +36,7 @@ export const Header = ({
   onMyPage,
   adminMode = false,
   onAdminModeChange,
-  impersonateUserId,
+  impersonateUsername,
   impersonateError,
   onImpersonate,
   onClearImpersonate,
@@ -77,7 +77,7 @@ export const Header = ({
     </div>
     {user?.isAdmin && adminMode && (
       <AdminHeader
-        impersonateUserId={impersonateUserId}
+        impersonateUsername={impersonateUsername}
         impersonateError={impersonateError}
         onImpersonate={onImpersonate}
         onClearImpersonate={onClearImpersonate}

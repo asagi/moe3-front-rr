@@ -9,8 +9,8 @@ export interface SessionData {
   isAdmin: boolean;
   /** 管理者モードが ON か（isAdmin のユーザーのみ有効） */
   adminMode: boolean;
-  /** 「視点変更」で表示する対象のユーザー ID（管理者モード中のみ有効） */
-  impersonateUserId: string;
+  /** 「視点変更」で表示する対象のユーザー名（管理者モード中のみ有効） */
+  impersonateUsername: string;
 }
 
 let storage: ReturnType<typeof createCookieSessionStorage<SessionData>>;
@@ -41,8 +41,8 @@ export const getApiAuth = (session: Session<SessionData>): ApiAuth | null => {
   const adminMode = !!session.get("isAdmin") && !!session.get("adminMode");
   return {
     accessToken,
-    impersonateUserId: adminMode
-      ? (session.get("impersonateUserId") ?? null)
+    impersonateUsername: adminMode
+      ? (session.get("impersonateUsername") ?? null)
       : null,
   };
 };

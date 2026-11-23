@@ -21,7 +21,7 @@ export type MeState =
       me: UserMe;
       /** 以降の API 呼び出しに使う認証情報（視点変更が不正なら外してある） */
       auth: ApiAuth;
-      /** 視点変更の ID が不正で、本人として取得し直したときのエラーメッセージ */
+      /** 視点変更のユーザー名が不正で、本人として取得し直したときのエラーメッセージ */
       impersonateError: string | null;
     };
 
@@ -47,10 +47,10 @@ export const loadMe = async (
         impersonateError: null,
       };
     } catch (e) {
-      // ID の正常性はチェックせずに保存しているので、不正なら本人として取り直す。
+      // ユーザー名の存在はチェックせずに保存しているので、不正なら本人として取り直す。
       // ここでログアウト扱いにすると管理者ヘッダが消えて解除できなくなる
       if (!isImpersonateError(e)) throw e;
-      const ownAuth = { ...auth, impersonateUserId: null };
+      const ownAuth = { ...auth, impersonateUsername: null };
       return {
         kind: "ok",
         me: await getMe(ownAuth),

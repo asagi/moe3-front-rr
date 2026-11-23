@@ -54,7 +54,7 @@ export const AdminMode: Story = {
 export const AdminModeImpersonating: Story = {
   args: {
     ...AdminMode.args,
-    impersonateUserId: "1012988952082399243",
+    impersonateUsername: "asagix",
   },
 };
 

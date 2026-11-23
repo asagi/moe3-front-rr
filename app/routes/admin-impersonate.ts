@@ -3,9 +3,9 @@ import { getSessionStorage } from "~/lib/session.server";
 import type { Route } from "./+types/admin-impersonate";
 
 /**
- * 「視点変更」の対象ユーザー ID をセッションに保存・解除する
- * （フォーム値 intent: "set" | "clear"、set のときは userId も送る）
- * ID の存在チェックはまだ行わない
+ * 「視点変更」の対象ユーザー名をセッションに保存・解除する
+ * （フォーム値 intent: "set" | "clear"、set のときは username も送る）
+ * 存在チェックは API 側で行う（存在しなければ本人の視点に戻してエラーを出す）
  */
 export async function action({ request }: Route.ActionArgs) {
   const sessionStorage = getSessionStorage();
@@ -19,13 +19,13 @@ export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
   const intent = formData.get("intent");
   if (intent === "set") {
-    const userId = String(formData.get("userId") ?? "").trim();
-    if (!userId) {
-      throw data("ユーザー ID を入力してください", { status: 400 });
+    const username = String(formData.get("username") ?? "").trim();
+    if (!username) {
+      throw data("ユーザー名を入力してください", { status: 400 });
     }
-    session.set("impersonateUserId", userId);
+    session.set("impersonateUsername", username);
   } else if (intent === "clear") {
-    session.unset("impersonateUserId");
+    session.unset("impersonateUsername");
   } else {
     throw data("不正なリクエストです", { status: 400 });
   }

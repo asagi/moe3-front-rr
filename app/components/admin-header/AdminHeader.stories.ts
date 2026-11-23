@@ -21,64 +21,62 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** 未設定時はユーザー ID を入力して「切替」できる */
+/** 未設定時はユーザー名を入力して「切替」できる（前後の空白と先頭の @ は外す） */
 export const Default: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     const button = canvas.getByRole("button", { name: "切替" });
     await expect(button).toBeDisabled();
-    await userEvent.type(canvas.getByLabelText("視点変更"), "  1012988952082399243 ");
+    await userEvent.type(canvas.getByLabelText("視点変更"), "  @asagix ");
     await userEvent.click(button);
-    await expect(args.onImpersonate).toHaveBeenCalledWith("1012988952082399243");
+    await expect(args.onImpersonate).toHaveBeenCalledWith("asagix");
   },
 };
 
-/** 設定済みのときは対象 ID と「解除」ボタンを表示する */
+/** 設定済みのときは対象のユーザー名と「解除」ボタンを表示する */
 export const Impersonating: Story = {
   args: {
-    impersonateUserId: "1012988952082399243",
+    impersonateUsername: "asagix",
   },
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByText("1012988952082399243")).toBeInTheDocument();
+    await expect(canvas.getByText("@asagix")).toBeInTheDocument();
     await userEvent.click(canvas.getByRole("button", { name: "解除" }));
     await expect(args.onClearImpersonate).toHaveBeenCalled();
   },
 };
 
-/** 切替 → 解除すると、入力欄に直前の ID が残っている */
+/** 切替 → 解除すると、入力欄に直前のユーザー名が残っている */
 export const ClearKeepsInput: Story = {
   render: (args) => {
-    const [userId, setUserId] = useState<string | null>(null);
+    const [username, setUsername] = useState<string | null>(null);
     return createElement(AdminHeader, {
       ...args,
-      impersonateUserId: userId,
-      onImpersonate: (id) => {
-        args.onImpersonate?.(id);
-        setUserId(id);
+      impersonateUsername: username,
+      onImpersonate: (name) => {
+        args.onImpersonate?.(name);
+        setUsername(name);
       },
       onClearImpersonate: () => {
         args.onClearImpersonate?.();
-        setUserId(null);
+        setUsername(null);
       },
     });
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.type(canvas.getByLabelText("視点変更"), "1012988952082399243");
+    await userEvent.type(canvas.getByLabelText("視点変更"), "asagix");
     await userEvent.click(canvas.getByRole("button", { name: "切替" }));
     await userEvent.click(canvas.getByRole("button", { name: "解除" }));
-    await expect(canvas.getByLabelText("視点変更")).toHaveValue(
-      "1012988952082399243",
-    );
+    await expect(canvas.getByLabelText("視点変更")).toHaveValue("asagix");
   },
 };
 
-/** ID が不正で切り替えられなかったときはエラーを出し、解除できるようにする */
+/** ユーザー名が見つからず切り替えられなかったときはエラーを出し、解除できるようにする */
 export const ImpersonateError: Story = {
   args: {
-    impersonateUserId: "not-a-number",
-    impersonateError: "X-Impersonate-User-Id must be a valid discord user id",
+    impersonateUsername: "unknown-user",
+    impersonateError: "user specified by X-Impersonate-User-Name was not found",
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

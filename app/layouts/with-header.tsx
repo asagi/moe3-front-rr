@@ -17,8 +17,8 @@ export const middleware: Route.MiddlewareFunction[] = [
 const loggedOut = {
   user: null as HeaderUser | null,
   adminMode: false,
-  impersonateUserId: null as string | null,
-  /** 視点変更の ID が不正で、本人として取得し直したときのエラーメッセージ */
+  impersonateUsername: null as string | null,
+  /** 視点変更のユーザー名が不正で、本人として取得し直したときのエラーメッセージ */
   impersonateError: null as string | null,
 };
 
@@ -53,10 +53,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   return data({
     user,
     adminMode: isAdmin && (session.get("adminMode") ?? false),
-    // 不正な ID のときは auth から外してあるので、表示用にはセッションの値を返す
-    impersonateUserId: impersonateError
-      ? (session.get("impersonateUserId") ?? null)
-      : (auth.impersonateUserId ?? null),
+    // 不正なユーザー名のときは auth から外してあるので、表示用にはセッションの値を返す
+    impersonateUsername: impersonateError
+      ? (session.get("impersonateUsername") ?? null)
+      : (auth.impersonateUsername ?? null),
     impersonateError,
   });
 }
@@ -74,12 +74,12 @@ export default function WithHeaderLayout({ loaderData }: Route.ComponentProps) {
   const impersonateFetcher = useFetcher();
   // 送信中は送った値を先に反映して、切替・解除の反応を待たせない
   const impersonateForm = impersonateFetcher.formData;
-  const impersonateUserId = (() => {
+  const impersonateUsername = (() => {
     if (!adminMode) return null;
     if (impersonateForm?.get("intent") === "set")
-      return String(impersonateForm.get("userId"));
+      return String(impersonateForm.get("username"));
     if (impersonateForm?.get("intent") === "clear") return null;
-    return loaderData.impersonateUserId;
+    return loaderData.impersonateUsername;
   })();
   // 送信中は前回のエラーを出さない
   const impersonateError = impersonateForm
@@ -109,11 +109,11 @@ export default function WithHeaderLayout({ loaderData }: Route.ComponentProps) {
             { method: "post", action: "/admin-mode" },
           );
         }}
-        impersonateUserId={impersonateUserId}
+        impersonateUsername={impersonateUsername}
         impersonateError={impersonateError}
-        onImpersonate={(userId) => {
+        onImpersonate={(username) => {
           impersonateFetcher.submit(
-            { intent: "set", userId },
+            { intent: "set", username },
             { method: "post", action: "/admin-impersonate" },
           );
         }}

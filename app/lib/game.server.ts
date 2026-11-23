@@ -76,7 +76,7 @@ export const canMaintainGame = async (
   if (game.is_owner) return true;
   const state = context.get(meContext);
   if (state.kind !== "ok") return false;
-  if (state.auth.impersonateUserId) {
+  if (state.auth.impersonateUsername) {
     // 切り替え先が管理者か。/users/me が is_admin を返すまでは管理者ではない扱い
     return state.me.is_admin === true;
   }

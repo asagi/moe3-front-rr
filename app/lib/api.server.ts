@@ -35,13 +35,13 @@ const request = async <T>(path: string, init: RequestInit): Promise<T> => {
 /** 認証が必要な API の呼び出しに使う情報 */
 export interface ApiAuth {
   accessToken: string;
-  /** 管理者が「視点変更」で成り代わるユーザーの Discord ユーザー ID。未設定なら本人として呼ぶ */
-  impersonateUserId?: string | null;
+  /** 管理者が「視点変更」で成り代わるユーザーの Discord ユーザー名。未設定なら本人として呼ぶ */
+  impersonateUsername?: string | null;
 }
 
 /** 成り代わり先の指定が不正なときに API が返すエラーコード */
 export const IMPERSONATE_ERROR_CODES = [
-  "invalid_impersonate_user_id",
+  "invalid_impersonate_user_name",
   "impersonate_user_not_found",
 ];
 
@@ -49,11 +49,11 @@ export const IMPERSONATE_ERROR_CODES = [
 export const isImpersonateError = (e: unknown): e is ApiError =>
   e instanceof ApiError && IMPERSONATE_ERROR_CODES.includes(e.code);
 
-const authHeaders = ({ accessToken, impersonateUserId }: ApiAuth) => {
+const authHeaders = ({ accessToken, impersonateUsername }: ApiAuth) => {
   const headers: Record<string, string> = {
     Authorization: `Bearer ${accessToken}`,
   };
-  if (impersonateUserId) headers["X-Impersonate-User-Id"] = impersonateUserId;
+  if (impersonateUsername) headers["X-Impersonate-User-Name"] = impersonateUsername;
   return headers;
 };
 
