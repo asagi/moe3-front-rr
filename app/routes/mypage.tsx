@@ -66,9 +66,7 @@ export async function loader({ context }: Route.LoaderArgs) {
       allActive?.games
         .filter(
           (g) =>
-            g.status === "preparing" &&
-            !g.is_owner &&
-            !joined.has(g.game_uuid),
+            g.status === "preparing" && !g.is_owner && !joined.has(g.game_uuid),
         )
         .slice(0, LIMIT) ?? null,
     // 自分が卓主のアクティブな卓があるうちは新しく立てられない。
@@ -102,7 +100,10 @@ export default function MyPage({ loaderData }: Route.ComponentProps) {
       <h2 className="text-xl font-bold">マイページ</h2>
 
       <Section title="参加中の卓">
-        <GameList games={active} emptyMessage="現在参加している卓はありません" />
+        <GameList
+          games={active}
+          emptyMessage="現在参加している卓はありません"
+        />
       </Section>
 
       <Section
@@ -124,7 +125,7 @@ export default function MyPage({ loaderData }: Route.ComponentProps) {
 
       <div className="text-center">
         <Link to="/games" className={linkButtonSecondary}>
-          すべての卓を見る
+          稼働中の卓を見る
         </Link>
       </div>
 
