@@ -8,3 +8,11 @@
 .image {
   display: block;
 }
+
+/* 国未定・希望なし */
+.none {
+  border: 1px dashed var(--color-gray-400, #9ca3af);
+  background-color: var(--color-gray-100, #f3f4f6);
+  color: var(--color-gray-400, #9ca3af);
+  font-weight: 700;
+}

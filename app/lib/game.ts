@@ -98,15 +98,15 @@ export const POWER_LABELS = Object.fromEntries(
 ) as Record<PowerCode, string>;
 
 /**
- * 国の画像 URL。code が null なら「国未定」の画像を返す
+ * 国の画像 URL。"x" は管理人の画像（国未定・希望なしの画像ではない）
  * @param size 60 または 100（px）
  */
 export const powerImageUrl = (
   faceType: GameRegulation["face_type"],
-  code: PowerCode | null,
+  code: PowerCode | "x",
   size: 60 | 100 = 60,
 ) =>
-  `/images/power/${faceType === "girls" ? "girl" : "flag"}/pl${code ?? "x"}${size}.png`;
+  `/images/power/${faceType === "girls" ? "girl" : "flag"}/pl${code}${size}.png`;
 
 /** 卓に参加しているユーザー（Discord のプロフィール） */
 export interface GamePlayerUser {
@@ -184,3 +184,19 @@ export const formatDateTimeJa = (value: string) => {
   const [h, m] = time.split(":");
   return `${formatDateJa(date)} ${Number(h)}:${m}`;
 };
+
+/** "1901s" → "1901 年春"、"ready" → "開戦前夜" などのシーズン表示名 */
+export const seasonLabel = (season: string) => {
+  if (season === "ready") return "開戦前夜";
+  if (season === "debrief") return "感想戦";
+  const m = /^(\d{4})([sf])$/.exec(season);
+  if (!m) return season;
+  return `${m[1]} 年${m[2] === "s" ? "春" : "秋"}`;
+};
+
+/**
+ * 終わった卓（Closed・Aborted）か。
+ * Solo・Draw（一覧 API では Finished）は感想戦の最中なので、まだ終わっていない扱い
+ */
+export const isEnded = (game: Pick<GameDetail, "status">) =>
+  game.status === "closed" || game.status === "aborted";

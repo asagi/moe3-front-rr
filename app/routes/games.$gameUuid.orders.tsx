@@ -5,7 +5,7 @@ import { PlaceholderPage } from "~/components/placeholder-page/PlaceholderPage";
 import type { GameRouteHandle } from "./games.$gameUuid";
 import type { Route } from "./+types/games.$gameUuid.orders";
 
-export const handle: GameRouteHandle = { gameTitle: "命令" };
+export const handle: GameRouteHandle = { gameTitle: "命令", seasonal: true };
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "命令 | Diplomacy MOE" }];

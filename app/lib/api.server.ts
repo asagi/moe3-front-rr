@@ -1,4 +1,5 @@
 import { requireEnv } from "~/lib/env.server";
+import type { ChatMessage } from "~/lib/chat";
 import type { GameDetail, GameSummary } from "~/lib/game";
 
 /** API サーバーが返すエラー形式 */
@@ -186,3 +187,25 @@ export const joinGame = (gameUuid: string, body: JoinGameBody, auth: ApiAuth) =>
       body: JSON.stringify(body),
     },
   );
+
+export interface GetGameLogsResponse {
+  messages: ChatMessage[];
+}
+
+/**
+ * GET /games/{uuid}/logs/{season}: シーズンの外交メッセージを取得する。
+ * 進行中の卓では、見ている人の権限で内容が絞られる（他国間の密談は masked）
+ * @param after 指定すると、このメッセージより後のものだけ返す
+ */
+export const getGameLogs = (
+  gameUuid: string,
+  season: string,
+  auth?: ApiAuth | null,
+  after?: string,
+) => {
+  const query = after ? `?${new URLSearchParams({ after })}` : "";
+  return request<GetGameLogsResponse>(
+    `/games/${encodeURIComponent(gameUuid)}/logs/${encodeURIComponent(season)}${query}`,
+    { headers: auth ? authHeaders(auth) : {} },
+  );
+};

@@ -1,0 +1,266 @@
+/* ---- 共通 ---- */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0 auto;
+  padding: 16px;
+  width: 100%;
+  max-width: 36rem;
+}
+
+.pageTitle {
+  color: var(--color-gray-600);
+  font-weight: 400;
+  font-size: 13px;
+  text-align: center;
+}
+
+.empty {
+  border: 1px dashed var(--color-gray-300);
+  border-radius: 6px;
+  padding: 12px;
+  color: var(--color-gray-500);
+  font-size: 13px;
+  text-align: center;
+}
+
+.time {
+  flex-shrink: 0;
+  color: var(--color-gray-500);
+  font-size: 11px;
+}
+
+/* ---- チャンネル一覧 ---- */
+
+.channels {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.channel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background-color 0.15s;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 8px;
+  background-color: #fff;
+  padding: 10px 12px;
+}
+
+.channel:hover {
+  background-color: var(--color-gray-50, #f9fafb);
+}
+
+.channel:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+.channelIcons {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: center;
+  gap: 2px;
+  width: 52px;
+}
+
+.openIcon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  background-color: var(--color-brand);
+  width: 40px;
+  height: 40px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.channelBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.channelHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.channelName {
+  overflow: hidden;
+  font-weight: 600;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.channelPreview {
+  overflow: hidden;
+  color: var(--color-gray-600);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- チャンネル画面 ---- */
+
+.channelTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.backLink {
+  color: var(--color-brand);
+  font-size: 13px;
+}
+
+.channelTitle h3 {
+  flex: 1;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+/* ---- メッセージ ---- */
+
+.messages {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.message {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.messageBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.messageHead {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.sender {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.bubble {
+  border-radius: 8px;
+  background-color: #fff;
+  padding: 8px 10px;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* 自分の発言（アイコンなしで右寄せ、時刻は左下） */
+.mine {
+  justify-content: flex-end;
+  align-items: flex-end;
+  padding-left: 48px;
+}
+
+.mine .bubble {
+  background-color: #e0e7ff;
+}
+
+/* 内容が見えない密談 */
+.masked .bubble {
+  color: var(--color-gray-500);
+  font-style: italic;
+}
+
+.system {
+  border-radius: 6px;
+  background-color: var(--color-gray-200);
+  padding: 6px 10px;
+  color: var(--color-gray-700);
+  font-size: 12px;
+  text-align: center;
+}
+
+/* ---- 送信フォーム ---- */
+
+/* チャンネル画面の下の余白（固定した送信フォームに隠れないように） */
+.withComposer {
+  padding-bottom: 72px;
+}
+
+/* 画面下のタブバーのすぐ上に固定する */
+.composerDock {
+  position: fixed;
+  right: 0;
+  bottom: calc(56px + env(safe-area-inset-bottom));
+  left: 0;
+  z-index: 10;
+  border-top: 1px solid var(--color-gray-200);
+  background-color: #fff;
+}
+
+.composer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 auto;
+  padding: 8px 12px;
+  max-width: 36rem;
+}
+
+.composer textarea {
+  flex: 1;
+  border: 1px solid var(--color-gray-300);
+  border-radius: 6px;
+  background-color: #fff;
+  padding: 6px 10px;
+  min-width: 0;
+  max-height: 8em;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: none;
+  field-sizing: content;
+}
+
+.composer textarea:disabled {
+  background-color: var(--color-gray-100);
+}
+
+.sendButton {
+  flex-shrink: 0;
+  border-radius: 6px;
+  padding: 4px;
+  width: 32px;
+  height: 32px;
+  color: var(--color-brand);
+}
+
+.sendButton:hover:not(:disabled) {
+  background-color: var(--color-gray-100);
+}
+
+.sendButton:disabled {
+  cursor: not-allowed;
+  color: var(--color-gray-300);
+}

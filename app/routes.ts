@@ -15,7 +15,8 @@ export default [
     route("games/:gameUuid", "routes/games.$gameUuid.tsx", [
       index("routes/games.$gameUuid._index.tsx"),
       route("calendar", "routes/games.$gameUuid.calendar.tsx"),
-      route("chat", "routes/games.$gameUuid.chat.tsx"),
+      route("chat", "routes/games.$gameUuid.chat._index.tsx"),
+      route("chat/:channelId", "routes/games.$gameUuid.chat.$channelId.tsx"),
       route("orders", "routes/games.$gameUuid.orders.tsx"),
       route("maintenance", "routes/games.$gameUuid.maintenance.tsx"),
     ]),

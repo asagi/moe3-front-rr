@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { createElement } from "react";
 
 import { POWERS } from "~/lib/game";
-import { PowerImage } from "./PowerImage";
+import { AdminImage, PowerImage } from "./PowerImage";
 
 const meta = {
   title: "Components/PowerImage",
@@ -25,7 +25,7 @@ export const Flag: Story = {
   args: { faceType: "flags" },
 };
 
-/** 娘と旗を並べたときに枠の大きさがそろう */
+/** 娘と旗を並べたときに枠の大きさがそろう（先頭は国未定・希望なし） */
 export const AllPowers: Story = {
   render: (args) =>
     createElement(
@@ -47,4 +47,16 @@ export const AllPowers: Story = {
       ),
     ),
   args: { size: 60 },
+};
+
+/** 管理人の画像（plx） */
+export const Admin: Story = {
+  render: (args) =>
+    createElement(
+      "div",
+      { style: { display: "flex", gap: 8 } },
+      (["girls", "flags"] as const).map((faceType) =>
+        createElement(AdminImage, { key: faceType, faceType, size: args.size }),
+      ),
+    ),
 };

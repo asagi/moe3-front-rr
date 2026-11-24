@@ -85,3 +85,19 @@ export const canMaintainGame = async (
   );
   return !!session.get("isAdmin") && !!session.get("adminMode");
 };
+
+/**
+ * ターンの中のページ（カレンダー・チャット・命令）で表示するシーズン。
+ * URL の ?season= で選び、指定がなければ現在のシーズン。シーズンがまだなければ null。
+ * 卓に無いシーズンを指定されたら 404 にする
+ */
+export const resolveSeason = (request: Request, game: GameDetail) => {
+  const requested = new URL(request.url).searchParams.get("season");
+  if (requested != null) {
+    if (!game.seasons.includes(requested)) {
+      throw data("シーズンが見つかりませんでした", { status: 404 });
+    }
+    return requested;
+  }
+  return game.seasons.at(-1) ?? null;
+};
