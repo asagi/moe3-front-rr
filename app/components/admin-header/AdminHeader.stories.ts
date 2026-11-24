@@ -46,6 +46,33 @@ export const Impersonating: Story = {
   },
 };
 
+/** 切り替え済みなら、対象ユーザーのアイコンも並べて表示する */
+export const ImpersonatingWithAvatar: Story = {
+  args: {
+    impersonateUsername: "asagix",
+    impersonateUser: {
+      name: "Asagi",
+      avatarUrl: "https://cdn.discordapp.com/embed/avatars/1.png",
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText("@asagix")).toBeInTheDocument();
+    await expect(canvasElement.querySelector("img")).toHaveAttribute(
+      "src",
+      "https://cdn.discordapp.com/embed/avatars/1.png",
+    );
+  },
+};
+
+/** アイコンがないユーザーは頭文字の丸を出す */
+export const ImpersonatingWithoutAvatar: Story = {
+  args: {
+    impersonateUsername: "dummy_carol",
+    impersonateUser: { name: "キャロル", avatarUrl: null },
+  },
+};
+
 /** 切替 → 解除すると、入力欄に直前のユーザー名が残っている */
 export const ClearKeepsInput: Story = {
   render: (args) => {

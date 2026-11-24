@@ -1,9 +1,18 @@
 import { useId, useState } from "react";
+import { UserAvatar } from "~/components/user-avatar/UserAvatar";
 import styles from "./AdminHeader.module.css";
+
+/** 視点変更先のユーザー（アイコン表示用） */
+export interface ImpersonateUser {
+  name: string;
+  avatarUrl?: string | null;
+}
 
 export interface AdminHeaderProps {
   /** 「視点変更」で表示中のユーザー名。未設定なら null */
   impersonateUsername?: string | null;
+  /** 視点変更先のユーザー。切り替え済みならアイコンを出す（切替中・失敗時は null） */
+  impersonateUser?: ImpersonateUser | null;
   /** 視点変更のユーザー名が不正だったときのエラーメッセージ（本人として表示している） */
   impersonateError?: string | null;
   /** 「切替」押下時の処理（入力されたユーザー名を受け取る。先頭の @ は外す） */
@@ -15,6 +24,7 @@ export interface AdminHeaderProps {
 /** 管理者モード ON のときに通常ヘッダの下に表示するヘッダ */
 export const AdminHeader = ({
   impersonateUsername,
+  impersonateUser,
   impersonateError,
   onImpersonate,
   onClearImpersonate,
@@ -35,10 +45,19 @@ export const AdminHeader = ({
               に切り替えられませんでした（{impersonateError}）
             </span>
           ) : (
-            <span className={styles.status}>
-              <span className={styles.username}>@{impersonateUsername}</span>{" "}
-              <span className={styles.nowrap}>の視点で表示中</span>
-            </span>
+            <>
+              {impersonateUser && (
+                <UserAvatar
+                  name={impersonateUser.name}
+                  avatarUrl={impersonateUser.avatarUrl}
+                  size={24}
+                />
+              )}
+              <span className={styles.status}>
+                <span className={styles.username}>@{impersonateUsername}</span>{" "}
+                <span className={styles.nowrap}>の視点で表示中</span>
+              </span>
+            </>
           )}
           <button
             type="button"

@@ -55,6 +55,10 @@ export const AdminModeImpersonating: Story = {
   args: {
     ...AdminMode.args,
     impersonateUsername: "asagix",
+    impersonateUser: {
+      name: "Asagi",
+      avatarUrl: "https://cdn.discordapp.com/embed/avatars/1.png",
+    },
   },
 };
 

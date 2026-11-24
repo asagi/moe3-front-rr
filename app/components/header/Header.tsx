@@ -1,4 +1,4 @@
-import { AdminHeader } from "~/components/admin-header/AdminHeader";
+import { AdminHeader, type ImpersonateUser } from "~/components/admin-header/AdminHeader";
 import { DiscordLoginButton } from "~/components/discord-login-button/DiscordLoginButton";
 import { UserMenu } from "~/components/user-menu/UserMenu";
 import styles from "./Header.module.css";
@@ -22,6 +22,8 @@ export interface HeaderProps {
   onAdminModeChange?: (enabled: boolean) => void;
   /** 「視点変更」で表示中のユーザー名（管理者用ヘッダに表示する） */
   impersonateUsername?: string | null;
+  /** 視点変更先のユーザー（管理者用ヘッダにアイコンを出す） */
+  impersonateUser?: ImpersonateUser | null;
   /** 視点変更のユーザー名が不正だったときのエラーメッセージ */
   impersonateError?: string | null;
   onImpersonate?: (username: string) => void;
@@ -37,6 +39,7 @@ export const Header = ({
   adminMode = false,
   onAdminModeChange,
   impersonateUsername,
+  impersonateUser,
   impersonateError,
   onImpersonate,
   onClearImpersonate,
@@ -78,6 +81,7 @@ export const Header = ({
     {user?.isAdmin && adminMode && (
       <AdminHeader
         impersonateUsername={impersonateUsername}
+        impersonateUser={impersonateUser}
         impersonateError={impersonateError}
         onImpersonate={onImpersonate}
         onClearImpersonate={onClearImpersonate}

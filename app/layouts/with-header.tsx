@@ -1,4 +1,5 @@
 import { Outlet, data, useFetcher, useNavigate } from "react-router";
+import type { ImpersonateUser } from "~/components/admin-header/AdminHeader";
 import { Header, type HeaderUser } from "~/components/header/Header";
 import { loadMe, meContext } from "~/lib/me.server";
 import { getSessionStorage } from "~/lib/session.server";
@@ -18,6 +19,8 @@ const loggedOut = {
   user: null as HeaderUser | null,
   adminMode: false,
   impersonateUsername: null as string | null,
+  /** 視点変更先のユーザー（管理者用ヘッダにアイコンを出す）。切り替えられていなければ null */
+  impersonateUser: null as ImpersonateUser | null,
   /** 視点変更のユーザー名が不正で、本人として取得し直したときのエラーメッセージ */
   impersonateError: null as string | null,
 };
@@ -43,11 +46,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const session = await getSessionStorage().getSession(
     request.headers.get("Cookie"),
   );
-  const { me, auth, impersonateError } = state;
+  const { me, self, auth, impersonateError } = state;
   const isAdmin = session.get("isAdmin") ?? false;
+  // 右上には視点変更中でもログインしている本人を出す
   const user: HeaderUser = {
-    name: me.global_name ?? me.username,
-    avatarUrl: me.avatar_url,
+    name: self.global_name ?? self.username,
+    avatarUrl: self.avatar_url,
     isAdmin,
   };
   return data({
@@ -57,6 +61,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     impersonateUsername: impersonateError
       ? (session.get("impersonateUsername") ?? null)
       : (auth.impersonateUsername ?? null),
+    impersonateUser: auth.impersonateUsername
+      ? { name: me.global_name ?? me.username, avatarUrl: me.avatar_url }
+      : null,
     impersonateError,
   });
 }
@@ -81,6 +88,9 @@ export default function WithHeaderLayout({ loaderData }: Route.ComponentProps) {
     if (impersonateForm?.get("intent") === "clear") return null;
     return loaderData.impersonateUsername;
   })();
+  // 送信中は切り替え先の情報がまだないので、アイコンを出さない
+  const impersonateUser =
+    adminMode && !impersonateForm ? loaderData.impersonateUser : null;
   // 送信中は前回のエラーを出さない
   const impersonateError = impersonateForm
     ? null
@@ -110,6 +120,7 @@ export default function WithHeaderLayout({ loaderData }: Route.ComponentProps) {
           );
         }}
         impersonateUsername={impersonateUsername}
+        impersonateUser={impersonateUser}
         impersonateError={impersonateError}
         onImpersonate={(username) => {
           impersonateFetcher.submit(
