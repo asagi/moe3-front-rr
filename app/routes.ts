@@ -26,4 +26,6 @@ export default [
   route("auth/logout", "routes/auth.logout.ts"),
   route("admin-mode", "routes/admin-mode.ts"),
   route("admin-impersonate", "routes/admin-impersonate.ts"),
+  // 卓のメッセージの SSE（API から中継する）
+  route("api/games/:gameUuid/stream", "routes/api.games.$gameUuid.stream.ts"),
 ] satisfies RouteConfig;

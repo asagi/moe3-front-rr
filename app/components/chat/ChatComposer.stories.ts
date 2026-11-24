@@ -44,3 +44,22 @@ export const Disabled: Story = {
     await expect(canvas.getByRole("button", { name: "送信" })).toBeDisabled();
   },
 };
+
+/** 送信に失敗したとき */
+export const WithError: Story = {
+  args: { error: "担当国が滅亡したため、書き込めません。" },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByRole("alert")).toHaveTextContent("滅亡");
+  },
+};
+
+/** 何か入力するまで送信ボタンは押せない */
+export const SendEnabledAfterInput: Story = {
+  play: async ({ canvasElement, userEvent }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole("button", { name: "送信" });
+    await expect(button).toBeDisabled();
+    await userEvent.type(canvas.getByRole("textbox"), "こんにちは");
+    await expect(button).toBeEnabled();
+  },
+};

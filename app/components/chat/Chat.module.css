@@ -221,12 +221,21 @@
 }
 
 .composer {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   margin: 0 auto;
   padding: 8px 12px;
   max-width: 36rem;
+}
+
+.composerRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.composerError {
+  margin-bottom: 6px;
+  color: #b91c1c;
+  font-size: 12px;
 }
 
 .composer textarea {

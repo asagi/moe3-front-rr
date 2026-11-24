@@ -209,3 +209,45 @@ export const getGameLogs = (
     { headers: auth ? authHeaders(auth) : {} },
   );
 };
+
+export interface PostMessageBody {
+  kind: "public" | "confidential" | "personal";
+  /** confidential のときだけ必須。宛先の国コード（自国を含めない） */
+  recipients: string[] | null;
+  /** 本文（最大 2000 文字） */
+  context: string;
+  /** 管理人発言か（管理者本人のみ。視点変更中は不可） */
+  as_admin: boolean;
+}
+
+/** POST /games/{uuid}/messages: 発言する。作ったメッセージを返す */
+export const postMessage = (gameUuid: string, body: PostMessageBody, auth: ApiAuth) =>
+  request<ChatMessage>(`/games/${encodeURIComponent(gameUuid)}/messages`, {
+    method: "POST",
+    headers: { ...authHeaders(auth), "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+/**
+ * GET /games/{uuid}/messages/stream: 新しいメッセージの SSE を開く。
+ * レスポンスをそのまま返すので、呼び出し側でブラウザへ中継する
+ */
+export const openMessageStream = (
+  gameUuid: string,
+  auth: ApiAuth | null,
+  options: { lastEventId?: string | null; after?: string | null; signal?: AbortSignal },
+) => {
+  const headers: Record<string, string> = {
+    Accept: "text/event-stream",
+    ...(auth ? authHeaders(auth) : {}),
+  };
+  if (options.lastEventId) headers["Last-Event-ID"] = options.lastEventId;
+  const query = options.after ? `?${new URLSearchParams({ after: options.after })}` : "";
+  return fetch(
+    new URL(
+      `/games/${encodeURIComponent(gameUuid)}/messages/stream${query}`,
+      requireEnv("API_BASE_URL"),
+    ),
+    { headers, signal: options.signal },
+  );
+};

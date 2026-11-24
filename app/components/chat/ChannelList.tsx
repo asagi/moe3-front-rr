@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 import { PowerImage } from "~/components/power-image/PowerImage";
-import { type ChannelSummary, channelName } from "~/lib/chat";
-import { type GameRegulation, type PowerCode, POWER_LABELS } from "~/lib/game";
+import { type ChannelSummary, channelName, senderName } from "~/lib/chat";
+import type { GameRegulation, PowerCode } from "~/lib/game";
 import styles from "./Chat.module.css";
 
 export interface ChannelListProps {
@@ -61,5 +61,6 @@ export const ChannelList = ({
 
 const preview = (m: NonNullable<ChannelSummary["lastMessage"]>) => {
   if (m.context == null) return "（内容は非公開）";
-  return m.sender ? `${POWER_LABELS[m.sender]}: ${m.context}` : m.context;
+  const name = senderName(m);
+  return name ? `${name}: ${m.context}` : m.context;
 };

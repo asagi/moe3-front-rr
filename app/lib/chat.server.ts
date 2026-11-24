@@ -15,7 +15,13 @@ import { getSessionStorage } from "~/lib/session.server";
  * canPostAsAdmin は、オープンチャンネルに管理人発言を書き込めるか
  */
 export type ChatViewer =
-  | { kind: "channels"; power: PowerCode | null; canPostAsAdmin: boolean }
+  | {
+      kind: "channels";
+      power: PowerCode | null;
+      /** 見ている人の Discord ユーザー名（開戦前夜・感想戦の自分の発言の判定に使う） */
+      username: string;
+      canPostAsAdmin: boolean;
+    }
   | { kind: "viewer" };
 
 /**
@@ -43,9 +49,10 @@ export const resolveChatViewer = async (
   const player = game.players.find(
     (p) => p.user.discord_user_id === state.me.discord_user_id,
   );
-  if (player) return { kind: "channels", power: player.power, canPostAsAdmin };
+  const username = state.me.username;
+  if (player) return { kind: "channels", power: player.power, username, canPostAsAdmin };
   // 参加者でない管理者は、オープンチャンネルだけのチャンネル一覧にする（管理人発言のため）
-  if (canPostAsAdmin) return { kind: "channels", power: null, canPostAsAdmin };
+  if (canPostAsAdmin) return { kind: "channels", power: null, username, canPostAsAdmin };
   return { kind: "viewer" };
 };
 
@@ -72,3 +79,25 @@ export const loadSeasonMessages = async (
   }
 };
 
+
+/** SSE をつなぎ直すきっかけ（見ている人が変わったら変わる） */
+export const streamConnectionKey = (viewer: Extract<ChatViewer, { kind: "channels" }>) =>
+  `${viewer.username}:${viewer.power ?? "-"}:${viewer.canPostAsAdmin}`;
+
+/** 発言 API のエラーコードごとの文言 */
+const POST_ERROR_MESSAGES: Record<string, string> = {
+  unauthorized: "ログイン情報を確認できませんでした。もう一度ログインしてください。",
+  invalid_kind: "このチャンネルには書き込めません。",
+  invalid_recipients: "宛先が正しくありません。",
+  empty_context: "発言を入力してください。",
+  context_too_long: "発言は 2000 文字までです。",
+  not_a_player: "この卓の参加者ではないため、書き込めません。",
+  power_eliminated: "担当国が滅亡したため、書き込めません。",
+  admin_post_not_allowed: "管理人発言は、視点変更していない管理者モード中だけできます。",
+  game_not_accepting_messages: "この卓にはもう書き込めません。",
+  not_found: "卓が見つかりませんでした。",
+};
+
+/** 発言 API のエラーを画面に出す文言にする */
+export const postErrorMessage = (e: ApiError) =>
+  POST_ERROR_MESSAGES[e.code] ?? `発言に失敗しました（${e.code}）: ${e.message}`;

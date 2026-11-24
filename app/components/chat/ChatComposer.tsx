@@ -1,8 +1,11 @@
-import { useId } from "react";
+import { useEffect, useId, useState } from "react";
 import { AdminImage, PowerImage } from "~/components/power-image/PowerImage";
 import { UserAvatar } from "~/components/user-avatar/UserAvatar";
 import { type GameRegulation, type PowerCode, POWER_LABELS } from "~/lib/game";
 import styles from "./Chat.module.css";
+
+/** 本文の最大文字数（API の上限） */
+export const MAX_MESSAGE_LENGTH = 2000;
 
 /** 誰として発言するか（入力欄の左のアイコン） */
 export type ChatComposerSender =
@@ -15,43 +18,83 @@ export type ChatComposerSender =
 
 export interface ChatComposerProps {
   sender: ChatComposerSender;
-  /** 送信できない理由。指定すると入力欄と送信ボタンを無効にして、入力欄にこの文言を出す */
+  /** 書き込めない理由。指定すると入力欄と送信ボタンを無効にして、入力欄にこの文言を出す */
   disabledReason?: string;
+  /** 送信中か */
+  submitting?: boolean;
+  /** 送信に失敗したときの文言 */
+  error?: string | null;
+  /** 変わったら入力欄を空にする（送信に成功したときに増やす） */
+  resetKey?: number;
+  /** 送信ボタン（または Ctrl / ⌘ + Enter）で呼ばれる */
+  onSend?: (context: string) => void;
 }
 
-/**
- * 発言の送信フォーム（画面下に固定して使う 1 行の入力欄）。
- * 送信 API がまだないので、今は見た目だけ（送信はしない）
- */
-export const ChatComposer = ({ sender, disabledReason }: ChatComposerProps) => {
+/** 発言の送信フォーム（画面下に固定して使う入力欄） */
+export const ChatComposer = ({
+  sender,
+  disabledReason,
+  submitting = false,
+  error,
+  resetKey = 0,
+  onSend,
+}: ChatComposerProps) => {
   const id = useId();
+  const [text, setText] = useState("");
+  useEffect(() => setText(""), [resetKey]);
+
   const disabled = disabledReason != null;
+  const tooLong = text.length > MAX_MESSAGE_LENGTH;
+  const canSend = !disabled && !submitting && !tooLong && text.trim() !== "";
+  const send = () => {
+    if (canSend) onSend?.(text);
+  };
+
   return (
     <form
       className={styles.composer}
-      onSubmit={(e) => e.preventDefault()}
+      onSubmit={(e) => {
+        e.preventDefault();
+        send();
+      }}
       aria-label="発言する"
     >
-      <SenderIcon sender={sender} />
-      <label htmlFor={id} className="sr-only">
-        {`${senderLabel(sender)}として発言`}
-      </label>
-      <textarea
-        id={id}
-        name="context"
-        rows={1}
-        disabled={disabled}
-        placeholder={disabledReason ?? "発言を入力"}
-      />
-      <button
-        type="submit"
-        className={styles.sendButton}
-        disabled={disabled}
-        aria-label="送信"
-        title="送信"
-      >
-        <SendIcon />
-      </button>
+      {(error || tooLong) && (
+        <p className={styles.composerError} role="alert">
+          {tooLong ? `${MAX_MESSAGE_LENGTH} 文字までです（${text.length} 文字）` : error}
+        </p>
+      )}
+      <div className={styles.composerRow}>
+        <SenderIcon sender={sender} />
+        <label htmlFor={id} className="sr-only">
+          {`${senderLabel(sender)}として発言`}
+        </label>
+        <textarea
+          id={id}
+          name="context"
+          rows={1}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            // 改行は Enter、送信は Ctrl / ⌘ + Enter
+            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+              e.preventDefault();
+              send();
+            }
+          }}
+          disabled={disabled}
+          placeholder={disabledReason ?? "発言を入力"}
+        />
+        <button
+          type="submit"
+          className={styles.sendButton}
+          disabled={!canSend}
+          aria-label="送信"
+          title="送信（Ctrl + Enter）"
+        >
+          <SendIcon />
+        </button>
+      </div>
     </form>
   );
 };

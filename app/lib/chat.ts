@@ -12,11 +12,30 @@ export type ChatMessageKind =
   | "ghost"
   | "system";
 
+/**
+ * 発言者の種類。
+ * - power: 担当国としての発言（進行中）
+ * - user: 国を持たないユーザーとしての発言（開戦前夜・感想戦）
+ * - admin: 管理人発言
+ * - system: システムメッセージ
+ */
+export type ChatSenderKind = "power" | "user" | "admin" | "system";
+
+/** sender_kind が user のときの発言者（Discord の数値 ID は返らない） */
+export interface ChatSenderUser {
+  username: string;
+  global_name: string | null;
+  avatar_url: string | null;
+}
+
 /** 外交メッセージ */
 export interface ChatMessage {
   message_uuid: string;
-  /** 送信者の国コード。システムメッセージは null */
+  /** 送信者の国コード。sender_kind が power のときだけ入る */
   sender: PowerCode | null;
+  sender_kind: ChatSenderKind;
+  /** sender_kind が user のときの発言者 */
+  sender_user: ChatSenderUser | null;
   /** 帰属シーズン（"1901s" など） */
   turn: string;
   /** 本文。masked は null */
@@ -162,6 +181,39 @@ export const channelName = (channel: Channel, myPower: PowerCode | null) => {
         .join("・");
   }
 };
+
+/** 発言者の表示名（国名・ユーザーの表示名・「管理人」）。システムメッセージは null */
+export const senderName = (m: ChatMessage) => {
+  switch (m.sender_kind) {
+    case "power":
+      return m.sender ? POWER_LABELS[m.sender] : null;
+    case "user":
+      return m.sender_user ? (m.sender_user.global_name ?? m.sender_user.username) : null;
+    case "admin":
+      return "管理人";
+    case "system":
+      return null;
+  }
+};
+
+/** 見ている人（自分の発言の判定に使う） */
+export interface ChatSelf {
+  /** 担当国（進行中の発言の判定に使う） */
+  power: PowerCode | null;
+  /** Discord のユーザー名（開戦前夜・感想戦の発言の判定に使う） */
+  username: string | null;
+}
+
+/** 自分の発言か。管理人発言は誰の発言か分からないので、自分の発言としない */
+export const isMine = (m: ChatMessage, self: ChatSelf) =>
+  (m.sender_kind === "power" && m.sender != null && m.sender === self.power) ||
+  (m.sender_kind === "user" &&
+    self.username != null &&
+    m.sender_user?.username === self.username);
+
+/** SSE で受け取ったメッセージを、重複を除いて末尾に足す */
+export const appendMessage = (messages: ChatMessage[], m: ChatMessage) =>
+  messages.some((x) => x.message_uuid === m.message_uuid) ? messages : [...messages, m];
 
 /** シーズンを保ったままチャット内の URL を作る */
 export const chatPath = (

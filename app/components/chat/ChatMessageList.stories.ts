@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, within } from "storybook/test";
 
 import { channelMessages } from "~/lib/chat";
-import { springMessages } from "./fixtures/messages";
+import { readyMessages, springMessages } from "./fixtures/messages";
 import { ChatMessageList } from "./ChatMessageList";
 
 const meta = {
@@ -13,7 +13,7 @@ const meta = {
   args: {
     messages: channelMessages(springMessages, "open"),
     faceType: "girls",
-    myPower: "f",
+    self: { power: "f", username: "asagix" },
   },
 } satisfies Meta<typeof ChatMessageList>;
 
@@ -66,5 +66,20 @@ export const Mine: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByText("イギリス")).toBeInTheDocument();
     await expect(canvas.queryByText("フランス")).not.toBeInTheDocument();
+  },
+};
+
+/** 開戦前夜：ユーザーとしての発言は Discord のアバター、管理人発言は管理人の画像 */
+export const Ready: Story = {
+  args: {
+    messages: readyMessages,
+    self: { power: null, username: "asagix" },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText("Judy")).toBeInTheDocument();
+    await expect(canvas.getByText("管理人")).toBeInTheDocument();
+    // 自分（asagix）の発言には名前を出さない
+    await expect(canvas.queryByText("あさぎ")).not.toBeInTheDocument();
   },
 };
