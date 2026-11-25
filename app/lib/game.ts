@@ -178,6 +178,13 @@ export const formatDateJa = (value: string) => {
   return `${y} 年 ${m} 月 ${d} 日（${weekday}）`;
 };
 
+/** "2026-11-25" → "11 月 25 日 (水)"（チャットの日付の区切り） */
+export const formatMonthDayJa = (value: string) => {
+  const [y, m, d] = value.split("-").map(Number);
+  const weekday = WEEKDAYS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
+  return `${m} 月 ${d} 日 (${weekday})`;
+};
+
 /** "2026-11-25 09:00" → "2026 年 11 月 25 日（水） 9:00" */
 export const formatDateTimeJa = (value: string) => {
   const [date, time = "0:00"] = value.split(" ");
@@ -200,3 +207,16 @@ export const seasonLabel = (season: string) => {
  */
 export const isEnded = (game: Pick<GameDetail, "status">) =>
   game.status === "closed" || game.status === "aborted";
+
+/**
+ * まだ発言が増えるシーズンか（終わっていない卓の現在のシーズン）。
+ * 終わったシーズンは更新されないので、SSE はこれが true のときだけつなぐ
+ */
+export const isLiveSeason = (
+  game: Pick<GameDetail, "status" | "seasons">,
+  season: string | null,
+) => !isEnded(game) && season != null && season === game.seasons.at(-1);
+
+/** 国ごとの密談がないシーズン（開戦前夜・感想戦）か */
+export const isOffGameSeason = (season: string | null) =>
+  season === "ready" || season === "debrief";

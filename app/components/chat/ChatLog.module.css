@@ -1,0 +1,209 @@
+/* ---- 第三者用ログビューアー ---- */
+
+.empty {
+  border: 1px dashed var(--color-gray-300);
+  border-radius: 6px;
+  padding: 12px;
+  color: var(--color-gray-500);
+  font-size: 13px;
+  text-align: center;
+}
+
+.time {
+  flex-shrink: 0;
+  color: var(--color-gray-500);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* ---- ツールバー ---- */
+
+.toolbar {
+  display: flex;
+  position: relative;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+  border-bottom: 1px solid var(--color-gray-200);
+  padding-bottom: 6px;
+}
+
+.toolbarStatus {
+  margin-right: auto;
+  color: var(--color-gray-600);
+  font-size: 12px;
+}
+
+.toolButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+  color: var(--color-gray-700);
+}
+
+.toolButton:hover:not(:disabled) {
+  background-color: var(--color-gray-100);
+}
+
+.toolButton:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 1px;
+}
+
+.toolButton:disabled {
+  cursor: not-allowed;
+  color: var(--color-gray-300);
+}
+
+/* 絞り込み中 */
+.toolButtonActive {
+  background-color: #e0e7ff;
+  color: var(--color-brand);
+}
+
+.menu {
+  display: flex;
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 20;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.12);
+  border: 1px solid var(--color-gray-200);
+  border-radius: 8px;
+  background-color: #fff;
+  padding: 8px;
+  min-width: 13rem;
+}
+
+.menuTitle {
+  float: left;
+  padding: 0 4px 4px;
+  width: 100%;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.menuNote {
+  clear: both;
+  padding: 0 4px 4px;
+  color: var(--color-gray-500);
+  font-size: 11px;
+}
+
+.menuItem {
+  display: flex;
+  clear: both;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 6px 4px;
+  font-size: 14px;
+}
+
+.menuItem:hover {
+  background-color: var(--color-gray-100);
+}
+
+/* ---- 発言 ---- */
+
+.log {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 日付の区切り */
+.date {
+  margin-top: 4px;
+  color: var(--color-gray-700);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* システムメッセージ（点線枠で中央、時刻は右） */
+.systemRow {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 6px;
+  padding-left: 48px;
+}
+
+.system {
+  border: 1px dashed var(--color-gray-500);
+  background-color: #fff;
+  padding: 4px 12px;
+  color: var(--color-gray-800);
+  font-size: 13px;
+  text-align: center;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* 同じ人の続けての発言は詰める */
+.continued {
+  margin-top: -8px;
+}
+
+.icon {
+  flex-shrink: 0;
+  width: 40px;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.head {
+  color: var(--color-gray-700);
+  font-size: 11px;
+}
+
+.bubbleRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  padding-right: 8px;
+}
+
+.bubble {
+  border: 1px solid var(--color-gray-700);
+  border-radius: 8px;
+  background-color: #fff;
+  padding: 6px 12px;
+  max-width: 100%;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* 密談（青系） */
+.private {
+  border-color: #6c8ebf;
+  background-color: #dae8fc;
+}
+
+/* 独り言（暗いグレー地に白字） */
+.personal {
+  border-color: #314354;
+  background-color: #647687;
+  color: #fff;
+  font-weight: 600;
+}

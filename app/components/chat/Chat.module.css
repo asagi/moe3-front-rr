@@ -155,31 +155,45 @@
   min-width: 0;
 }
 
-.messageHead {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
+.icon {
+  flex-shrink: 0;
+  width: 32px;
 }
 
 .sender {
+  color: var(--color-gray-700);
   font-weight: 600;
-  font-size: 13px;
+  font-size: 12px;
+}
+
+/* 吹き出しと時刻（時刻は吹き出しの右下） */
+.bubbleRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
 }
 
 .bubble {
   border-radius: 8px;
   background-color: #fff;
   padding: 8px 10px;
+  min-width: 0;
   font-size: 14px;
   line-height: 1.6;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
+/* 同じ人の続けての発言は詰める */
+.continued {
+  margin-top: -6px;
+}
+
 /* 自分の発言（アイコンなしで右寄せ、時刻は左下） */
 .mine {
   justify-content: flex-end;
   align-items: flex-end;
+  gap: 6px;
   padding-left: 48px;
 }
 
@@ -193,13 +207,32 @@
   font-style: italic;
 }
 
-.system {
-  border-radius: 6px;
-  background-color: var(--color-gray-200);
-  padding: 6px 10px;
+/* 日付の区切り */
+.date {
+  margin-top: 4px;
   color: var(--color-gray-700);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* システムメッセージ（点線枠で中央、時刻は右） */
+.systemRow {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 6px;
+  padding-left: 40px;
+}
+
+.system {
+  border: 1px dashed var(--color-gray-500);
+  background-color: #fff;
+  padding: 4px 12px;
+  color: var(--color-gray-800);
   font-size: 12px;
   text-align: center;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 /* ---- 送信フォーム ---- */

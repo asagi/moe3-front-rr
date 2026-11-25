@@ -24,7 +24,7 @@ import {
   resolveChatViewer,
   streamConnectionKey,
 } from "~/lib/chat.server";
-import { type GameDetail, displayName } from "~/lib/game";
+import { type GameDetail, displayName, isLiveSeason } from "~/lib/game";
 import { requireGame, resolveSeason } from "~/lib/game.server";
 import { meContext } from "~/lib/me.server";
 import { useMessageStream } from "~/lib/use-message-stream";
@@ -102,6 +102,9 @@ const loadChannel = async (
 
   const seasonParam = new URL(request.url).searchParams.get("season");
   const listPath = chatPath(game.game_uuid, seasonParam);
+  const season = resolveSeason(request, game);
+  // 終わったシーズンは、参加者もログビューアーで見る
+  if (!isLiveSeason(game, season)) throw redirect(listPath);
   const viewer = await resolveChatViewer(request, context, game);
   if (viewer.kind === "viewer") throw redirect(listPath);
   const myPower = viewer.power;
@@ -113,13 +116,12 @@ const loadChannel = async (
         : channel.members.includes(myPower)));
   if (!isMember) throw redirect(listPath);
 
-  const season = resolveSeason(request, game);
   return { game, channel, viewer, season, listPath };
 };
 
 /**
  * チャンネル画面。
- * 第三者になったときと、このチャンネルのメンバーでない参加者になったときは、
+ * 第三者になったとき・このチャンネルのメンバーでない参加者になったとき・終わったシーズンを開いたときは、
  * シーズンを保ったまま /chat（ログビューアーかチャンネル一覧）に移す
  */
 export async function loader({ request, params, context }: Route.LoaderArgs) {
@@ -133,7 +135,6 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 
   const messages = season ? await loadSeasonMessages(context, game, season) : [];
   const postAs = resolvePostAs(game, viewer, channel, season);
-  const isCurrent = season != null && season === game.seasons.at(-1);
   return {
     gameUuid: game.game_uuid,
     faceType: game.regulation.face_type,
@@ -145,8 +146,8 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     sender: composerSender(game, viewer, postAs.ok && postAs.asAdmin, state.me),
     disabledReason: postAs.ok ? undefined : postAs.reason,
     messages: channelMessages(messages, channel.id),
-    // SSE で最初に送り直してもらう起点（現在のシーズンを見ているときだけ）
-    streamAfter: isCurrent ? (messages.at(-1)?.message_uuid ?? null) : null,
+    // SSE で最初に送り直してもらう起点
+    streamAfter: messages.at(-1)?.message_uuid ?? null,
     streamKey: streamConnectionKey(viewer),
   };
 }
@@ -212,7 +213,10 @@ export default function GameChatChannel({ loaderData }: Route.ComponentProps) {
 
   useMessageStream(
     gameUuid,
-    { after: loaderData.streamAfter, connectionKey: loaderData.streamKey },
+    {
+      after: loaderData.streamAfter,
+      connectionKey: loaderData.streamKey,
+    },
     {
       onMessage: (m) => {
         if (m.turn === season && channelIdOf(m) === channelId) {

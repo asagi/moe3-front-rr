@@ -224,3 +224,93 @@ export const chatPath = (
   const base = `/games/${gameUuid}/chat${channelId ? `/${channelId}` : ""}`;
   return season ? `${base}?${new URLSearchParams({ season })}` : base;
 };
+
+/* ---- 第三者用ログビューアー ---- */
+
+/**
+ * ログビューアーのフィルタで出し分ける発言の種類。
+ * - system: システムメッセージ
+ * - open: オープンチャンネルの発言（管理人発言を含む）
+ * - private: 密談（内容が伏せられたものを含む）
+ * - personal: 独り言
+ */
+export type LogCategory = "system" | "open" | "private" | "personal";
+
+export const LOG_CATEGORIES: { value: LogCategory; label: string }[] = [
+  { value: "system", label: "システムメッセージ" },
+  { value: "open", label: "オープンチャンネル" },
+  { value: "private", label: "密談" },
+  { value: "personal", label: "独り言" },
+];
+
+/** 発言の種類。ログビューアーに出さないもの（ghost）は null */
+export const logCategoryOf = (m: ChatMessage): LogCategory | null => {
+  switch (m.kind) {
+    case "system":
+      return "system";
+    case "public":
+      return "open";
+    case "confidential":
+    case "masked":
+      return "private";
+    case "personal":
+      return "personal";
+    default:
+      return null;
+  }
+};
+
+/**
+ * 卓の進行中に、その国が読めた発言か（視点変更で使う）。
+ * 全体向けの発言・その国が送信者か宛先の密談・その国の独り言だけが読める
+ */
+export const couldRead = (m: ChatMessage, power: PowerCode) => {
+  switch (logCategoryOf(m)) {
+    case "system":
+    case "open":
+      return true;
+    case "private":
+      return m.sender === power || (m.recipients ?? []).includes(power);
+    case "personal":
+      return m.sender === power;
+    default:
+      return false;
+  }
+};
+
+/** ログビューアーの絞り込み */
+export interface LogFilter {
+  /** 視点にする国（null なら絞らない） */
+  pov: PowerCode | null;
+  /** 出さない種類 */
+  hidden: ReadonlySet<LogCategory>;
+}
+
+/** 視点とフィルタで発言を絞る */
+export const filterLog = (messages: ChatMessage[], { pov, hidden }: LogFilter) =>
+  messages.filter((m) => {
+    const category = logCategoryOf(m);
+    if (category == null || hidden.has(category)) return false;
+    return pov == null || couldRead(m, pov);
+  });
+
+/** URL の ?pov= を読む。不正なら null */
+export const parsePov = (value: string | null): PowerCode | null =>
+  value != null && POWER_ORDER.includes(value as PowerCode) ? (value as PowerCode) : null;
+
+/** URL の ?hide=system,personal を読む。知らない値は捨てる */
+export const parseHidden = (value: string | null): Set<LogCategory> =>
+  new Set(
+    (value ?? "")
+      .split(",")
+      .filter((v): v is LogCategory => LOG_CATEGORIES.some((c) => c.value === v)),
+  );
+
+/** ?hide= に入れる値（並びはメニューの順）。何も隠さなければ null */
+export const serializeHidden = (hidden: ReadonlySet<LogCategory>) => {
+  const list = LOG_CATEGORIES.map((c) => c.value).filter((v) => hidden.has(v));
+  return list.length > 0 ? list.join(",") : null;
+};
+
+/** 密談の宛先（国の並び順） */
+export const recipientsOf = (m: ChatMessage) => sortPowers(m.recipients ?? []);
