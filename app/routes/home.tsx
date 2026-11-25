@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 import type { Route } from "./+types/home";
-import Board from "~/components/board/Board";
+import { BoardWithInfo } from "~/components/board/BoardWithInfo";
 import { Greeting } from "~/components/greeting/Greeting";
 
 export function meta({}: Route.MetaArgs) {
@@ -13,7 +13,8 @@ export function meta({}: Route.MetaArgs) {
 export default function Home() {
   return (
     <>
-      <Board />
+      {/* 初期配置の地図。地域を押すと、その情報を地図の下に重ねて出す */}
+      <BoardWithInfo />
       <div className="px-4 pt-6 text-center">
         <Link
           to="/games"

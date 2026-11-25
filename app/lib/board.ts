@@ -76,3 +76,23 @@ export const boardNotEditableReason = (game: Pick<GameDetail, "status" | "phase_
       return null;
   }
 };
+
+/** 国の英語の形容詞（ユニットの表記 "Russian F stp (sc)" に使う） */
+export const POWER_ADJECTIVES: Record<PowerCode, string> = {
+  a: "Austrian",
+  e: "English",
+  f: "French",
+  g: "German",
+  i: "Italian",
+  r: "Russian",
+  t: "Turkish",
+};
+
+/** ユニットの表記（"Russian F stp (sc)"、"French A par"） */
+export const unitNotation = (unit: Pick<BoardUnit, "power" | "kind" | "location">) => {
+  const [base, coast] = unit.location.split("_");
+  return `${POWER_ADJECTIVES[unit.power]} ${unit.kind.toUpperCase()} ${base}${coast ? ` (${coast})` : ""}`;
+};
+
+/** 地域の名前（"St. Petersburg / サンクトペテルブルク"） */
+export const provinceNames = (province: Province) => `${province.full} / ${province.jname}`;

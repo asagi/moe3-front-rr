@@ -1,0 +1,55 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  box-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -2px rgb(0 0 0 / 0.05);
+  border: 2px solid #718096;
+  border-radius: 8px;
+  background-color: #fff;
+  padding: 12px 16px 20px;
+  text-align: center;
+}
+
+.title {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.code {
+  font-size: 24px;
+}
+
+.owner {
+  font-size: 14px;
+}
+
+.names {
+  font-size: 16px;
+}
+
+.unit {
+  margin-top: 12px;
+  font-size: 16px;
+}
+
+/* ---- 地図に重ねるとき（BoardWithInfo） ---- */
+
+/* 地図とカードの基準 */
+.anchor {
+  position: relative;
+  width: 100%;
+  max-width: 660px;
+}
+
+/* 地図のすぐ下に重ねる（下のコンテンツは押し下げない） */
+.overlay {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 4px;
+  left: 4px;
+  z-index: 20;
+}
