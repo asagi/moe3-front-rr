@@ -6,7 +6,7 @@ export interface GameTabBarProps {
   gameUuid: string;
   /** 命令ページを開けるか（開始前は開けない） */
   ordersEnabled: boolean;
-  /** メンテナンスページを開けるか（管理者とその卓の卓主のみ） */
+  /** 盤面の編集ページを開けるか（卓主と管理者モード中の管理者が、開戦前夜かメインフェイズのときだけ） */
   maintenanceEnabled: boolean;
 }
 
@@ -31,7 +31,7 @@ export const GameTabBar = ({
         <Tab to={base} end label="卓情報" icon={<InfoIcon />} />
         <Tab
           to={`${base}/maintenance`}
-          label="メンテナンス"
+          label="盤面の編集"
           icon={<GearIcon />}
           disabled={!maintenanceEnabled}
         />

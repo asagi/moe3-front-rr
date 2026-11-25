@@ -125,20 +125,17 @@
 }
 
 /* board container: units / supply centers are positioned relative to this */
+/*
+ * 縦横比は地図の画像（880 x 800）と同じ 11:10 に固定する。
+ * 比率がずれると、地図は余白付きで中央に縮小されるのに、ユニットなどはコンテナの % で置かれるため、
+ * 下や右に行くほど位置がずれる（以前は min-height で高さだけ伸びて、幅の狭い画面でずれていた）
+ */
 .board {
   display: block;
   position: relative;
-  max-width: calc(var(--board-width) * 1px);
-  max-height: calc(var(--board-height) * 1px);
+  aspect-ratio: var(--board-width) / var(--board-height);
   width: 100%;
-  height: 0;
-  padding-top: min(
-    calc(var(--board-height) / var(--board-width) * 100%),
-    calc(var(--board-height) * 1px)
-  );
-  min-height: calc(
-    var(--board-height) / var(--board-width) * var(--min-width, 375px)
-  );
+  max-width: calc(var(--board-width) * 1px);
 }
 
 /* overlay layers covering the whole board */
@@ -177,6 +174,18 @@
   height: 100%;
   stroke: #3f3f46;
   pointer-events: fill;
+}
+
+/* 押せる地域（盤面の編集） */
+.selectable {
+  cursor: pointer;
+}
+.selectable:hover {
+  filter: brightness(0.92);
+}
+/* 枠線は強調しない（選んだ地域は〇で示す） */
+.selectable:focus {
+  outline: none;
 }
 
 /* for province images */
@@ -668,13 +677,13 @@
 }
 .unit-on-tyr {
   composes: unit;
-  top: var(--pos-u-y-20);
-  left: var(--pos-u-x-28);
+  top: var(--pos-u-y-23);
+  left: var(--pos-u-x-24);
 }
 .unit-on-boh {
   composes: unit;
-  top: var(--pos-u-y-23);
-  left: var(--pos-u-x-24);
+  top: var(--pos-u-y-20);
+  left: var(--pos-u-x-28);
 }
 .unit-on-gal {
   composes: unit;
@@ -718,13 +727,13 @@
 }
 .unit-on-mos {
   composes: unit;
-  top: var(--pos-u-y-23);
-  left: var(--pos-u-x-37);
+  top: var(--pos-u-y-16);
+  left: var(--pos-u-x-41);
 }
 .unit-on-ukr {
   composes: unit;
-  top: var(--pos-u-y-16);
-  left: var(--pos-u-x-41);
+  top: var(--pos-u-y-23);
+  left: var(--pos-u-x-37);
 }
 .unit-on-sev {
   composes: unit;
@@ -825,6 +834,14 @@
   composes: unit;
   top: var(--pos-u-y-33);
   left: var(--pos-u-x-33);
+}
+
+/* 選んでいる地域の印（〇）。ユニットより一回り大きくして重ねる */
+.selection {
+  filter: drop-shadow(0 0 1px #fff) drop-shadow(0 0 1px #fff);
+  transform: scale(1.7);
+  transform-origin: center;
+  fill: #dc2626;
 }
 
 /* anchor position for svg tag */

@@ -1,0 +1,78 @@
+import boardDefaults from "~/components/board/boardDefaults.json";
+import type { Province } from "~/components/board/types";
+import type { GameDetail, PowerCode } from "~/lib/game";
+
+/** ユニットの種類（a: 陸軍、f: 海軍） */
+export type UnitKind = "a" | "f";
+
+/** 盤面のユニット。location は地域コード（海岸が 2 つある地域の海軍は "spa_nc" など） */
+export interface BoardUnit {
+  power: PowerCode;
+  kind: UnitKind;
+  location: string;
+}
+
+/** 地域の占領情報（補給都市でない陸地を含む。地図の色分けに使う） */
+export interface BoardTerritory {
+  power: PowerCode;
+  code: string;
+}
+
+/** 最新フェイズの盤面（GET /games/{uuid}/board） */
+export interface BoardSnapshot {
+  /** 最新フェイズのシーズン（"ready" / "1901s" など） */
+  season: string;
+  phase_kind: GameDetail["phase_kind"];
+  units: BoardUnit[];
+  territories: BoardTerritory[];
+}
+
+export const UNIT_KIND_LABELS: Record<UnitKind, string> = { a: "陸軍", f: "海軍" };
+
+const PROVINCES = boardDefaults.provinces as Province[];
+
+/** 地域コードのベース部分（"spa_nc" → "spa"） */
+export const baseCode = (location: string) => location.split("_")[0];
+
+/** 地図で選べる地域（海岸の区分 "spa_nc" などは除く） */
+export const SELECTABLE_PROVINCES = PROVINCES.filter((p) => !p.code.includes("_"));
+
+/** 地域（ベースコードで探す） */
+export const findProvince = (code: string) =>
+  PROVINCES.find((p) => p.code === baseCode(code)) ?? null;
+
+/** 海岸が 2 つある地域の、海岸ごとの地域（スペインなら spa_nc と spa_sc）。ほかは空 */
+export const coastsOf = (code: string) =>
+  PROVINCES.filter((p) => p.code.startsWith(`${baseCode(code)}_`));
+
+/** 海か */
+export const isWater = (province: Province) => province.kind === "Water";
+
+/** 内陸か（海軍を置けない） */
+export const isInland = (province: Province) => province.kind === "Inland";
+
+/**
+ * 盤面を編集できるか。
+ * 終わっていない卓の、開戦前夜かメインフェイズのときだけ（撤退・調整・感想戦は不可）
+ */
+export const isBoardEditable = (game: Pick<GameDetail, "status" | "phase_kind">) =>
+  game.status !== "closed" &&
+  game.status !== "aborted" &&
+  (game.phase_kind === "ready" || game.phase_kind === "main");
+
+/** 盤面を編集できないときの理由 */
+export const boardNotEditableReason = (game: Pick<GameDetail, "status" | "phase_kind">) => {
+  if (game.status === "closed" || game.status === "aborted") {
+    return "終了した卓の盤面は編集できません";
+  }
+  switch (game.phase_kind) {
+    case "retreat":
+      return "撤退フェイズのあいだは盤面を編集できません";
+    case "adjustment":
+      return "調整フェイズのあいだは盤面を編集できません";
+    case "debrief":
+      return "感想戦では盤面を編集できません";
+    default:
+      return null;
+  }
+};

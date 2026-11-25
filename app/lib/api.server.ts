@@ -1,4 +1,5 @@
 import { requireEnv } from "~/lib/env.server";
+import type { BoardSnapshot, UnitKind } from "~/lib/board";
 import type { ChatMessage } from "~/lib/chat";
 import type { GameDetail, GameSummary } from "~/lib/game";
 
@@ -251,3 +252,68 @@ export const openMessageStream = (
     { headers, signal: options.signal },
   );
 };
+
+/* ---- 盤面の編集（卓主と管理者） ---- */
+
+const adminGamePath = (gameUuid: string, kind: "units" | "territories", code: string) =>
+  `/admin/games/${encodeURIComponent(gameUuid)}/${kind}/${encodeURIComponent(code)}`;
+
+/**
+ * GET /games/{uuid}/board: 最新フェイズのユニット配置と占領情報を取得する。
+ * API は units[].kind を大文字（"A" / "F"）で返すので、フロントの形（"a" / "f"）にそろえる
+ */
+export const getBoard = async (gameUuid: string, auth?: ApiAuth | null) => {
+  const board = await request<BoardSnapshot>(`/games/${encodeURIComponent(gameUuid)}/board`, {
+    headers: auth ? authHeaders(auth) : {},
+  });
+  return {
+    ...board,
+    units: board.units.map((u) => ({ ...u, kind: u.kind.toLowerCase() as UnitKind })),
+  };
+};
+
+/**
+ * PUT /admin/games/{uuid}/units/{location}: ユニットを置く（同じ地域のユニットは置き換える）。
+ * 新しいユニットには維持命令が付き、置き換えた古いユニットの命令は消える
+ * @param season 最新フェイズのシーズン。食い違うと 409 phase_conflict
+ */
+export const putUnit = (
+  gameUuid: string,
+  location: string,
+  unit: { power: string; kind: UnitKind },
+  season: string,
+  auth: ApiAuth,
+) =>
+  request<unknown>(adminGamePath(gameUuid, "units", location), {
+    method: "PUT",
+    headers: { ...authHeaders(auth), "Content-Type": "application/json" },
+    body: JSON.stringify({ unit, season }),
+  });
+
+/** DELETE /admin/games/{uuid}/units/{location}: ユニットを消す（そのユニットの命令も消える） */
+export const deleteUnit = (gameUuid: string, location: string, season: string, auth: ApiAuth) =>
+  request<unknown>(
+    `${adminGamePath(gameUuid, "units", location)}?${new URLSearchParams({ season })}`,
+    { method: "DELETE", headers: authHeaders(auth) },
+  );
+
+/** PUT /admin/games/{uuid}/territories/{code}: 地域の占領国を設定する */
+export const putTerritory = (
+  gameUuid: string,
+  code: string,
+  power: string,
+  season: string,
+  auth: ApiAuth,
+) =>
+  request<unknown>(adminGamePath(gameUuid, "territories", code), {
+    method: "PUT",
+    headers: { ...authHeaders(auth), "Content-Type": "application/json" },
+    body: JSON.stringify({ power, season }),
+  });
+
+/** DELETE /admin/games/{uuid}/territories/{code}: 地域の占領を解除する */
+export const deleteTerritory = (gameUuid: string, code: string, season: string, auth: ApiAuth) =>
+  request<unknown>(
+    `${adminGamePath(gameUuid, "territories", code)}?${new URLSearchParams({ season })}`,
+    { method: "DELETE", headers: authHeaders(auth) },
+  );

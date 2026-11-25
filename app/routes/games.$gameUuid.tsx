@@ -1,6 +1,7 @@
 import { Outlet, useMatches } from "react-router";
 import { GameHeader } from "~/components/game-nav/GameHeader";
 import { GameTabBar } from "~/components/game-nav/GameTabBar";
+import { isBoardEditable } from "~/lib/board";
 import { gameNumberLabel, isStarted, seasonLabel } from "~/lib/game";
 import {
   canMaintainGame,
@@ -42,7 +43,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     gameUuid: game.game_uuid,
     numberLabel: gameNumberLabel(game),
     ordersEnabled: isStarted(game),
-    maintenanceEnabled: await canMaintainGame(request, context, game),
+    // 盤面の編集は、卓主か管理者モード中の管理者が、開戦前夜かメインフェイズのときだけ
+    maintenanceEnabled:
+      isBoardEditable(game) && (await canMaintainGame(request, context, game)),
     // ターンの中のページで卓ヘッダに出すシーズン（?season= が不正ならページ側で 404 にする）
     seasonLabel: (() => {
       try {

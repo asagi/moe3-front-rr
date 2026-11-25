@@ -39,4 +39,10 @@ export type BoardState = {
   units: Array<Unit>;
 };
 
-export type BoardProps = { boardData?: BoardData };
+export type BoardProps = {
+  boardData?: BoardData;
+  /** 指定すると地域を押せるようにし、押された地域のコード（"spa" などベースのコード）を渡す */
+  onProvinceSelect?: (code: string) => void;
+  /** 強調する地域のコード（ベースのコード） */
+  selectedCode?: string | null;
+};

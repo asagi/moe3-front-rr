@@ -1,0 +1,135 @@
+/* ---- 盤面の編集 ---- */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0 auto;
+  padding: 16px;
+  width: 100%;
+  max-width: 44rem;
+}
+
+.lead {
+  color: var(--color-gray-600);
+  font-size: 13px;
+}
+
+.notice {
+  border-radius: 6px;
+  background-color: var(--color-gray-200);
+  padding: 8px 12px;
+  color: var(--color-gray-700);
+  font-size: 13px;
+}
+
+.picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.picker select,
+.row select {
+  border: 1px solid var(--color-gray-300);
+  border-radius: 6px;
+  background-color: #fff;
+  padding: 4px 8px;
+  font-size: 14px;
+}
+
+/* ---- 編集パネル ---- */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 8px;
+  background-color: #fff;
+  padding: 12px 16px;
+}
+
+.panelHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.panelHead h3 {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.closeButton {
+  color: var(--color-gray-600);
+  font-size: 13px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field legend {
+  margin-bottom: 4px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.choices {
+  display: flex;
+  gap: 16px;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.choice:has(input:disabled) {
+  color: var(--color-gray-400);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.row > label {
+  width: 3em;
+}
+
+.error {
+  color: #b91c1c;
+  font-size: 13px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.saveButton {
+  border-radius: 6px;
+  background-color: var(--color-brand);
+  padding: 6px 20px;
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.saveButton:hover:not(:disabled) {
+  background-color: var(--color-brand-hover);
+}
+
+.saveButton:disabled {
+  cursor: not-allowed;
+  background-color: var(--color-gray-300);
+}

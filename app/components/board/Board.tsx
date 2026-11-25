@@ -1,5 +1,5 @@
 import boardDefaults from "./boardDefaults.json";
-import type { JSX } from "react";
+import type { JSX, KeyboardEvent as ReactKeyboardEvent } from "react";
 import type {
   BoardData,
   BoardDefaults,
@@ -38,15 +38,46 @@ const mergeBoardData = (
 const getOwnerByCode = (data: BoardState) =>
   new Map(data.territories.map((t) => [t.code, t.power]));
 
+/** 地域を押せるようにするときの、<use> に付ける属性 */
+type ProvinceInteraction = {
+  onSelect?: (code: string) => void;
+  selectedCode?: string | null;
+};
+
+const provinceProps = (
+  prov: { code: string; jname: string },
+  className: string | undefined,
+  { onSelect, selectedCode }: ProvinceInteraction,
+) => {
+  const selected = selectedCode === prov.code;
+  // 選んでいる地域は、地域の塗りではなくユニットの位置に重ねる〇で示す（loadSelection）
+  const classes = [className, onSelect ? styles.selectable : ""].filter(Boolean).join(" ");
+  if (!onSelect) return { className: classes };
+  return {
+    className: classes,
+    role: "button",
+    tabIndex: 0,
+    "aria-label": prov.jname,
+    "aria-pressed": selected,
+    onClick: () => onSelect(prov.code),
+    onKeyDown: (e: ReactKeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        onSelect(prov.code);
+      }
+    },
+  };
+};
+
 // 海域: kind が Water の地域
-const loadWaters = (data: BoardState) => {
+const loadWaters = (data: BoardState, interaction: ProvinceInteraction) => {
   return data.provinces
     .filter((prov) => prov.kind === "Water")
     .map((prov) => (
       <use
         xlinkHref={`#${prov.code}`}
-        className={styles.water}
         key={prov.code}
+        {...provinceProps(prov, styles.water, interaction)}
       />
     ));
 };
@@ -69,7 +100,7 @@ const loadSupplyCenters = (data: BoardState) => {
 };
 
 // 陸地: Water 以外の地域（bul_ec などの沿岸区分は除く）
-const loadLands = (data: BoardState) => {
+const loadLands = (data: BoardState, interaction: ProvinceInteraction) => {
   const ownerByCode = getOwnerByCode(data);
   return data.provinces
     .filter((prov) => prov.kind !== "Water" && !prov.code.includes("_"))
@@ -81,8 +112,8 @@ const loadLands = (data: BoardState) => {
       return (
         <use
           xlinkHref={`#${prov.code}`}
-          className={ownerStyle}
           key={prov.code}
+          {...provinceProps(prov, ownerStyle, interaction)}
         />
       );
     });
@@ -107,6 +138,18 @@ const loadUnits = (data: BoardState) => {
   });
 };
 
+// 選んでいる地域の印（〇）。その地域のユニットの表示位置に重ねる
+const loadSelection = (selectedCode?: string | null) => {
+  if (!selectedCode) return null;
+  const positionStyle = styles[`unit-on-${selectedCode.split("_")[0]}`];
+  if (!positionStyle) return null;
+  return (
+    <svg className={`${positionStyle} ${styles.selection}`} aria-hidden="true">
+      <use xlinkHref="#selection" />
+    </svg>
+  );
+};
+
 const loadAnchors = (data: BoardState) => {
   return data.units.map((unit: Unit, index) => {
     const prov = unit.location.split("_");
@@ -121,13 +164,19 @@ const loadAnchors = (data: BoardState) => {
   });
 };
 
-export default function Board({ boardData }: BoardProps): JSX.Element {
+export default function Board({
+  boardData,
+  onProvinceSelect,
+  selectedCode,
+}: BoardProps): JSX.Element {
   const data = mergeBoardData(boardDefaults, boardData);
-  const Waters = loadWaters(data);
-  const Lands = loadLands(data);
+  const interaction = { onSelect: onProvinceSelect, selectedCode };
+  const Waters = loadWaters(data, interaction);
+  const Lands = loadLands(data, interaction);
   const Units = loadUnits(data);
   const SupplyCenters = loadSupplyCenters(data);
   const Anchors = loadAnchors(data);
+  const Selection = loadSelection(selectedCode);
 
   return (
     <>
@@ -159,6 +208,7 @@ export default function Board({ boardData }: BoardProps): JSX.Element {
         <div className={styles.units}>
           {Units}
           {Anchors}
+          {Selection}
         </div>
       </div>
     </>

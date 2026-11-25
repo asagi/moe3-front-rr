@@ -31,7 +31,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** 開始前・一般の参加者：命令とメンテナンスは押せない */
+/** 開始前・一般の参加者：命令と盤面の編集は押せない */
 export const BeforeStart: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -44,7 +44,7 @@ export const BeforeStart: Story = {
       "true",
     );
     await expect(
-      canvas.getByRole("link", { name: "メンテナンス" }),
+      canvas.getByRole("link", { name: "盤面の編集" }),
     ).toHaveAttribute("aria-disabled", "true");
   },
 };
