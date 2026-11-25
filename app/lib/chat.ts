@@ -2,7 +2,7 @@ import { POWERS, POWER_LABELS, type PowerCode } from "~/lib/game";
 
 /**
  * メッセージの種類（GET /games/{uuid}/logs/{season} の kind）。
- * ghost は API にはあるがフロントでは使わない
+ * ghost は滅亡した国の発言（通常発言の代わり）。オープンチャンネルに出す
  */
 export type ChatMessageKind =
   | "public"
@@ -46,6 +46,9 @@ export interface ChatMessage {
   /** 送信日時（JST、"YYYY-MM-DD HH:mm"） */
   created_at: string;
 }
+
+/** 滅亡した国の発言（Ghost 発言）か。アイコンを白黒にし、吹き出しを薄くする */
+export const isGhost = (m: Pick<ChatMessage, "kind">) => m.kind === "ghost";
 
 /** オープンチャンネル（全員向けの公開発言）の ID */
 export const OPEN_CHANNEL_ID = "open";
@@ -92,6 +95,7 @@ export const parseChannelId = (id: string): Channel | null => {
 export const channelIdOf = (message: ChatMessage): string | null => {
   switch (message.kind) {
     case "public":
+    case "ghost":
     case "system":
       return OPEN_CHANNEL_ID;
     case "confidential":
@@ -106,7 +110,6 @@ export const channelIdOf = (message: ChatMessage): string | null => {
       // 独り言は送信者の国だけのチャンネル
       return message.sender;
     default:
-      // ghost はフロントでは使わない
       return null;
   }
 };
@@ -230,7 +233,7 @@ export const chatPath = (
 /**
  * ログビューアーのフィルタで出し分ける発言の種類。
  * - system: システムメッセージ
- * - open: オープンチャンネルの発言（管理人発言を含む）
+ * - open: オープンチャンネルの発言（管理人発言・Ghost 発言を含む）
  * - private: 密談（内容が伏せられたものを含む）
  * - personal: 独り言
  */
@@ -243,12 +246,13 @@ export const LOG_CATEGORIES: { value: LogCategory; label: string }[] = [
   { value: "personal", label: "独り言" },
 ];
 
-/** 発言の種類。ログビューアーに出さないもの（ghost）は null */
+/** 発言の種類。知らない kind は null（ログビューアーに出さない） */
 export const logCategoryOf = (m: ChatMessage): LogCategory | null => {
   switch (m.kind) {
     case "system":
       return "system";
     case "public":
+    case "ghost":
       return "open";
     case "confidential":
     case "masked":

@@ -207,3 +207,9 @@
   color: #fff;
   font-weight: 600;
 }
+
+/* Ghost 発言（滅亡した国。枠線と文字を薄くする） */
+.ghost {
+  border-color: var(--color-gray-400);
+  color: var(--color-gray-500);
+}

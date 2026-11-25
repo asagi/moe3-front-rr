@@ -32,6 +32,16 @@
   font-size: 11px;
 }
 
+/* 撤退・調整フェイズで書き込めないことのお知らせ */
+.phaseNotice {
+  border-radius: 6px;
+  background-color: var(--color-gray-200);
+  padding: 6px 10px;
+  color: var(--color-gray-700);
+  font-size: 12px;
+  text-align: center;
+}
+
 /* ---- チャンネル一覧 ---- */
 
 .channels {
@@ -207,6 +217,14 @@
   font-style: italic;
 }
 
+/* Ghost 発言（滅亡した国。枠線と文字を薄くする） */
+.ghost .bubble,
+.mine.ghost .bubble {
+  border: 1px solid var(--color-gray-300);
+  background-color: var(--color-gray-50, #f9fafb);
+  color: var(--color-gray-500);
+}
+
 /* 日付の区切り */
 .date {
   margin-top: 4px;
@@ -265,6 +283,24 @@
   gap: 8px;
 }
 
+.composerNotice {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px 8px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  background-color: #e0e7ff;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.composerNotice a {
+  color: var(--color-brand);
+  font-weight: 600;
+}
+
 .composerError {
   margin-bottom: 6px;
   color: #b91c1c;
@@ -285,7 +321,8 @@
   field-sizing: content;
 }
 
-.composer textarea:disabled {
+.composer textarea:disabled,
+.composer textarea:read-only {
   background-color: var(--color-gray-100);
 }
 

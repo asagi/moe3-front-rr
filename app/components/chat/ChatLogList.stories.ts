@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, within } from "storybook/test";
 
 import { filterLog } from "~/lib/chat";
-import { message, readyMessages, springMessages } from "./fixtures/messages";
+import { ghostMessages, message, readyMessages, springMessages } from "./fixtures/messages";
 import { ChatLogList } from "./ChatLogList";
 
 /** 終わった卓のログ（全部公開。墺露の密談も中身が見える） */
@@ -81,4 +81,13 @@ export const Ready: Story = {
 /** 発言がないとき */
 export const Empty: Story = {
   args: { messages: [] },
+};
+
+/** 滅亡したイタリアの Ghost 発言（白黒のアイコン、薄い吹き出し） */
+export const Ghost: Story = {
+  args: { messages: ghostMessages },
+  play: async ({ canvasElement }) => {
+    const images = canvasElement.querySelectorAll<HTMLImageElement>("img[src*='dfpli']");
+    await expect(images.length).toBe(1);
+  },
 };

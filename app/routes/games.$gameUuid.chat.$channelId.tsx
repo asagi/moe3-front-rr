@@ -1,5 +1,12 @@
-import { useEffect, useState } from "react";
-import { Link, data, redirect, useFetcher, useRevalidator } from "react-router";
+import { useEffect, useRef, useState } from "react";
+import {
+  Link,
+  data,
+  redirect,
+  useFetcher,
+  useNavigate,
+  useRevalidator,
+} from "react-router";
 import {
   ChatComposer,
   type ChatComposerSender,
@@ -10,6 +17,7 @@ import styles from "~/components/chat/Chat.module.css";
 import { ApiError, type PostMessageBody, postMessage } from "~/lib/api.server";
 import {
   type Channel,
+  OPEN_CHANNEL_ID,
   appendMessage,
   channelIdOf,
   channelMessages,
@@ -24,7 +32,13 @@ import {
   resolveChatViewer,
   streamConnectionKey,
 } from "~/lib/chat.server";
-import { type GameDetail, displayName, isLiveSeason } from "~/lib/game";
+import {
+  type GameDetail,
+  chatClosedPhaseLabel,
+  displayName,
+  isWritableSeason,
+  seasonLabel,
+} from "~/lib/game";
 import { requireGame, resolveSeason } from "~/lib/game.server";
 import { meContext } from "~/lib/me.server";
 import { useMessageStream } from "~/lib/use-message-stream";
@@ -51,6 +65,7 @@ type PostAs =
  * - 書けるのは現在のシーズンだけ
  * - 管理者モード中（視点変更なし）は管理人として、オープンチャンネルにだけ書ける
  * - 開戦前夜と感想戦は、オープンチャンネルにだけ書ける
+ * - 滅亡した国は密談に書けない（オープンチャンネルへの発言は Ghost 発言になる。独り言は書ける）
  */
 const resolvePostAs = (
   game: GameDetail,
@@ -69,12 +84,16 @@ const resolvePostAs = (
   if (game.status !== "in_progress" && channel.kind !== "open") {
     return { ok: false, reason: "開戦前夜と感想戦はオープンチャンネルにだけ書き込めます" };
   }
+  if (viewer.eliminated && channel.kind === "group") {
+    return { ok: false, reason: "滅亡したため密談には書き込めません" };
+  }
   return { ok: true, asAdmin: false };
 };
 
 /**
  * 発言フォームのアイコン。
- * 管理人発言なら管理人の画像。進行中は担当国、開戦前夜・感想戦は Discord のアバター
+ * 管理人発言なら管理人の画像。進行中は担当国（滅亡していれば白黒の画像）、
+ * 開戦前夜・感想戦は Discord のアバター
  * （視点変更中は切り替え先のアカウント）
  */
 const composerSender = (
@@ -85,7 +104,12 @@ const composerSender = (
 ): ChatComposerSender => {
   if (asAdmin) return { kind: "admin", faceType: game.regulation.face_type };
   if (game.status === "in_progress" && viewer.power) {
-    return { kind: "power", faceType: game.regulation.face_type, power: viewer.power };
+    return {
+      kind: "power",
+      faceType: game.regulation.face_type,
+      power: viewer.power,
+      defeated: viewer.eliminated,
+    };
   }
   return { kind: "user", name: displayName(me), avatarUrl: me.avatar_url };
 };
@@ -103,8 +127,8 @@ const loadChannel = async (
   const seasonParam = new URL(request.url).searchParams.get("season");
   const listPath = chatPath(game.game_uuid, seasonParam);
   const season = resolveSeason(request, game);
-  // 終わったシーズンは、参加者もログビューアーで見る
-  if (!isLiveSeason(game, season)) throw redirect(listPath);
+  // 書き込めないシーズン（終わったシーズン・撤退フェイズ・調整フェイズ）は、参加者もログビューアーで見る
+  if (!isWritableSeason(game, season)) throw redirect(listPath);
   const viewer = await resolveChatViewer(request, context, game);
   if (viewer.kind === "viewer") throw redirect(listPath);
   const myPower = viewer.power;
@@ -116,16 +140,16 @@ const loadChannel = async (
         : channel.members.includes(myPower)));
   if (!isMember) throw redirect(listPath);
 
-  return { game, channel, viewer, season, listPath };
+  return { game, channel, viewer, season, seasonParam, listPath };
 };
 
 /**
  * チャンネル画面。
- * 第三者になったとき・このチャンネルのメンバーでない参加者になったとき・終わったシーズンを開いたときは、
+ * 第三者になったとき・このチャンネルのメンバーでない参加者になったとき・書き込めないシーズンを開いたときは、
  * シーズンを保ったまま /chat（ログビューアーかチャンネル一覧）に移す
  */
 export async function loader({ request, params, context }: Route.LoaderArgs) {
-  const { game, channel, viewer, season, listPath } = await loadChannel(
+  const { game, channel, viewer, season, seasonParam, listPath } = await loadChannel(
     request,
     params,
     context,
@@ -140,6 +164,8 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     faceType: game.regulation.face_type,
     listPath,
     season,
+    // URL でシーズンを指定しているか（指定がなければ、読み直すと最新のシーズンになる）
+    seasonFixed: seasonParam != null,
     channelId: channel.id,
     channelName: channelName(channel, viewer.power),
     self: { power: viewer.power, username: viewer.username },
@@ -206,16 +232,56 @@ export default function GameChatChannel({ loaderData }: Route.ComponentProps) {
   const { gameUuid, faceType, listPath, season, channelId, self, sender } = loaderData;
   const fetcher = useFetcher<typeof action>();
   const revalidator = useRevalidator();
+  const navigate = useNavigate();
+  const openPath = chatPath(gameUuid, null, OPEN_CHANNEL_ID);
 
   // SSE で届いたメッセージを足していく。読み直したら loader の結果に戻す
   const [messages, setMessages] = useState(loaderData.messages);
   useEffect(() => setMessages(loaderData.messages), [loaderData.messages]);
+
+  // 書きかけの発言があるか（シーズンが進んだときに、画面を移ってよいかの判断に使う）
+  const hasDraftRef = useRef(false);
+  // 書きかけがあって移らなかったときの、新しいシーズン（入力欄の上にお知らせを出す）
+  const [pendingSeason, setPendingSeason] = useState<string | null>(null);
+  useEffect(() => setPendingSeason(null), [channelId]);
+  // 書きかけがあって移らなかったときの、書き込めなくなったフェイズの名前
+  const [closedPhase, setClosedPhase] = useState<string | null>(null);
+  useEffect(() => setClosedPhase(null), [channelId, season]);
+  const viewerPath = chatPath(gameUuid, null);
+
+  /**
+   * 撤退・調整フェイズになったら書き込めないので、ログビューアーに移る。
+   * 書きかけがあるときは、消えないよう移らずに入力欄を止めてお知らせを出す（書きかけはコピーできる）
+   */
+  const closeByPhase = (phase: string) => {
+    if (!hasDraftRef.current) {
+      void navigate(viewerPath);
+      return;
+    }
+    setClosedPhase(phase);
+  };
+
+  /**
+   * シーズンが進んだら、最新シーズンのオープンチャンネルに移る。
+   * オープンチャンネル以外で書きかけがあるときは、消えないよう移らずにお知らせだけ出す
+   */
+  const followSeason = (next: string) => {
+    if (!hasDraftRef.current || channelId === OPEN_CHANNEL_ID) {
+      void navigate(openPath);
+      return;
+    }
+    setPendingSeason(next);
+    // シーズンを指定していなければ、このチャンネルの最新シーズンに読み直す（書きかけは残る）。
+    // 指定していると読み直しでログビューアーに移り書きかけが消えるので、読み直さない
+    if (!loaderData.seasonFixed) void revalidator.revalidate();
+  };
 
   useMessageStream(
     gameUuid,
     {
       after: loaderData.streamAfter,
       connectionKey: loaderData.streamKey,
+      season,
     },
     {
       onMessage: (m) => {
@@ -223,8 +289,11 @@ export default function GameChatChannel({ loaderData }: Route.ComponentProps) {
           setMessages((list) => appendMessage(list, m));
         }
       },
-      // シーズンが進んだら、現在のシーズンや書き込める範囲を読み直す
-      onSeason: () => revalidator.revalidate(),
+      onSeason: followSeason,
+      onPhase: (phase) => {
+        const label = chatClosedPhaseLabel(phase);
+        if (label) closeByPhase(label);
+      },
     },
   );
 
@@ -245,12 +314,36 @@ export default function GameChatChannel({ loaderData }: Route.ComponentProps) {
       <ChatMessageList messages={messages} faceType={faceType} self={self} />
       <div className={styles.composerDock}>
         <ChatComposer
+          // チャンネルを移ったら書きかけを持ち越さない（密談の下書きをオープンに出さないため）
+          key={channelId}
           sender={sender}
-          disabledReason={loaderData.disabledReason}
+          disabledReason={
+            closedPhase
+              ? `${closedPhase}のあいだは書き込めません`
+              : loaderData.disabledReason
+          }
           submitting={fetcher.state !== "idle"}
           error={fetcher.state === "idle" ? fetcher.data?.error : null}
           resetKey={sentCount}
           onSend={(context) => fetcher.submit({ context }, { method: "post" })}
+          onDraftChange={(hasDraft) => {
+            hasDraftRef.current = hasDraft;
+          }}
+          notice={
+            closedPhase ? (
+              <>
+                <span>{closedPhase}になりました</span>
+                <Link to={viewerPath}>ログビューアーへ</Link>
+              </>
+            ) : (
+              pendingSeason && (
+                <>
+                  <span>{seasonLabel(pendingSeason)}が始まりました</span>
+                  <Link to={openPath}>オープンチャンネルへ</Link>
+                </>
+              )
+            )
+          }
         />
       </div>
     </div>

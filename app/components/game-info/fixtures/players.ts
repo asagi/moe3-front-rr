@@ -14,5 +14,6 @@ export const player = (
   is_owner: false,
   requested_power: null,
   power: null,
+  is_eliminated: false,
   ...overrides,
 });

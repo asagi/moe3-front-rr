@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import { AdminImage, PowerImage } from "~/components/power-image/PowerImage";
 import { UserAvatar } from "~/components/user-avatar/UserAvatar";
-import { type ChatMessage, type ChatSelf, isMine, senderName } from "~/lib/chat";
+import { type ChatMessage, type ChatSelf, isGhost, isMine, senderName } from "~/lib/chat";
 import { type GameRegulation, formatMonthDayJa } from "~/lib/game";
 import styles from "./Chat.module.css";
 
@@ -75,8 +75,14 @@ const MessageItem = ({
   }
   if (isMine(m, self)) {
     // 自分の発言はアイコンと名前を出さず、右に寄せる（時刻は吹き出しの左下）
+    const mineClasses = [
+      styles.message,
+      styles.mine,
+      isGhost(m) ? styles.ghost : "",
+      continued ? styles.continued : "",
+    ].join(" ");
     return (
-      <li className={`${styles.message} ${styles.mine} ${continued ? styles.continued : ""}`}>
+      <li className={mineClasses}>
         {time}
         <p className={styles.bubble}>
           <span className="sr-only">{name}: </span>
@@ -88,6 +94,7 @@ const MessageItem = ({
   const classes = [
     styles.message,
     m.kind === "masked" ? styles.masked : "",
+    isGhost(m) ? styles.ghost : "",
     continued ? styles.continued : "",
   ].join(" ");
   return (
@@ -127,6 +134,14 @@ const SenderIcon = ({
         <UserAvatar name={name} avatarUrl={message.sender_user?.avatar_url} size={32} />
       );
     default:
-      return <PowerImage faceType={faceType} code={message.sender} size={32} />;
+      // Ghost 発言（滅亡した国）は白黒の画像
+      return (
+        <PowerImage
+          faceType={faceType}
+          code={message.sender}
+          size={32}
+          defeated={isGhost(message)}
+        />
+      );
   }
 };

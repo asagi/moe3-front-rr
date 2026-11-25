@@ -11,6 +11,8 @@ export interface PowerImageProps {
   code: PowerCode | null;
   /** 表示する枠の一辺（px）。娘・旗どちらでもこの正方形に収める */
   size: number;
+  /** 滅亡した国の白黒の画像（dfpl）にするか */
+  defeated?: boolean;
   className?: string;
 }
 
@@ -19,7 +21,13 @@ export interface PowerImageProps {
  * 娘（正方形）と旗（3:2）で比率が違うので、同じ大きさの正方形の枠に
  * 元の比率のまま中央寄せで収める（並べたときに位置がずれないようにする）
  */
-export const PowerImage = ({ faceType, code, size, className }: PowerImageProps) =>
+export const PowerImage = ({
+  faceType,
+  code,
+  size,
+  defeated = false,
+  className,
+}: PowerImageProps) =>
   code == null ? (
     // 国未定・希望なしの専用画像はないので、枠だけの仮アイコンにする
     <span
@@ -31,7 +39,13 @@ export const PowerImage = ({ faceType, code, size, className }: PowerImageProps)
       </span>
     </span>
   ) : (
-    <FramedImage faceType={faceType} code={code} size={size} className={className} />
+    <FramedImage
+      faceType={faceType}
+      code={code}
+      size={size}
+      defeated={defeated}
+      className={className}
+    />
   );
 
 export interface AdminImageProps {
@@ -53,11 +67,13 @@ const FramedImage = ({
   faceType,
   code,
   size,
+  defeated = false,
   className,
 }: {
   faceType: GameRegulation["face_type"];
   code: PowerCode | "x";
   size: number;
+  defeated?: boolean;
   className?: string;
 }) => {
   const height = faceType === "flags" ? Math.round(size * FLAG_RATIO) : size;
@@ -68,7 +84,7 @@ const FramedImage = ({
     >
       <img
         className={styles.image}
-        src={powerImageUrl(faceType, code, size > 60 ? 100 : 60)}
+        src={powerImageUrl(faceType, code, size > 60 ? 100 : 60, defeated)}
         alt=""
         width={size}
         height={height}

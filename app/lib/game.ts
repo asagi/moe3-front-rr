@@ -100,13 +100,15 @@ export const POWER_LABELS = Object.fromEntries(
 /**
  * 国の画像 URL。"x" は管理人の画像（国未定・希望なしの画像ではない）
  * @param size 60 または 100（px）
+ * @param defeated 滅亡した国の白黒の画像（dfpl）にするか。管理人の画像にはない
  */
 export const powerImageUrl = (
   faceType: GameRegulation["face_type"],
   code: PowerCode | "x",
   size: 60 | 100 = 60,
+  defeated = false,
 ) =>
-  `/images/power/${faceType === "girls" ? "girl" : "flag"}/pl${code}${size}.png`;
+  `/images/power/${faceType === "girls" ? "girl" : "flag"}/${defeated && code !== "x" ? "dfpl" : "pl"}${code}${size}.png`;
 
 /** 卓に参加しているユーザー（Discord のプロフィール） */
 export interface GamePlayerUser {
@@ -125,6 +127,8 @@ export interface GamePlayer {
   requested_power: PowerCode | null;
   /** 担当国（開始前は null） */
   power: PowerCode | null;
+  /** 担当国が滅亡しているか（担当国がない・開戦前夜・感想戦は false） */
+  is_eliminated: boolean;
 }
 
 /** 卓の詳細（GET /games/{uuid}） */
@@ -216,6 +220,22 @@ export const isLiveSeason = (
   game: Pick<GameDetail, "status" | "seasons">,
   season: string | null,
 ) => !isEnded(game) && season != null && season === game.seasons.at(-1);
+
+/** フェイズ種別（GET /games/{uuid} の phase_kind） */
+export type PhaseKind = GameDetail["phase_kind"];
+
+/** チャットに書き込めないフェイズ（撤退・調整）の名前。書き込めるフェイズなら null */
+export const chatClosedPhaseLabel = (phaseKind: PhaseKind) =>
+  phaseKind === "retreat" ? "撤退フェイズ" : phaseKind === "adjustment" ? "調整フェイズ" : null;
+
+/**
+ * チャットに書き込めるシーズンか（まだ発言が増えるシーズンで、撤退・調整フェイズでない）。
+ * 書き込めなければ、参加者もログビューアーで見る
+ */
+export const isWritableSeason = (
+  game: Pick<GameDetail, "status" | "seasons" | "phase_kind">,
+  season: string | null,
+) => isLiveSeason(game, season) && chatClosedPhaseLabel(game.phase_kind) == null;
 
 /** 国ごとの密談がないシーズン（開戦前夜・感想戦）か */
 export const isOffGameSeason = (season: string | null) =>

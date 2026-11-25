@@ -53,3 +53,11 @@ export const readyMessages: ChatMessage[] = [
   }),
   message({ sender_kind: "admin", turn: "ready", context: "開始は 12 月 12 日 0 時です。", created_at: "2026-11-23 11:10" }),
 ];
+
+/** 秋のオープンチャンネル（滅亡したイタリアの Ghost 発言を含む） */
+export const ghostMessages: ChatMessage[] = [
+  message({ sender: "t", turn: "1905f", context: "イタリアさん、お疲れさまでした。", created_at: "2026-12-20 09:00" }),
+  message({ sender: "i", kind: "ghost", turn: "1905f", context: "まだ見てるからな。", created_at: "2026-12-20 09:05" }),
+  message({ sender: "i", kind: "ghost", turn: "1905f", context: "オーストリアを信じたのが間違いだった。", created_at: "2026-12-20 09:06" }),
+  message({ sender: "f", turn: "1905f", context: "化けて出た。", created_at: "2026-12-20 09:10" }),
+];

@@ -25,6 +25,11 @@ export const Flag: Story = {
   args: { faceType: "flags" },
 };
 
+/** 滅亡した国（白黒の dfpl 画像。Ghost 発言のアイコンに使う） */
+export const Defeated: Story = {
+  args: { defeated: true },
+};
+
 /** 娘と旗を並べたときに枠の大きさがそろう（先頭は国未定・希望なし） */
 export const AllPowers: Story = {
   render: (args) =>

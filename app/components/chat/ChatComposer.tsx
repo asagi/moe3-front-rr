@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { type ReactNode, useEffect, useId, useState } from "react";
 import { AdminImage, PowerImage } from "~/components/power-image/PowerImage";
 import { UserAvatar } from "~/components/user-avatar/UserAvatar";
 import { type GameRegulation, type PowerCode, POWER_LABELS } from "~/lib/game";
@@ -11,8 +11,13 @@ export const MAX_MESSAGE_LENGTH = 2000;
 export type ChatComposerSender =
   /** 開戦前夜・感想戦など担当国で発言しないとき（Discord のアバター） */
   | { kind: "user"; name: string; avatarUrl: string | null }
-  /** 担当国として発言するとき */
-  | { kind: "power"; faceType: GameRegulation["face_type"]; power: PowerCode }
+  /** 担当国として発言するとき（defeated なら滅亡した国の Ghost 発言で、白黒の画像） */
+  | {
+      kind: "power";
+      faceType: GameRegulation["face_type"];
+      power: PowerCode;
+      defeated?: boolean;
+    }
   /** 管理者モード中の管理人発言 */
   | { kind: "admin"; faceType: GameRegulation["face_type"] };
 
@@ -28,6 +33,10 @@ export interface ChatComposerProps {
   resetKey?: number;
   /** 送信ボタン（または Ctrl / ⌘ + Enter）で呼ばれる */
   onSend?: (context: string) => void;
+  /** 書きかけの発言があるかが変わったら呼ばれる */
+  onDraftChange?: (hasDraft: boolean) => void;
+  /** 入力欄の上に出すお知らせ（新しいシーズンが始まったときなど） */
+  notice?: ReactNode;
 }
 
 /** 発言の送信フォーム（画面下に固定して使う入力欄） */
@@ -38,10 +47,14 @@ export const ChatComposer = ({
   error,
   resetKey = 0,
   onSend,
+  onDraftChange,
+  notice,
 }: ChatComposerProps) => {
   const id = useId();
   const [text, setText] = useState("");
   useEffect(() => setText(""), [resetKey]);
+  const hasDraft = text.trim() !== "";
+  useEffect(() => onDraftChange?.(hasDraft), [hasDraft]);
 
   const disabled = disabledReason != null;
   const tooLong = text.length > MAX_MESSAGE_LENGTH;
@@ -59,6 +72,7 @@ export const ChatComposer = ({
       }}
       aria-label="発言する"
     >
+      {notice && <div className={styles.composerNotice}>{notice}</div>}
       {(error || tooLong) && (
         <p className={styles.composerError} role="alert">
           {tooLong ? `${MAX_MESSAGE_LENGTH} 文字までです（${text.length} 文字）` : error}
@@ -82,7 +96,9 @@ export const ChatComposer = ({
               send();
             }
           }}
-          disabled={disabled}
+          // 書きかけがあるときは、コピーできるよう読み取り専用にとどめる
+          disabled={disabled && !hasDraft}
+          readOnly={disabled}
           placeholder={disabledReason ?? "発言を入力"}
         />
         <button
@@ -122,7 +138,12 @@ const SenderIcon = ({ sender }: { sender: ChatComposerSender }) => {
     case "power":
       return (
         <span title={title}>
-          <PowerImage faceType={sender.faceType} code={sender.power} size={28} />
+          <PowerImage
+            faceType={sender.faceType}
+            code={sender.power}
+            size={28}
+            defeated={sender.defeated}
+          />
         </span>
       );
     case "admin":

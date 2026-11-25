@@ -20,6 +20,8 @@ export type ChatViewer =
       power: PowerCode | null;
       /** 見ている人の Discord ユーザー名（開戦前夜・感想戦の自分の発言の判定に使う） */
       username: string;
+      /** 担当国が滅亡しているか（オープンチャンネルへの発言が Ghost 発言になり、密談は書けない） */
+      eliminated: boolean;
       canPostAsAdmin: boolean;
     }
   | { kind: "viewer" };
@@ -50,9 +52,19 @@ export const resolveChatViewer = async (
     (p) => p.user.discord_user_id === state.me.discord_user_id,
   );
   const username = state.me.username;
-  if (player) return { kind: "channels", power: player.power, username, canPostAsAdmin };
+  if (player) {
+    return {
+      kind: "channels",
+      power: player.power,
+      username,
+      eliminated: player.is_eliminated,
+      canPostAsAdmin,
+    };
+  }
   // 参加者でない管理者は、オープンチャンネルだけのチャンネル一覧にする（管理人発言のため）
-  if (canPostAsAdmin) return { kind: "channels", power: null, username, canPostAsAdmin };
+  if (canPostAsAdmin) {
+    return { kind: "channels", power: null, username, eliminated: false, canPostAsAdmin };
+  }
   return { kind: "viewer" };
 };
 
@@ -92,9 +104,10 @@ const POST_ERROR_MESSAGES: Record<string, string> = {
   empty_context: "発言を入力してください。",
   context_too_long: "発言は 2000 文字までです。",
   not_a_player: "この卓の参加者ではないため、書き込めません。",
-  power_eliminated: "担当国が滅亡したため、書き込めません。",
+  power_eliminated: "担当国が滅亡したため、密談には書き込めません。",
   admin_post_not_allowed: "管理人発言は、視点変更していない管理者モード中だけできます。",
   game_not_accepting_messages: "この卓にはもう書き込めません。",
+  phase_not_accepting_messages: "撤退フェイズと調整フェイズのあいだは書き込めません。",
   not_found: "卓が見つかりませんでした。",
 };
 

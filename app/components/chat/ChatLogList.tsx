@@ -3,6 +3,7 @@ import { AdminImage, PowerImage } from "~/components/power-image/PowerImage";
 import { UserAvatar } from "~/components/user-avatar/UserAvatar";
 import {
   type ChatMessage,
+  isGhost,
   logCategoryOf,
   recipientsOf,
   senderName,
@@ -103,6 +104,7 @@ const LogItem = ({
     styles.bubble,
     category === "private" ? styles.private : "",
     category === "personal" ? styles.personal : "",
+    isGhost(m) ? styles.ghost : "",
   ].join(" ");
   const label = headLabel(m, name);
   return (
@@ -152,6 +154,14 @@ const SenderIcon = ({
         <UserAvatar name={name} avatarUrl={message.sender_user?.avatar_url} size={40} />
       );
     default:
-      return <PowerImage faceType={faceType} code={message.sender} size={40} />;
+      // Ghost 発言（滅亡した国）は白黒の画像
+      return (
+        <PowerImage
+          faceType={faceType}
+          code={message.sender}
+          size={40}
+          defeated={isGhost(message)}
+        />
+      );
   }
 };

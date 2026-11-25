@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, within } from "storybook/test";
 
 import { channelMessages } from "~/lib/chat";
-import { readyMessages, springMessages } from "./fixtures/messages";
+import { ghostMessages, readyMessages, springMessages } from "./fixtures/messages";
 import { ChatMessageList } from "./ChatMessageList";
 
 const meta = {
@@ -81,5 +81,14 @@ export const Ready: Story = {
     await expect(canvas.getByText("管理人")).toBeInTheDocument();
     // 自分（asagix）の発言には名前を出さない
     await expect(canvas.queryByText("あさぎ")).not.toBeInTheDocument();
+  },
+};
+
+/** 滅亡したイタリアの Ghost 発言（白黒のアイコン、薄い吹き出し） */
+export const Ghost: Story = {
+  args: { messages: ghostMessages },
+  play: async ({ canvasElement }) => {
+    const images = canvasElement.querySelectorAll<HTMLImageElement>("img[src*='dfpli']");
+    await expect(images.length).toBe(1);
   },
 };

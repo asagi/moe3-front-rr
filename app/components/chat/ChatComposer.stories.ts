@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
+import { createElement } from "react";
+
 import { expect, within } from "storybook/test";
 
 import { ChatComposer } from "./ChatComposer";
@@ -18,6 +20,19 @@ type Story = StoryObj<typeof meta>;
 
 /** 担当国として発言する */
 export const Power: Story = {};
+
+/** 滅亡した国（オープンチャンネルへの発言は Ghost 発言になる。アイコンは白黒） */
+export const DefeatedPower: Story = {
+  args: { sender: { kind: "power", faceType: "girls", power: "f", defeated: true } },
+};
+
+/** 滅亡した国の密談（書き込めない） */
+export const DefeatedGroup: Story = {
+  args: {
+    sender: { kind: "power", faceType: "girls", power: "f", defeated: true },
+    disabledReason: "滅亡したため密談には書き込めません",
+  },
+};
 
 /** 開戦前夜・感想戦は Discord のアバター */
 export const DiscordUser: Story = {
@@ -61,5 +76,20 @@ export const SendEnabledAfterInput: Story = {
     await expect(button).toBeDisabled();
     await userEvent.type(canvas.getByRole("textbox"), "こんにちは");
     await expect(button).toBeEnabled();
+  },
+};
+
+/** 書きかけがあってシーズンが進んだとき（移らずにお知らせを出す） */
+export const NewSeasonNotice: Story = {
+  args: {
+    notice: createElement(
+      "span",
+      null,
+      "1901 年秋が始まりました ",
+      createElement("a", { href: "#" }, "オープンチャンネルへ"),
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByText(/1901 年秋が始まりました/)).toBeInTheDocument();
   },
 };
