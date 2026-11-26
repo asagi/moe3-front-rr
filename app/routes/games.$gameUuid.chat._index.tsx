@@ -102,6 +102,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       // 第三者にはフィルタにも出さない
       personalVisible:
         game.status !== "in_progress" || (viewer.kind === "channels" && viewer.power != null),
+      // 開戦前夜と感想戦はオープンチャンネルだけなので、フィルタも全体向けの発言だけにする
+      openOnly: isOffGameSeason(season),
       live,
       streamAfter: messages.at(-1)?.message_uuid ?? null,
       streamKey: viewer.kind === "channels" ? streamConnectionKey(viewer) : "viewer",
@@ -115,7 +117,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     // URL で指定されたシーズン（チャンネル画面へのリンクに引き継ぐ）
     seasonParam: new URL(request.url).searchParams.get("season"),
     myPower,
-    channels: summarizeChannels(messages, myPower),
+    // 開戦前夜と感想戦はオープンチャンネルだけ（独り言も出さない）
+    channels: summarizeChannels(messages, isOffGameSeason(season) ? null : myPower),
     live,
     streamKey: streamConnectionKey(viewer),
   };
@@ -206,9 +209,11 @@ const ChatLogViewer = ({ data }: { data: Extract<LoaderData, { layout: "viewer" 
   const pov = povEnabled ? parsePov(searchParams.get("pov")) : null;
   const hiddenParam = searchParams.get("hide");
   const hidden = useMemo(() => parseHidden(hiddenParam), [hiddenParam]);
-  const categories: LogCategory[] = personalVisible
-    ? ["system", "open", "private", "personal"]
-    : ["system", "open", "private"];
+  const categories: LogCategory[] = data.openOnly
+    ? ["system", "open"]
+    : personalVisible
+      ? ["system", "open", "private", "personal"]
+      : ["system", "open", "private"];
 
   const updateParam = (key: string, value: string | null) =>
     setSearchParams(

@@ -36,6 +36,7 @@ import {
   type GameDetail,
   chatClosedPhaseLabel,
   displayName,
+  isOffGameSeason,
   isWritableSeason,
   seasonLabel,
 } from "~/lib/game";
@@ -139,6 +140,8 @@ const loadChannel = async (
         ? channel.power === myPower
         : channel.members.includes(myPower)));
   if (!isMember) throw redirect(listPath);
+  // 開戦前夜と感想戦はオープンチャンネルだけ（独り言もない）
+  if (isOffGameSeason(season) && channel.kind !== "open") throw redirect(listPath);
 
   return { game, channel, viewer, season, seasonParam, listPath };
 };

@@ -132,7 +132,7 @@ export interface ChannelSummary {
  * 並びは、オープンチャンネル → 独り言 → 密談（新しく発言があった順）。
  * オープンチャンネルと独り言は、メッセージがなくても出す。
  * @param myPower 参加者の担当国。その国がメンバーのチャンネルだけに絞る。
- *   null（担当国が決まる前）ならオープンチャンネルだけ
+ *   null（担当国が決まる前・開戦前夜・感想戦）ならオープンチャンネルだけ
  */
 export const summarizeChannels = (
   messages: ChatMessage[],
