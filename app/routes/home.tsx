@@ -5,8 +5,11 @@ import { Greeting } from "~/components/greeting/Greeting";
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "New React Router App" },
-    { name: "description", content: "Welcome to React Router!" },
+    { title: "Diplomacy MOE" },
+    {
+      name: "description",
+      content: "ボードゲーム「ディプロマシー」をオンラインで遊べるサイト",
+    },
   ];
 }
 
