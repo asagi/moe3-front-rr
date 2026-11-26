@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Outlet, useLocation, useMatches } from "react-router";
 import { GameHeader, type SeasonNav } from "~/components/game-nav/GameHeader";
 import { GameTabBar } from "~/components/game-nav/GameTabBar";
@@ -86,6 +86,27 @@ const useSeasonNav = (season: string | null, seasons: string[]): SeasonNav | und
   };
 };
 
+/**
+ * 最後に開いていたチャットのページ（チャンネル画面なら "/games/:uuid/chat/efg"、クエリ込み）。
+ * 命令ページなどに移ってからチャットのタブで戻ったときに、同じチャンネルを開くために使う。
+ * 見ているシーズンが違えば使わない（タブはそのシーズンのチャンネル一覧へ）
+ */
+const useLastChatPath = (gameUuid: string, season: string | null) => {
+  const location = useLocation();
+  const [last, setLast] = useState<{ gameUuid: string; path: string; season: string | null } | null>(
+    null,
+  );
+  useEffect(() => {
+    if (!location.pathname.startsWith(`/games/${gameUuid}/chat`)) return;
+    setLast({
+      gameUuid,
+      path: `${location.pathname}${location.search}`,
+      season: new URLSearchParams(location.search).get("season"),
+    });
+  }, [gameUuid, location.pathname, location.search]);
+  return last && last.gameUuid === gameUuid && last.season === season ? last.path : null;
+};
+
 export default function GameLayout({ loaderData }: Route.ComponentProps) {
   const matches = useMatches();
   // いちばん深いページの handle からページ名を取る
@@ -103,6 +124,7 @@ export default function GameLayout({ loaderData }: Route.ComponentProps) {
   const headerRef = useRef<HTMLDivElement>(null);
   useStickyHeight(headerRef, "--game-header-height");
   const seasonNav = useSeasonNav(seasonal ? loaderData.season : null, loaderData.seasons);
+  const chatTo = useLastChatPath(loaderData.gameUuid, seasonal ? seasonParam : null);
 
   return (
     // 画面下のタブバーに隠れないよう、下に余白を取る
@@ -119,6 +141,8 @@ export default function GameLayout({ loaderData }: Route.ComponentProps) {
         maintenanceEnabled={loaderData.maintenanceEnabled}
         // 過去のシーズンを見ているときは、カレンダー・チャット・命令のあいだでシーズンを引き継ぐ
         season={seasonal ? seasonParam : null}
+        // ほかのタブからチャットに戻ったら、最後に開いていたチャンネルを開く
+        chatTo={chatTo}
       />
     </div>
   );

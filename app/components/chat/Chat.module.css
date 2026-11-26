@@ -43,6 +43,14 @@
   text-align: center;
 }
 
+/* グループチャンネルの見出し（自国以外のメンバーの国の画像を並べる） */
+.subHeaderInner h3.subHeaderPowers {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 0;
+}
+
 .empty {
   border: 1px dashed var(--color-gray-300);
   border-radius: 6px;
@@ -360,4 +368,106 @@
 .sendButton:disabled {
   cursor: not-allowed;
   color: var(--color-gray-300);
+}
+
+/* ---- グループチャンネルを作る ---- */
+
+.newChannelButton {
+  cursor: pointer;
+  border: 1px dashed var(--color-gray-400);
+  border-radius: 8px;
+  background-color: #fff;
+  padding: 10px 12px;
+  color: var(--color-gray-700);
+  font-size: 14px;
+}
+
+.newChannelButton:hover {
+  background-color: var(--color-gray-50, #f9fafb);
+}
+
+.newChannel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 8px;
+  background-color: #fff;
+  padding: 12px;
+}
+
+.newChannelTitle {
+  font-weight: 600;
+  font-size: 14px;
+  text-align: center;
+}
+
+.newChannelNote {
+  color: var(--color-gray-500);
+  font-size: 13px;
+  text-align: center;
+}
+
+.newChannelChoices {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 4px;
+}
+
+.newChannelChoice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 4px 2px;
+  font-size: 11px;
+  /* 「オーストリア」も 1 行に収める */
+  white-space: nowrap;
+}
+
+.newChannelChoice[data-checked="true"] {
+  border-color: var(--color-brand);
+  background-color: #eef0fe;
+}
+
+.newChannelChoice:has(input:focus-visible) {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+.newChannelButtons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.newChannelSubmit,
+.newChannelCancel {
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 6px 20px;
+  font-size: 14px;
+}
+
+.newChannelSubmit {
+  border: 1px solid var(--color-brand);
+  background-color: var(--color-brand);
+  color: #fff;
+}
+
+.newChannelSubmit:hover:not(:disabled) {
+  background-color: var(--color-brand-hover);
+}
+
+.newChannelSubmit:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.newChannelCancel {
+  border: 1px solid var(--color-gray-400);
+  background-color: #fff;
 }

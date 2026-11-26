@@ -6,6 +6,7 @@ import {
   useSearchParams,
 } from "react-router";
 import { ChannelList } from "~/components/chat/ChannelList";
+import { NewChannelForm } from "~/components/chat/NewChannelForm";
 import styles from "~/components/chat/Chat.module.css";
 import { ChatLogList } from "~/components/chat/ChatLogList";
 import { ChatLogToolbar } from "~/components/chat/ChatLogToolbar";
@@ -15,6 +16,7 @@ import {
   appendMessage,
   chatPath,
   filterLog,
+  groupChannelId,
   parseHidden,
   parsePov,
   serializeHidden,
@@ -26,6 +28,7 @@ import {
   streamConnectionKey,
 } from "~/lib/chat.server";
 import {
+  POWERS,
   chatClosedPhaseLabel,
   isLiveSeason,
   isOffGameSeason,
@@ -133,6 +136,20 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       messages,
       isOffGameSeason(season) ? null : myPower,
     ),
+    // グループチャンネルを作れるときのメンバーの候補（作れなければ null）。
+    // 進行中の卓の担当国のある参加者だけ。開戦前夜と感想戦はオープンチャンネルだけ、
+    // 滅亡した国と管理人発言（管理者モード中）はグループチャンネルに書けないので作れない
+    newChannelCandidates:
+      game.status === "in_progress" &&
+      !isOffGameSeason(season) &&
+      myPower != null &&
+      !viewer.eliminated &&
+      !viewer.canPostAsAdmin
+        ? // 国の並び順にする
+          POWERS.map((p) => p.code).filter((code) =>
+            game.players.some((p) => p.power === code && code !== myPower && !p.is_eliminated),
+          )
+        : null,
     live,
     streamKey: streamConnectionKey(viewer),
   };
@@ -201,6 +218,17 @@ const ChannelIndex = ({
           myPower={myPower}
           channelHref={(id) => chatPath(gameUuid, seasonParam, id)}
         />
+        {data.newChannelCandidates && myPower && (
+          <NewChannelForm
+            faceType={faceType}
+            candidates={data.newChannelCandidates}
+            // チャンネル ID は顔ぶれで決まるので、そのチャンネル画面を開くだけでよい
+            // （最初の発言でチャンネルが始まる。同じ顔ぶれのチャンネルがあればそれが開く）
+            onCreate={(members) =>
+              void navigate(chatPath(gameUuid, seasonParam, groupChannelId([myPower, ...members])))
+            }
+          />
+        )}
       </div>
     </>
   );

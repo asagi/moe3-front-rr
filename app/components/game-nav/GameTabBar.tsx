@@ -13,6 +13,11 @@ export interface GameTabBarProps {
    * カレンダー・チャット・命令のあいだを移るときに引き継ぐ
    */
   season?: string | null;
+  /**
+   * チャットのタブのリンク先を、これに差し替える（最後に開いていたチャンネルに戻すため）。
+   * 指定しなければチャンネル一覧（ログビューアー）
+   */
+  chatTo?: string | null;
 }
 
 /** 卓内のページを切り替える画面下のタブバー */
@@ -21,6 +26,7 @@ export const GameTabBar = ({
   ordersEnabled,
   maintenanceEnabled,
   season = null,
+  chatTo = null,
 }: GameTabBarProps) => {
   const base = `/games/${gameUuid}`;
   const query = season ? `?${new URLSearchParams({ season })}` : "";
@@ -28,7 +34,7 @@ export const GameTabBar = ({
     <nav className={styles.tabBar} aria-label="卓のメニュー">
       <ul>
         <Tab to={`${base}/calendar${query}`} label="カレンダー" icon={<CalendarIcon />} />
-        <Tab to={`${base}/chat${query}`} label="チャット" icon={<ChatIcon />} />
+        <Tab to={chatTo ?? `${base}/chat${query}`} label="チャット" icon={<ChatIcon />} />
         <Tab
           to={`${base}/orders${query}`}
           label="命令"

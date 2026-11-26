@@ -13,6 +13,7 @@ import {
   MAX_MESSAGE_LENGTH,
 } from "~/components/chat/ChatComposer";
 import { ChatMessageList } from "~/components/chat/ChatMessageList";
+import { PowerImage } from "~/components/power-image/PowerImage";
 import styles from "~/components/chat/Chat.module.css";
 import { ApiError, type PostMessageBody, postMessage } from "~/lib/api.server";
 import {
@@ -182,6 +183,17 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     seasonFixed: seasonParam != null,
     channelId: channel.id,
     channelName: channelName(channel, viewer.power),
+    // グループチャンネルの見出しは、自国以外のメンバーの国の画像で出す（滅亡した国は白黒）
+    headerPowers:
+      channel.kind === "group"
+        ? channel.members
+            .filter((code) => code !== viewer.power)
+            .map((code) => ({
+              code,
+              eliminated:
+                game.players.find((p) => p.power === code)?.is_eliminated ?? false,
+            }))
+        : null,
     self: { power: viewer.power, username: viewer.username },
     sender: composerSender(game, viewer, postAs.ok && postAs.asAdmin, state.me),
     disabledReason: postAs.ok ? undefined : postAs.reason,
@@ -354,7 +366,22 @@ export default function GameChatChannel({ loaderData }: Route.ComponentProps) {
             </svg>
             <span aria-hidden="true">一覧</span>
           </Link>
-          <h3>{loaderData.channelName}</h3>
+          {loaderData.headerPowers ? (
+            <h3 className={styles.subHeaderPowers} title={loaderData.channelName}>
+              {loaderData.headerPowers.map((p) => (
+                <PowerImage
+                  key={p.code}
+                  faceType={faceType}
+                  code={p.code}
+                  size={32}
+                  defeated={p.eliminated}
+                />
+              ))}
+              <span className="sr-only">{loaderData.channelName}</span>
+            </h3>
+          ) : (
+            <h3>{loaderData.channelName}</h3>
+          )}
         </div>
       </div>
       <div className={`${styles.page} ${styles.withComposer}`}>
