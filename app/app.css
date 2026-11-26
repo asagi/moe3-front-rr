@@ -10,13 +10,14 @@
   --color-brand-hover: #4752c4;
 }
 
+/*
+ * 部品の配色はライトモード前提で作っているので、OS がダークモードでも
+ * ライトモードの表示に固定する（ダークモードには未対応）
+ */
 html,
 body {
-  @apply bg-gray-100 dark:bg-gray-950;
-
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
-  }
+  @apply bg-gray-100;
+  color-scheme: light;
 }
 
 :root {
@@ -31,12 +32,12 @@ body {
  */
 html:has(.app-frame),
 html:has(.app-frame) body {
-  @apply bg-gray-300 dark:bg-black;
+  @apply bg-gray-300;
 }
 
 /* アプリ全体の枠（サイトヘッダからページの中身まで） */
 .app-frame {
-  @apply bg-gray-100 dark:bg-gray-950;
+  @apply bg-gray-100;
   margin: 0 auto;
   min-height: 100dvh;
   max-width: var(--app-max-width);
