@@ -53,3 +53,25 @@ export const BeforeStart: Story = {
 export const OwnerInProgress: Story = {
   args: { ordersEnabled: true, maintenanceEnabled: true },
 };
+
+/** 過去のシーズンを見ているとき：カレンダー・チャット・命令にシーズンを引き継ぐ */
+export const WithSeason: Story = {
+  args: { ordersEnabled: true, season: "1901s" },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const base = `/games/${GAME_UUID}`;
+    await expect(canvas.getByRole("link", { name: "チャット" })).toHaveAttribute(
+      "href",
+      `${base}/chat?season=1901s`,
+    );
+    await expect(canvas.getByRole("link", { name: "命令" })).toHaveAttribute(
+      "href",
+      `${base}/orders?season=1901s`,
+    );
+    await expect(canvas.getByRole("link", { name: "カレンダー" })).toHaveAttribute(
+      "href",
+      `${base}/calendar?season=1901s`,
+    );
+    await expect(canvas.getByRole("link", { name: "卓情報" })).toHaveAttribute("href", base);
+  },
+};

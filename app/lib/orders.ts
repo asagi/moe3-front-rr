@@ -88,6 +88,7 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   failure: "失敗",
   dislodged: "敗退",
   cut: "カット",
+  // 調整フェイズの命令のほか、メインフェイズでカットも敗退もされずに働いた支援・輸送にも使う
   valid: "有効",
   invalid: "無効",
   unreachable: "到達不能",

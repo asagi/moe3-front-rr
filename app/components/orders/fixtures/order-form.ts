@@ -21,7 +21,7 @@ export const mainResponse: OrdersResponse = {
     { unit_power: "e", unit_kind: "f", location: "lon", move_dests: ["eng", "nth", "wal", "yor"], convoy_dests: [], support_targets: [], convoy_targets: [] },
     {
       unit_power: "f", unit_kind: "f", location: "bre",
-      move_dests: ["eng", "gas", "mao", "pic"], convoy_dests: [],
+      move_dests: ["eng", "gas", "mid", "pic"], convoy_dests: [],
       support_targets: [{ target_location: "par", target_dests: [null, "gas", "pic"] }],
       convoy_targets: [],
     },

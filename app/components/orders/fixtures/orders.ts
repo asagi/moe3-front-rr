@@ -14,8 +14,8 @@ export const initialPowers: PowerStatus[] = [
 /** ストーリー用の行軍命令の結果（1901 年春） */
 export const mainOrders: ResultOrder[] = [
   { power: "f", unit_kind: "a", location: "par", order_kind: "move", status: "success", dest: "bur", via_convoy: false },
-  { power: "f", unit_kind: "a", location: "mar", order_kind: "support", status: "success", target_location: "par", target_dest: "bur" },
-  { power: "f", unit_kind: "f", location: "bre", order_kind: "move", status: "success", dest: "mao", via_convoy: false },
+  { power: "f", unit_kind: "a", location: "mar", order_kind: "support", status: "valid", target_location: "par", target_dest: "bur" },
+  { power: "f", unit_kind: "f", location: "bre", order_kind: "move", status: "success", dest: "mid", via_convoy: false },
   { power: "e", unit_kind: "f", location: "lon", order_kind: "move", status: "success", dest: "nth", via_convoy: false },
   { power: "e", unit_kind: "a", location: "lvp", order_kind: "move", status: "failure", dest: "bel", via_convoy: true },
   { power: "e", unit_kind: "f", location: "edi", order_kind: "convoy", status: "failure", target_location: "lvp", target_dest: "bel" },

@@ -8,6 +8,11 @@ export interface GameTabBarProps {
   ordersEnabled: boolean;
   /** 盤面の編集ページを開けるか（卓主と管理者モード中の管理者が、開戦前夜かメインフェイズのときだけ） */
   maintenanceEnabled: boolean;
+  /**
+   * 見ているシーズン（URL の ?season=。最新のシーズンなら null）。
+   * カレンダー・チャット・命令のあいだを移るときに引き継ぐ
+   */
+  season?: string | null;
 }
 
 /** 卓内のページを切り替える画面下のタブバー */
@@ -15,15 +20,17 @@ export const GameTabBar = ({
   gameUuid,
   ordersEnabled,
   maintenanceEnabled,
+  season = null,
 }: GameTabBarProps) => {
   const base = `/games/${gameUuid}`;
+  const query = season ? `?${new URLSearchParams({ season })}` : "";
   return (
     <nav className={styles.tabBar} aria-label="卓のメニュー">
       <ul>
-        <Tab to={`${base}/calendar`} label="カレンダー" icon={<CalendarIcon />} />
-        <Tab to={`${base}/chat`} label="チャット" icon={<ChatIcon />} />
+        <Tab to={`${base}/calendar${query}`} label="カレンダー" icon={<CalendarIcon />} />
+        <Tab to={`${base}/chat${query}`} label="チャット" icon={<ChatIcon />} />
         <Tab
-          to={`${base}/orders`}
+          to={`${base}/orders${query}`}
           label="命令"
           icon={<QuillIcon />}
           disabled={!ordersEnabled}

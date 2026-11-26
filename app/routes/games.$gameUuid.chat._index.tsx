@@ -225,7 +225,7 @@ const ChatLogViewer = ({ data }: { data: Extract<LoaderData, { layout: "viewer" 
   const narrowed = pov != null || categories.some((c) => hidden.has(c));
 
   return (
-    <div className={`${styles.page} ${data.closedPhase ? styles.withPhaseDock : ""}`}>
+    <>
       <ChatLogToolbar
         pov={pov}
         povEnabled={povEnabled}
@@ -234,25 +234,27 @@ const ChatLogViewer = ({ data }: { data: Extract<LoaderData, { layout: "viewer" 
         onPovChange={(p) => updateParam("pov", p)}
         onHiddenChange={(h) => updateParam("hide", serializeHidden(h))}
       />
-      <ChatLogList
-        messages={visible}
-        faceType={faceType}
-        emptyText={
-          narrowed && messages.length > 0
-            ? "視点・フィルタの条件に合う発言はありません"
-            : undefined
-        }
-      />
-      {data.closedPhase && (
-        // 書き込めない理由は、チャンネル画面の入力フォームと同じ位置（画面下）に出す
-        <div className={styles.composerDock}>
-          <div className={styles.composer}>
-            <p className={styles.phaseNotice} role="status">
-              {data.closedPhase}のあいだは、チャットに書き込めません
-            </p>
+      <div className={`${styles.page} ${data.closedPhase ? styles.withPhaseDock : ""}`}>
+        <ChatLogList
+          messages={visible}
+          faceType={faceType}
+          emptyText={
+            narrowed && messages.length > 0
+              ? "視点・フィルタの条件に合う発言はありません"
+              : undefined
+          }
+        />
+        {data.closedPhase && (
+          // 書き込めない理由は、チャンネル画面の入力フォームと同じ位置（画面下）に出す
+          <div className={styles.composerDock}>
+            <div className={styles.composer}>
+              <p className={styles.phaseNotice} role="status">
+                {data.closedPhase}のあいだは、チャットに書き込めません
+              </p>
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </>
   );
 };

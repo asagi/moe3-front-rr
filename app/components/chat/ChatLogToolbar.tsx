@@ -51,74 +51,77 @@ export const ChatLogToolbar = ({
   const toggle = (menu: "pov" | "filter") => setOpen((v) => (v === menu ? null : menu));
 
   return (
-    <div ref={rootRef} className={styles.toolbar}>
-      {activePov && (
-        <span className={styles.toolbarStatus}>{POWER_LABELS[activePov]}の視点</span>
-      )}
-      <ToolButton
-        label="視点変更"
-        title={povEnabled ? "視点変更" : "開戦前夜と感想戦では視点変更できません"}
-        active={activePov != null}
-        disabled={!povEnabled}
-        expanded={open === "pov"}
-        controls={open === "pov" ? panelId : undefined}
-        onClick={() => toggle("pov")}
-      >
-        <EyeIcon />
-      </ToolButton>
-      <ToolButton
-        label="フィルタ"
-        title="フィルタ"
-        active={filtering}
-        expanded={open === "filter"}
-        controls={open === "filter" ? panelId : undefined}
-        onClick={() => toggle("filter")}
-      >
-        <FilterIcon />
-      </ToolButton>
+    // 卓ヘッダのすぐ下に固定するバー（中身はページと同じ幅にそろえる）
+    <div className={styles.toolbarBar}>
+      <div ref={rootRef} className={styles.toolbar}>
+        {activePov && (
+          <span className={styles.toolbarStatus}>{POWER_LABELS[activePov]}の視点</span>
+        )}
+        <ToolButton
+          label="視点変更"
+          title={povEnabled ? "視点変更" : "開戦前夜と感想戦では視点変更できません"}
+          active={activePov != null}
+          disabled={!povEnabled}
+          expanded={open === "pov"}
+          controls={open === "pov" ? panelId : undefined}
+          onClick={() => toggle("pov")}
+        >
+          <EyeIcon />
+        </ToolButton>
+        <ToolButton
+          label="フィルタ"
+          title="フィルタ"
+          active={filtering}
+          expanded={open === "filter"}
+          controls={open === "filter" ? panelId : undefined}
+          onClick={() => toggle("filter")}
+        >
+          <FilterIcon />
+        </ToolButton>
 
-      {open === "pov" && (
-        <fieldset id={panelId} className={styles.menu}>
-          <legend className={styles.menuTitle}>視点</legend>
-          <p className={styles.menuNote}>
-            選んだ国が進行中に読めなかった発言を隠します
-          </p>
-          {[{ code: null, label: "指定なし" }, ...POWERS].map((p) => (
-            <label key={p.code ?? "none"} className={styles.menuItem}>
-              <input
-                type="radio"
-                name={`${panelId}-pov`}
-                checked={activePov === p.code}
-                onChange={() => {
-                  onPovChange(p.code);
-                  setOpen(null);
-                }}
-              />
-              {p.label}
-            </label>
-          ))}
-        </fieldset>
-      )}
-      {open === "filter" && (
-        <fieldset id={panelId} className={styles.menu}>
-          <legend className={styles.menuTitle}>表示する発言</legend>
-          {LOG_CATEGORIES.filter((c) => categories.includes(c.value)).map((c) => (
-            <label key={c.value} className={styles.menuItem}>
-              <input
-                type="checkbox"
-                checked={!hidden.has(c.value)}
-                onChange={(e) => {
-                  const next = new Set(hidden);
-                  if (e.target.checked) next.delete(c.value);
-                  else next.add(c.value);
-                  onHiddenChange(next);
-                }}
-              />
-              {c.label}
-            </label>
-          ))}
-        </fieldset>
-      )}
+        {open === "pov" && (
+          <fieldset id={panelId} className={styles.menu}>
+            <legend className={styles.menuTitle}>視点</legend>
+            <p className={styles.menuNote}>
+              選んだ国が進行中に読めなかった発言を隠します
+            </p>
+            {[{ code: null, label: "指定なし" }, ...POWERS].map((p) => (
+              <label key={p.code ?? "none"} className={styles.menuItem}>
+                <input
+                  type="radio"
+                  name={`${panelId}-pov`}
+                  checked={activePov === p.code}
+                  onChange={() => {
+                    onPovChange(p.code);
+                    setOpen(null);
+                  }}
+                />
+                {p.label}
+              </label>
+            ))}
+          </fieldset>
+        )}
+        {open === "filter" && (
+          <fieldset id={panelId} className={styles.menu}>
+            <legend className={styles.menuTitle}>表示する発言</legend>
+            {LOG_CATEGORIES.filter((c) => categories.includes(c.value)).map((c) => (
+              <label key={c.value} className={styles.menuItem}>
+                <input
+                  type="checkbox"
+                  checked={!hidden.has(c.value)}
+                  onChange={(e) => {
+                    const next = new Set(hidden);
+                    if (e.target.checked) next.delete(c.value);
+                    else next.add(c.value);
+                    onHiddenChange(next);
+                  }}
+                />
+                {c.label}
+              </label>
+            ))}
+          </fieldset>
+        )}
+      </div>
     </div>
   );
 };

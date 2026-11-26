@@ -1,7 +1,9 @@
+import { useRef } from "react";
 import { Outlet, data, useFetcher, useNavigate } from "react-router";
 import type { ImpersonateUser } from "~/components/admin-header/AdminHeader";
 import { Header, type HeaderUser } from "~/components/header/Header";
 import { loadMe, meContext } from "~/lib/me.server";
+import { useStickyHeight } from "~/lib/use-sticky-height";
 import { getSessionStorage } from "~/lib/session.server";
 import type { Route } from "./+types/with-header";
 
@@ -70,6 +72,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 export default function WithHeaderLayout({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate();
+  const headerRef = useRef<HTMLDivElement>(null);
+  useStickyHeight(headerRef, "--site-header-height");
   const logoutFetcher = useFetcher();
   const adminModeFetcher = useFetcher();
   // 送信中は送った値を先に反映して、トグルの反応を待たせない
@@ -98,43 +102,46 @@ export default function WithHeaderLayout({ loaderData }: Route.ComponentProps) {
 
   return (
     <>
-      <Header
-        user={loaderData.user}
-        onLogin={() => {
-          window.location.href = "/auth/discord";
-        }}
-        onHome={() => {
-          navigate("/");
-        }}
-        onMyPage={() => {
-          navigate("/mypage");
-        }}
-        onLogout={() => {
-          logoutFetcher.submit(null, { method: "post", action: "/auth/logout" });
-        }}
-        adminMode={adminMode}
-        onAdminModeChange={(enabled) => {
-          adminModeFetcher.submit(
-            { enabled: String(enabled) },
-            { method: "post", action: "/admin-mode" },
-          );
-        }}
-        impersonateUsername={impersonateUsername}
-        impersonateUser={impersonateUser}
-        impersonateError={impersonateError}
-        onImpersonate={(username) => {
-          impersonateFetcher.submit(
-            { intent: "set", username },
-            { method: "post", action: "/admin-impersonate" },
-          );
-        }}
-        onClearImpersonate={() => {
-          impersonateFetcher.submit(
-            { intent: "clear" },
-            { method: "post", action: "/admin-impersonate" },
-          );
-        }}
-      />
+      {/* サイトヘッダ（管理者モードの帯を含む）は画面上部に固定する */}
+      <div ref={headerRef} className="sticky top-0 z-30">
+        <Header
+          user={loaderData.user}
+          onLogin={() => {
+            window.location.href = "/auth/discord";
+          }}
+          onHome={() => {
+            navigate("/");
+          }}
+          onMyPage={() => {
+            navigate("/mypage");
+          }}
+          onLogout={() => {
+            logoutFetcher.submit(null, { method: "post", action: "/auth/logout" });
+          }}
+          adminMode={adminMode}
+          onAdminModeChange={(enabled) => {
+            adminModeFetcher.submit(
+              { enabled: String(enabled) },
+              { method: "post", action: "/admin-mode" },
+            );
+          }}
+          impersonateUsername={impersonateUsername}
+          impersonateUser={impersonateUser}
+          impersonateError={impersonateError}
+          onImpersonate={(username) => {
+            impersonateFetcher.submit(
+              { intent: "set", username },
+              { method: "post", action: "/admin-impersonate" },
+            );
+          }}
+          onClearImpersonate={() => {
+            impersonateFetcher.submit(
+              { intent: "clear" },
+              { method: "post", action: "/admin-impersonate" },
+            );
+          }}
+        />
+      </div>
       <main className="flex flex-col items-center justify-center pt-0 pb-4">
         <Outlet />
       </main>

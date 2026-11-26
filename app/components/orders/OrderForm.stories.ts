@@ -48,8 +48,8 @@ export const Main: Story = {
     const brestRow = own.getByText("F Bre 維持").closest("li") as HTMLElement;
     await userEvent.click(within(brestRow).getByRole("button", { name: "変更" }));
     await userEvent.click(within(brestRow).getByRole("radio", { name: "移動" }));
-    await userEvent.selectOptions(within(brestRow).getByRole("combobox", { name: "移動先" }), "mao");
-    await expect(own.getByText("F Bre → Mao")).toBeInTheDocument();
+    await userEvent.selectOptions(within(brestRow).getByRole("combobox", { name: "移動先" }), "mid");
+    await expect(own.getByText("F Bre → Mid")).toBeInTheDocument();
     await expect(within(brestRow).getByText("未確定")).toBeInTheDocument();
 
     // 即時進行に合意して確定する（確認を挟む）
@@ -59,7 +59,7 @@ export const Main: Story = {
     await userEvent.click(canvas.getByRole("button", { name: "確定する" }));
     await expect(args.onSubmit).toHaveBeenCalledWith({
       orders: expect.arrayContaining([
-        expect.objectContaining({ location: "bre", order_kind: "move", dest: "mao" }),
+        expect.objectContaining({ location: "bre", order_kind: "move", dest: "mid" }),
       ]),
       progressConsented: true,
     });

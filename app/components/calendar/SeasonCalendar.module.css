@@ -1,0 +1,76 @@
+.calendar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.single {
+  display: flex;
+}
+
+.table {
+  border-collapse: separate;
+  border-spacing: 0 6px;
+  width: 100%;
+}
+
+.table td {
+  padding-left: 6px;
+  width: 40%;
+}
+
+.year {
+  padding-right: 4px;
+  font-weight: 600;
+  font-size: 13px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* 1 つのシーズン（命令画面の一覧と同じく、白地に細い枠） */
+.cell {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid var(--color-gray-400);
+  border-radius: 6px;
+  background-color: #fff;
+  padding: 8px 6px;
+  min-height: 48px;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.cell:hover {
+  background-color: var(--color-gray-100);
+}
+
+.wide {
+  flex: 1;
+}
+
+/* 見ているシーズン */
+.cell[aria-current="page"] {
+  border-color: var(--color-brand);
+  background-color: #eef0fe;
+  font-weight: 700;
+}
+
+.now {
+  border-radius: 4px;
+  background-color: var(--color-brand);
+  padding: 0 6px;
+  color: #fff;
+  font-weight: 400;
+  font-size: 11px;
+}
+
+/* まだ来ていないシーズン */
+.empty {
+  display: block;
+  border: 1px dashed var(--color-gray-300);
+  border-radius: 6px;
+  min-height: 48px;
+}
