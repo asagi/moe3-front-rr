@@ -1,6 +1,7 @@
 import boardDefaults from "~/components/board/boardDefaults.json";
 import type { Province } from "~/components/board/types";
 import type { GameDetail, PowerCode } from "~/lib/game";
+import type { PowerStatus } from "~/lib/orders";
 
 /** ユニットの種類（a: 陸軍、f: 海軍） */
 export type UnitKind = "a" | "f";
@@ -12,19 +13,30 @@ export interface BoardUnit {
   location: string;
 }
 
+/** GET /games/{uuid}/board のユニット（撤退フェイズの撃退の情報つき） */
+export interface BoardSnapshotUnit extends BoardUnit {
+  /** 撃退されたユニットか（撤退フェイズでのみ true になりうる） */
+  dislodged: boolean;
+  /** 攻撃元の地域。撃退されていない・海路で攻められたときは null */
+  dislodged_from: string | null;
+}
+
 /** 地域の占領情報（補給都市でない陸地を含む。地図の色分けに使う） */
 export interface BoardTerritory {
   power: PowerCode;
   code: string;
 }
 
-/** 最新フェイズの盤面（GET /games/{uuid}/board） */
+/** 盤面（GET /games/{uuid}/board）。シーズンを指定すればそのシーズンの最後のフェイズ */
 export interface BoardSnapshot {
-  /** 最新フェイズのシーズン（"ready" / "1901s" など） */
+  /** 返したフェイズのシーズン（"ready" / "1901s" など） */
   season: string;
   phase_kind: GameDetail["phase_kind"];
-  units: BoardUnit[];
+  /** ユニット。撤退フェイズでは、撃退されたユニットと攻めてきたユニットが同じ地域に並ぶ */
+  units: BoardSnapshotUnit[];
   territories: BoardTerritory[];
+  /** 国ごとの状況（7 か国、国コード順）。フェイズがない卓では空 */
+  powers: PowerStatus[];
 }
 
 export const UNIT_KIND_LABELS: Record<UnitKind, string> = { a: "陸軍", f: "海軍" };

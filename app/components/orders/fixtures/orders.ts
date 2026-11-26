@@ -1,0 +1,38 @@
+import type { PowerStatus, ResultOrder } from "~/lib/orders";
+
+/** ストーリー用の国ごとの状況（1901 年春の初期配置） */
+export const initialPowers: PowerStatus[] = [
+  { power: "a", supply_centers: 3, armies: 2, fleets: 1, needs_action: true, progress_consented: false, is_idle: false, is_eliminated: false },
+  { power: "e", supply_centers: 3, armies: 1, fleets: 2, needs_action: true, progress_consented: true, is_idle: false, is_eliminated: false },
+  { power: "f", supply_centers: 3, armies: 2, fleets: 1, needs_action: true, progress_consented: true, is_idle: false, is_eliminated: false },
+  { power: "g", supply_centers: 3, armies: 2, fleets: 1, needs_action: true, progress_consented: false, is_idle: false, is_eliminated: false },
+  { power: "i", supply_centers: 3, armies: 2, fleets: 1, needs_action: true, progress_consented: true, is_idle: true, is_eliminated: false },
+  { power: "r", supply_centers: 4, armies: 2, fleets: 2, needs_action: true, progress_consented: false, is_idle: false, is_eliminated: false },
+  { power: "t", supply_centers: 0, armies: 0, fleets: 0, needs_action: false, progress_consented: false, is_idle: false, is_eliminated: true },
+];
+
+/** ストーリー用の行軍命令の結果（1901 年春） */
+export const mainOrders: ResultOrder[] = [
+  { power: "f", unit_kind: "a", location: "par", order_kind: "move", status: "success", dest: "bur", via_convoy: false },
+  { power: "f", unit_kind: "a", location: "mar", order_kind: "support", status: "success", target_location: "par", target_dest: "bur" },
+  { power: "f", unit_kind: "f", location: "bre", order_kind: "move", status: "success", dest: "mao", via_convoy: false },
+  { power: "e", unit_kind: "f", location: "lon", order_kind: "move", status: "success", dest: "nth", via_convoy: false },
+  { power: "e", unit_kind: "a", location: "lvp", order_kind: "move", status: "failure", dest: "bel", via_convoy: true },
+  { power: "e", unit_kind: "f", location: "edi", order_kind: "convoy", status: "failure", target_location: "lvp", target_dest: "bel" },
+  { power: "g", unit_kind: "a", location: "mun", order_kind: "move", status: "failure", dest: "bur", via_convoy: false },
+  { power: "g", unit_kind: "a", location: "ber", order_kind: "support", status: "cut", target_location: "kie" },
+  { power: "r", unit_kind: "f", location: "stp_sc", order_kind: "move", status: "success", dest: "bot", via_convoy: false },
+  { power: "a", unit_kind: "a", location: "vie", order_kind: "hold", status: "dislodged" },
+];
+
+/** ストーリー用の撤退命令の結果 */
+export const retreatOrders: ResultOrder[] = [
+  { power: "a", unit_kind: "a", location: "vie", order_kind: "retreat", status: "success", dest: "boh" },
+];
+
+/** ストーリー用の調整命令の結果 */
+export const adjustmentOrders: ResultOrder[] = [
+  { power: "f", unit_kind: "f", location: "bre", order_kind: "build", status: "valid" },
+  { power: "f", unit_kind: "a", location: "par", order_kind: "build", status: "invalid" },
+  { power: "a", unit_kind: "a", location: "boh", order_kind: "disband", status: "valid" },
+];

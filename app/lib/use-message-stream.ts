@@ -17,6 +17,11 @@ export interface MessageStreamHandlers {
    * 撤退・調整フェイズになったら書き込めなくなるので、画面を切り替えるのに使う
    */
   onPhase?: (phaseKind: PhaseKind, season: string) => void;
+  /**
+   * 国ごとの状況（補給都市・ユニット数・即時進行の合意）が変わった（board イベント）。
+   * 中身はないので、受け取ったら盤面を読み直す
+   */
+  onBoard?: () => void;
 }
 
 /**
@@ -85,6 +90,7 @@ export const useMessageStream = (
         console.error("SSE のフェイズを読めませんでした", err);
       }
     });
+    source.addEventListener("board", () => handlersRef.current.onBoard?.());
     return () => source.close();
   }, [gameUuid, connectionKey, enabled]);
 };

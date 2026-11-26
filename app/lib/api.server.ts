@@ -259,18 +259,14 @@ const adminGamePath = (gameUuid: string, kind: "units" | "territories", code: st
   `/admin/games/${encodeURIComponent(gameUuid)}/${kind}/${encodeURIComponent(code)}`;
 
 /**
- * GET /games/{uuid}/board: 最新フェイズのユニット配置と占領情報を取得する。
- * API は units[].kind を大文字（"A" / "F"）で返すので、フロントの形（"a" / "f"）にそろえる
+ * GET /games/{uuid}/board: 盤面（ユニット配置・占領情報・国ごとの状況）を取得する。
+ * @param season 指定すればそのシーズンの最後のフェイズ、省略すれば最新フェイズ
  */
-export const getBoard = async (gameUuid: string, auth?: ApiAuth | null) => {
-  const board = await request<BoardSnapshot>(`/games/${encodeURIComponent(gameUuid)}/board`, {
-    headers: auth ? authHeaders(auth) : {},
-  });
-  return {
-    ...board,
-    units: board.units.map((u) => ({ ...u, kind: u.kind.toLowerCase() as UnitKind })),
-  };
-};
+export const getBoard = (gameUuid: string, auth?: ApiAuth | null, season?: string | null) =>
+  request<BoardSnapshot>(
+    `/games/${encodeURIComponent(gameUuid)}/board${season ? `?${new URLSearchParams({ season })}` : ""}`,
+    { headers: auth ? authHeaders(auth) : {} },
+  );
 
 /**
  * PUT /admin/games/{uuid}/units/{location}: ユニットを置く（同じ地域のユニットは置き換える）。
