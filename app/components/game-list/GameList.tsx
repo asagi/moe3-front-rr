@@ -18,7 +18,7 @@ export interface GameListProps {
   emptyMessage: string;
 }
 
-/** 卓の一覧（各行は卓のページへのリンク） */
+/** 卓の一覧（各行は卓のページへのリンク。卓の状態に合わせたページが開く） */
 export const GameList = ({ games, emptyMessage }: GameListProps) => {
   if (games == null) {
     return (
@@ -35,7 +35,8 @@ export const GameList = ({ games, emptyMessage }: GameListProps) => {
     <ul className={styles.list}>
       {games.map((game) => (
         <li key={game.game_uuid}>
-          <Link to={`/games/${game.game_uuid}`} className={styles.item}>
+          {/* 卓の状態に合わせたページ（卓情報・チャット・命令）に、入口のルートから移る */}
+          <Link to={`/games/${game.game_uuid}/enter`} className={styles.item}>
             <div className={styles.head}>
               <span className={styles.title}>{gameTitle(game)}</span>
               <StatusBadge status={game.status} />

@@ -240,3 +240,35 @@ export const isWritableSeason = (
 /** 国ごとの密談がないシーズン（開戦前夜・感想戦）か */
 export const isOffGameSeason = (season: string | null) =>
   season === "ready" || season === "debrief";
+
+/**
+ * 卓一覧から開いたときに最初に出すページ。
+ * - 募集中：卓情報
+ * - 開戦前夜・感想戦：オープンチャンネル（第三者はチャンネル画面からログビューアーに移る）
+ * - 進行中のメインフェイズ：チャット（参加者はチャンネル一覧、第三者はログビューアー）
+ * - 進行中の撤退・調整フェイズ：命令（このあいだはチャットに書き込めず、命令画面が参加者のメイン画面）
+ * - 閉鎖（感想戦が終わった卓）：開戦前夜のチャット（ログビューアー。最初から読めるように）
+ * - 中止：始まる前に中止した卓は卓情報、始まってから中止した卓はチャット（ログビューアー）
+ */
+export const gameEntryPath = (
+  game: Pick<GameDetail, "game_uuid" | "status" | "phase_kind" | "seasons">,
+) => {
+  const base = `/games/${game.game_uuid}`;
+  switch (game.status) {
+    case "ready":
+    case "solo":
+    case "draw":
+    case "finished":
+      return `${base}/chat/open`;
+    case "in_progress":
+      return game.phase_kind === "retreat" || game.phase_kind === "adjustment"
+        ? `${base}/orders`
+        : `${base}/chat`;
+    case "closed":
+      return `${base}/chat?season=ready`;
+    case "aborted":
+      return game.seasons.some((season) => season !== "ready") ? `${base}/chat` : base;
+    default:
+      return base;
+  }
+};

@@ -14,6 +14,8 @@ export default [
     // 卓内のページ（卓ヘッダと画面下のタブバーを共通で出す）
     route("games/:gameUuid", "routes/games.$gameUuid.tsx", [
       index("routes/games.$gameUuid._index.tsx"),
+      // 卓一覧から開いたときの入口（卓の状態に合わせたページに移す）
+      route("enter", "routes/games.$gameUuid.enter.ts"),
       route("calendar", "routes/games.$gameUuid.calendar.tsx"),
       route("chat", "routes/games.$gameUuid.chat._index.tsx"),
       route("chat/:channelId", "routes/games.$gameUuid.chat.$channelId.tsx"),

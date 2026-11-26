@@ -62,7 +62,7 @@ export const Default: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole("link", { name: /第 42 卓/ })).toHaveAttribute(
       "href",
-      "/games/a",
+      "/games/a/enter",
     );
     await expect(canvas.getByRole("link", { name: /番号未定/ })).toBeInTheDocument();
   },
