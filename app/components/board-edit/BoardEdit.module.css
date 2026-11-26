@@ -10,6 +10,13 @@
   max-width: 44rem;
 }
 
+/* 卓の管理で、卓主の操作と並べるときの「盤面の編集」の見出し */
+.sectionTitle {
+  margin-top: 8px;
+  font-weight: 700;
+  font-size: 15px;
+}
+
 .lead {
   color: var(--color-gray-600);
   font-size: 13px;

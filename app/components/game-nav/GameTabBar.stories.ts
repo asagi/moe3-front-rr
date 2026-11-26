@@ -44,7 +44,7 @@ export const BeforeStart: Story = {
       "true",
     );
     await expect(
-      canvas.getByRole("link", { name: "盤面の編集" }),
+      canvas.getByRole("link", { name: "卓の管理" }),
     ).toHaveAttribute("aria-disabled", "true");
   },
 };

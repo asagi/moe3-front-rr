@@ -153,6 +153,8 @@ export interface GameDetail {
   players: GamePlayer[];
   /** 見ているユーザーがその卓に参加（申請）済みか */
   is_joined: boolean;
+  /** 卓主が和平終了（講和）を宣言しているか（卓主の無政府化で自動的に立った場合も true） */
+  draw_proposal: boolean;
 }
 
 /** 参加者を受け付けている（開始前で募集中の）卓か */

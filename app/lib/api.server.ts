@@ -353,3 +353,49 @@ export const putProgressConsensus = (gameUuid: string, agreed: boolean, auth: Ap
       body: JSON.stringify({ agreed }),
     },
   );
+
+/* ---- 卓主の操作 ---- */
+
+/**
+ * PUT /admin/games/{uuid}/next-update-at: 次回更新時刻を延長する（卓主のみ・開戦前夜とメインフェイズのみ）。
+ * 今より前には戻せない。分は 5 分刻み
+ * @param season 最新フェイズのシーズン。食い違うと 409 phase_conflict
+ * @param nextUpdateAt JST の "YYYY-MM-DD HH:mm"
+ */
+export const putNextUpdateAt = (gameUuid: string, season: string, nextUpdateAt: string, auth: ApiAuth) =>
+  request<{ game_uuid: string; next_update_at: string }>(
+    `/admin/games/${encodeURIComponent(gameUuid)}/next-update-at`,
+    {
+      method: "PUT",
+      headers: { ...authHeaders(auth), "Content-Type": "application/json" },
+      body: JSON.stringify({ season, next_update_at: nextUpdateAt }),
+    },
+  );
+
+/**
+ * PUT /admin/games/{uuid}/draw-proposal: 和平終了（講和）を宣言・撤回する（卓主のみ・メインフェイズのみ）
+ * @param season 最新フェイズのシーズン。食い違うと 409 phase_conflict
+ */
+export const putDrawProposal = (gameUuid: string, season: string, drawProposal: boolean, auth: ApiAuth) =>
+  request<{ game_uuid: string; draw_proposal: boolean }>(
+    `/admin/games/${encodeURIComponent(gameUuid)}/draw-proposal`,
+    {
+      method: "PUT",
+      headers: { ...authHeaders(auth), "Content-Type": "application/json" },
+      body: JSON.stringify({ draw_proposal: drawProposal, season }),
+    },
+  );
+
+/**
+ * PUT /admin/games/{uuid}/progress-mode: 定時進行から合意進行に切り替える（卓主のみ・メインフェイズのみ）。
+ * 合意進行から定時進行には戻せない
+ */
+export const putProgressModeConsensus = (gameUuid: string, season: string, auth: ApiAuth) =>
+  request<{ game_uuid: string; progress_mode: "consensus" }>(
+    `/admin/games/${encodeURIComponent(gameUuid)}/progress-mode`,
+    {
+      method: "PUT",
+      headers: { ...authHeaders(auth), "Content-Type": "application/json" },
+      body: JSON.stringify({ season }),
+    },
+  );

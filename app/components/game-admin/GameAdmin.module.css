@@ -1,0 +1,106 @@
+/* 卓の管理（卓主の操作）。盤面の編集パネルと同じ白地に細い枠 */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 8px;
+  background-color: #fff;
+  padding: 12px 16px;
+}
+
+.title {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.current {
+  font-size: 14px;
+}
+
+.note,
+.hint {
+  color: var(--color-gray-500);
+  font-size: 12px;
+}
+
+.hint {
+  color: #b45309;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.input {
+  flex: 1;
+  border: 1px solid var(--color-gray-300);
+  border-radius: 6px;
+  background-color: #fff;
+  padding: 6px 8px;
+  min-width: 0;
+  font-size: 14px;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.primary,
+.secondary,
+.danger {
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 6px 16px;
+  font-size: 14px;
+}
+
+.primary {
+  border: 1px solid var(--color-brand);
+  background-color: var(--color-brand);
+  color: #fff;
+}
+
+.primary:hover:not(:disabled) {
+  background-color: var(--color-brand-hover);
+}
+
+.secondary {
+  border: 1px solid var(--color-gray-400);
+  background-color: #fff;
+}
+
+.danger {
+  border: 1px solid #b91c1c;
+  background-color: #b91c1c;
+  color: #fff;
+}
+
+.primary:disabled,
+.secondary:disabled,
+.danger:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  background-color: #fffbeb;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+.error {
+  color: #b91c1c;
+  font-size: 13px;
+}

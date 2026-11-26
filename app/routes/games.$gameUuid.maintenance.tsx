@@ -7,10 +7,19 @@ import {
 } from "~/components/board-edit/BoardEditPanel";
 import styles from "~/components/board-edit/BoardEdit.module.css";
 import {
+  DrawProposalControl,
+  NextUpdateForm,
+  ProgressModeControl,
+} from "~/components/game-admin/OwnerControls";
+import {
+  type ApiAuth,
   ApiError,
   deleteTerritory,
   deleteUnit,
   getBoard,
+  putDrawProposal,
+  putNextUpdateAt,
+  putProgressModeConsensus,
   putTerritory,
   putUnit,
 } from "~/lib/api.server";
@@ -22,16 +31,16 @@ import {
   boardNotEditableReason,
   findProvince,
 } from "~/lib/board";
-import { POWERS, type PowerCode, seasonLabel } from "~/lib/game";
+import { type GameDetail, POWERS, type PowerCode, isEnded, seasonLabel } from "~/lib/game";
 import { canMaintainGame, requireGame } from "~/lib/game.server";
 import { meContext } from "~/lib/me.server";
 import type { GameRouteHandle } from "./games.$gameUuid";
 import type { Route } from "./+types/games.$gameUuid.maintenance";
 
-export const handle: GameRouteHandle = { gameTitle: "盤面の編集" };
+export const handle: GameRouteHandle = { gameTitle: "卓の管理" };
 
 export function meta({}: Route.MetaArgs) {
-  return [{ title: "盤面の編集 | Diplomacy MOE" }];
+  return [{ title: "卓の管理 | Diplomacy MOE" }];
 }
 
 /** 卓主と管理者モード中の管理者以外は開けないので、卓情報へ戻す */
@@ -53,11 +62,33 @@ const loadBoard = async (gameUuid: string, context: Route.LoaderArgs["context"])
 };
 
 /**
- * 盤面の編集。最新フェイズのユニット配置と占領情報を、地域ごとに編集する。
- * 開戦前夜とメインフェイズだけ編集できる
+ * 卓主の操作（次回更新時刻・和平終了・進行モード）。使えるのは卓主だけ（管理者は使えない）。
+ * 次回更新時刻は開戦前夜とメインフェイズ、和平終了と進行モードはメインフェイズだけ。
+ * 視点変更中は、切り替え先が卓主なら使える（is_owner も切り替え先の値が返る）
+ */
+const ownerControlsOf = (game: GameDetail) => {
+  if (!game.is_owner || isEnded(game)) return null;
+  const main = game.status === "in_progress" && game.phase_kind === "main";
+  const ready = game.status === "ready" && game.phase_kind === "ready";
+  if (!main && !ready) return null;
+  return {
+    season: game.seasons.at(-1) ?? "ready",
+    nextUpdateAt: game.next_update_at,
+    // 和平終了と進行モードはメインフェイズだけ
+    main,
+    drawProposal: game.draw_proposal,
+    progressMode: game.regulation.progress_mode,
+  };
+};
+
+/**
+ * 卓の管理。卓主の操作（次回更新時刻・和平終了・進行モード）と、盤面の編集。
+ * 盤面の編集は、最新フェイズのユニット配置と占領情報を地域ごとに編集する（卓主と管理者モード中の管理者）。
+ * 開戦前夜とメインフェイズだけ使える
  */
 export async function loader({ request, params, context }: Route.LoaderArgs) {
   const game = await requireMaintainer(request, params, context);
+  const owner = ownerControlsOf(game);
   const notEditable = boardNotEditableReason(game);
   let board: BoardSnapshot | null = null;
   let loadError: string | null = null;
@@ -70,7 +101,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
         ? "盤面を取得できませんでした（サーバーが盤面取得 API にまだ対応していない可能性があります）"
         : `盤面を取得できませんでした（${e.code}）`;
   }
-  return { board, loadError, notEditable };
+  return { board, loadError, notEditable, owner };
 }
 
 type EditResult = { ok: true; error?: undefined } | { ok?: false; error: string };
@@ -89,17 +120,69 @@ const editErrorMessage = (e: ApiError) => {
   }
 };
 
-/** 1 つの地域のユニットと占領国を保存する */
+/** 卓主の操作の API エラーごとの文言 */
+const ownerErrorMessage = (e: ApiError) => {
+  switch (e.code) {
+    case "phase_conflict":
+      return "フェイズが進んだため変更できませんでした。画面を読み直してください。";
+    case "forbidden":
+      return `変更できません（${e.message}）`;
+    case "invalid_request":
+      return `入力が正しくありません（${e.message}）`;
+    default:
+      return `変更に失敗しました（${e.code}）: ${e.message}`;
+  }
+};
+
+/** 卓主の操作（intent が next-update / draw / progress-mode） */
+const handleOwnerAction = async (game: GameDetail, auth: ApiAuth, form: FormData) => {
+  const owner = ownerControlsOf(game);
+  if (!owner) {
+    return data<EditResult>({ error: "この操作は、卓主が開戦前夜かメインフェイズにだけ使えます。" }, { status: 403 });
+  }
+  const intent = form.get("intent");
+  try {
+    if (intent === "next-update") {
+      const value = String(form.get("next_update_at") ?? "");
+      if (!/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(value)) {
+        return data<EditResult>({ error: "日時が正しくありません。" }, { status: 400 });
+      }
+      await putNextUpdateAt(game.game_uuid, owner.season, value, auth);
+    } else if (!owner.main) {
+      return data<EditResult>({ error: "この操作はメインフェイズにだけ使えます。" }, { status: 403 });
+    } else if (intent === "draw") {
+      await putDrawProposal(game.game_uuid, owner.season, form.get("draw_proposal") === "true", auth);
+    } else if (intent === "progress-mode") {
+      await putProgressModeConsensus(game.game_uuid, owner.season, auth);
+    } else {
+      return data<EditResult>({ error: "操作が正しくありません。" }, { status: 400 });
+    }
+    return data<EditResult>({ ok: true });
+  } catch (e) {
+    if (e instanceof ApiError) {
+      return data<EditResult>({ error: ownerErrorMessage(e) }, { status: e.status });
+    }
+    throw e;
+  }
+};
+
+const OWNER_INTENTS = ["next-update", "draw", "progress-mode"];
+
+/** 卓主の操作か、1 つの地域のユニットと占領国の保存 */
 export async function action({ request, params, context }: Route.ActionArgs) {
   const game = await requireMaintainer(request, params, context);
   const state = context.get(meContext);
   if (state.kind !== "ok") {
     return data<EditResult>({ error: "ログイン情報を確認できませんでした。" }, { status: 401 });
   }
+  const form = await request.formData();
+  if (OWNER_INTENTS.includes(String(form.get("intent")))) {
+    return handleOwnerAction(game, state.auth, form);
+  }
+
   const notEditable = boardNotEditableReason(game);
   if (notEditable) return data<EditResult>({ error: notEditable }, { status: 403 });
 
-  const form = await request.formData();
   const code = String(form.get("code") ?? "");
   const province = findProvince(code);
   if (!province || province.code !== code) {
@@ -159,8 +242,75 @@ export async function action({ request, params, context }: Route.ActionArgs) {
   }
 }
 
-export default function GameBoardEdit({ loaderData }: Route.ComponentProps) {
-  const { board, loadError, notEditable } = loaderData;
+export default function GameMaintenance({ loaderData }: Route.ComponentProps) {
+  const { owner } = loaderData;
+  return (
+    <div className={styles.page}>
+      {owner && <OwnerSection owner={owner} />}
+      <BoardEditSection data={loaderData} showHeading={owner != null} />
+    </div>
+  );
+}
+
+/** 送信の状態（送信中か・失敗したときの文言） */
+const useControlState = (fetcher: ReturnType<typeof useFetcher<typeof action>>) => {
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    if (fetcher.state === "idle") setError(fetcher.data?.error ?? null);
+  }, [fetcher.state, fetcher.data]);
+  return { submitting: fetcher.state !== "idle", error };
+};
+
+/** 卓主の操作（次回更新時刻・和平終了・進行モード）。操作ごとに別々に送る */
+const OwnerSection = ({
+  owner,
+}: {
+  owner: NonNullable<Route.ComponentProps["loaderData"]["owner"]>;
+}) => {
+  const nextUpdate = useFetcher<typeof action>();
+  const draw = useFetcher<typeof action>();
+  const progress = useFetcher<typeof action>();
+  const nextUpdateState = useControlState(nextUpdate);
+  const drawState = useControlState(draw);
+  const progressState = useControlState(progress);
+  return (
+    <>
+      <NextUpdateForm
+        current={owner.nextUpdateAt}
+        {...nextUpdateState}
+        onSubmit={(value) =>
+          void nextUpdate.submit({ intent: "next-update", next_update_at: value }, { method: "post" })
+        }
+      />
+      {owner.main && (
+        <>
+          <DrawProposalControl
+            current={owner.drawProposal}
+            {...drawState}
+            onChange={(value) =>
+              void draw.submit({ intent: "draw", draw_proposal: String(value) }, { method: "post" })
+            }
+          />
+          <ProgressModeControl
+            current={owner.progressMode}
+            {...progressState}
+            onSwitch={() => void progress.submit({ intent: "progress-mode" }, { method: "post" })}
+          />
+        </>
+      )}
+    </>
+  );
+};
+
+/** 盤面の編集 */
+const BoardEditSection = ({
+  data: { board, loadError, notEditable },
+  showHeading,
+}: {
+  data: Route.ComponentProps["loaderData"];
+  /** 卓主の操作と並べるときは「盤面の編集」の見出しを出す */
+  showHeading: boolean;
+}) => {
   const fetcher = useFetcher<typeof action>();
   const [selected, setSelected] = useState<string | null>(null);
 
@@ -171,13 +321,15 @@ export default function GameBoardEdit({ loaderData }: Route.ComponentProps) {
   }, [fetcher.state, fetcher.data]);
   useEffect(() => setError(null), [selected]);
 
+  const heading = showHeading && <h3 className={styles.sectionTitle}>盤面の編集</h3>;
   if (!board) {
     return (
-      <div className={styles.page}>
+      <>
+        {heading}
         <p className={styles.notice} role="alert">
           {loadError}
         </p>
-      </div>
+      </>
     );
   }
 
@@ -203,7 +355,8 @@ export default function GameBoardEdit({ loaderData }: Route.ComponentProps) {
   };
 
   return (
-    <div className={styles.page}>
+    <>
+      {heading}
       {editable ? (
         <p className={styles.lead}>
           {seasonLabel(board.season)}の盤面です。地図の地域を押すと、ユニットと占領を編集できます。
@@ -247,6 +400,6 @@ export default function GameBoardEdit({ loaderData }: Route.ComponentProps) {
           onClose={() => setSelected(null)}
         />
       )}
-    </div>
+    </>
   );
-}
+};
