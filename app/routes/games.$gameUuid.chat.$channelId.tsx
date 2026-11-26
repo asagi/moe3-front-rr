@@ -46,7 +46,10 @@ import { useMessageStream } from "~/lib/use-message-stream";
 import type { GameRouteHandle } from "./games.$gameUuid";
 import type { Route } from "./+types/games.$gameUuid.chat.$channelId";
 
-export const handle: GameRouteHandle = { gameTitle: "チャット", seasonal: true };
+export const handle: GameRouteHandle = {
+  gameTitle: "チャット",
+  seasonal: true,
+};
 
 export function meta({ loaderData }: Route.MetaArgs) {
   return [
@@ -57,9 +60,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
 type ChannelsViewer = Extract<ChatViewer, { kind: "channels" }>;
 
 /** 誰として書き込むか。書き込めなければ理由 */
-type PostAs =
-  | { ok: true; asAdmin: boolean }
-  | { ok: false; reason: string };
+type PostAs = { ok: true; asAdmin: boolean } | { ok: false; reason: string };
 
 /**
  * このチャンネルに誰として書き込めるか。
@@ -80,10 +81,16 @@ const resolvePostAs = (
   if (viewer.canPostAsAdmin) {
     return channel.kind === "open"
       ? { ok: true, asAdmin: true }
-      : { ok: false, reason: "管理者モード中はオープンチャンネルにだけ書き込めます" };
+      : {
+          ok: false,
+          reason: "管理者モード中はオープンチャンネルにだけ書き込めます",
+        };
   }
   if (game.status !== "in_progress" && channel.kind !== "open") {
-    return { ok: false, reason: "開戦前夜と感想戦はオープンチャンネルにだけ書き込めます" };
+    return {
+      ok: false,
+      reason: "開戦前夜と感想戦はオープンチャンネルにだけ書き込めます",
+    };
   }
   if (viewer.eliminated && channel.kind === "group") {
     return { ok: false, reason: "滅亡したため密談には書き込めません" };
@@ -101,7 +108,11 @@ const composerSender = (
   game: GameDetail,
   viewer: ChannelsViewer,
   asAdmin: boolean,
-  me: { username: string; global_name: string | null; avatar_url: string | null },
+  me: {
+    username: string;
+    global_name: string | null;
+    avatar_url: string | null;
+  },
 ): ChatComposerSender => {
   if (asAdmin) return { kind: "admin", faceType: game.regulation.face_type };
   if (game.status === "in_progress" && viewer.power) {
@@ -141,7 +152,8 @@ const loadChannel = async (
         : channel.members.includes(myPower)));
   if (!isMember) throw redirect(listPath);
   // 開戦前夜と感想戦はオープンチャンネルだけ（独り言もない）
-  if (isOffGameSeason(season) && channel.kind !== "open") throw redirect(listPath);
+  if (isOffGameSeason(season) && channel.kind !== "open")
+    throw redirect(listPath);
 
   return { game, channel, viewer, season, seasonParam, listPath };
 };
@@ -152,15 +164,14 @@ const loadChannel = async (
  * シーズンを保ったまま /chat（ログビューアーかチャンネル一覧）に移す
  */
 export async function loader({ request, params, context }: Route.LoaderArgs) {
-  const { game, channel, viewer, season, seasonParam, listPath } = await loadChannel(
-    request,
-    params,
-    context,
-  );
+  const { game, channel, viewer, season, seasonParam, listPath } =
+    await loadChannel(request, params, context);
   const state = context.get(meContext);
   if (state.kind !== "ok") throw redirect(listPath);
 
-  const messages = season ? await loadSeasonMessages(context, game, season) : [];
+  const messages = season
+    ? await loadSeasonMessages(context, game, season)
+    : [];
   const postAs = resolvePostAs(game, viewer, channel, season);
   return {
     gameUuid: game.game_uuid,
@@ -181,20 +192,32 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   };
 }
 
-type PostResult = { ok: true; error?: undefined } | { ok?: false; error: string };
+type PostResult =
+  | { ok: true; error?: undefined }
+  | { ok?: false; error: string };
 
 /** 発言フォームの送信 */
 export async function action({ request, params, context }: Route.ActionArgs) {
-  const { game, channel, viewer, season } = await loadChannel(request, params, context);
+  const { game, channel, viewer, season } = await loadChannel(
+    request,
+    params,
+    context,
+  );
   const state = context.get(meContext);
   if (state.kind !== "ok") {
-    return data<PostResult>({ error: "ログイン情報を確認できませんでした。" }, { status: 401 });
+    return data<PostResult>(
+      { error: "ログイン情報を確認できませんでした。" },
+      { status: 401 },
+    );
   }
 
   const formData = await request.formData();
   const text = String(formData.get("context") ?? "");
   if (text.trim() === "") {
-    return data<PostResult>({ error: "発言を入力してください。" }, { status: 400 });
+    return data<PostResult>(
+      { error: "発言を入力してください。" },
+      { status: 400 },
+    );
   }
   if (text.length > MAX_MESSAGE_LENGTH) {
     return data<PostResult>(
@@ -203,7 +226,8 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     );
   }
   const postAs = resolvePostAs(game, viewer, channel, season);
-  if (!postAs.ok) return data<PostResult>({ error: postAs.reason }, { status: 403 });
+  if (!postAs.ok)
+    return data<PostResult>({ error: postAs.reason }, { status: 403 });
 
   const body: PostMessageBody =
     channel.kind === "group"
@@ -225,14 +249,18 @@ export async function action({ request, params, context }: Route.ActionArgs) {
     return data<PostResult>({ ok: true });
   } catch (e) {
     if (e instanceof ApiError) {
-      return data<PostResult>({ error: postErrorMessage(e) }, { status: e.status });
+      return data<PostResult>(
+        { error: postErrorMessage(e) },
+        { status: e.status },
+      );
     }
     throw e;
   }
 }
 
 export default function GameChatChannel({ loaderData }: Route.ComponentProps) {
-  const { gameUuid, faceType, listPath, season, channelId, self, sender } = loaderData;
+  const { gameUuid, faceType, listPath, season, channelId, self, sender } =
+    loaderData;
   const fetcher = useFetcher<typeof action>();
   const revalidator = useRevalidator();
   const navigate = useNavigate();
@@ -303,52 +331,71 @@ export default function GameChatChannel({ loaderData }: Route.ComponentProps) {
   // 送信に成功したら入力欄を空にする
   const [sentCount, setSentCount] = useState(0);
   useEffect(() => {
-    if (fetcher.state === "idle" && fetcher.data?.ok) setSentCount((n) => n + 1);
+    if (fetcher.state === "idle" && fetcher.data?.ok)
+      setSentCount((n) => n + 1);
   }, [fetcher.state, fetcher.data]);
 
   return (
-    <div className={`${styles.page} ${styles.withComposer}`}>
-      <div className={styles.channelTitle}>
-        <Link to={listPath} className={styles.backLink}>
-          ‹ 一覧
-        </Link>
-        <h3>{loaderData.channelName}</h3>
+    <>
+      {/* チャンネル一覧と同じく、卓ヘッダのすぐ下に固定する */}
+      <div className={styles.subHeader}>
+        <div className={styles.subHeaderInner}>
+          <Link to={listPath} className={styles.backLink} aria-label="チャンネル一覧へ">
+            {/* 卓ヘッダのシーズン切り替えと同じ線のアイコン */}
+            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+              <path
+                d="M10 3 5 8l5 5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span aria-hidden="true">一覧</span>
+          </Link>
+          <h3>{loaderData.channelName}</h3>
+        </div>
       </div>
-      <ChatMessageList messages={messages} faceType={faceType} self={self} />
-      <div className={styles.composerDock}>
-        <ChatComposer
-          // チャンネルを移ったら書きかけを持ち越さない（密談の下書きをオープンに出さないため）
-          key={channelId}
-          sender={sender}
-          disabledReason={
-            closedPhase
-              ? `${closedPhase}のあいだは書き込めません`
-              : loaderData.disabledReason
-          }
-          submitting={fetcher.state !== "idle"}
-          error={fetcher.state === "idle" ? fetcher.data?.error : null}
-          resetKey={sentCount}
-          onSend={(context) => fetcher.submit({ context }, { method: "post" })}
-          onDraftChange={(hasDraft) => {
-            hasDraftRef.current = hasDraft;
-          }}
-          notice={
-            closedPhase ? (
-              <>
-                <span>{closedPhase}になりました</span>
-                <Link to={viewerPath}>ログビューアーへ</Link>
-              </>
-            ) : (
-              pendingSeason && (
+      <div className={`${styles.page} ${styles.withComposer}`}>
+        <ChatMessageList messages={messages} faceType={faceType} self={self} />
+        <div className={styles.composerDock}>
+          <ChatComposer
+            // チャンネルを移ったら書きかけを持ち越さない（密談の下書きをオープンに出さないため）
+            key={channelId}
+            sender={sender}
+            disabledReason={
+              closedPhase
+                ? `${closedPhase}のあいだは書き込めません`
+                : loaderData.disabledReason
+            }
+            submitting={fetcher.state !== "idle"}
+            error={fetcher.state === "idle" ? fetcher.data?.error : null}
+            resetKey={sentCount}
+            onSend={(context) =>
+              fetcher.submit({ context }, { method: "post" })
+            }
+            onDraftChange={(hasDraft) => {
+              hasDraftRef.current = hasDraft;
+            }}
+            notice={
+              closedPhase ? (
                 <>
-                  <span>{seasonLabel(pendingSeason)}が始まりました</span>
-                  <Link to={openPath}>オープンチャンネルへ</Link>
+                  <span>{closedPhase}になりました</span>
+                  <Link to={viewerPath}>ログビューアーへ</Link>
                 </>
+              ) : (
+                pendingSeason && (
+                  <>
+                    <span>{seasonLabel(pendingSeason)}が始まりました</span>
+                    <Link to={openPath}>オープンチャンネルへ</Link>
+                  </>
+                )
               )
-            )
-          }
-        />
+            }
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 }

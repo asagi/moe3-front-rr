@@ -1,0 +1,127 @@
+/* システムメッセージ。チャンネル画面（アイコン 32px）とログビューアー（40px）で左の余白をそろえる */
+
+.time {
+  flex-shrink: 0;
+  color: var(--color-gray-500);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* ---- 通常（点線の枠で中央、時刻は右） ---- */
+
+.row {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 6px;
+  padding-left: 40px;
+}
+
+.row[data-variant="log"] {
+  padding-left: 48px;
+}
+
+/* 枠の幅は本文の長さによらずそろえる（狭い画面では縮める） */
+.notice,
+.groupToggle {
+  flex: 0 1 256px;
+  min-width: 0;
+}
+
+/* 発言より目立たないよう、文字は小さく薄く、枠も薄くする */
+.notice {
+  border: 1px dashed var(--color-gray-300);
+  background-color: #fff;
+  padding: 2px 10px;
+  color: var(--color-gray-500);
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: center;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.row[data-variant="log"] .notice {
+  font-size: 12px;
+}
+
+/* 国（小さな画像と国名） */
+.power {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0 1px;
+  vertical-align: bottom;
+  color: var(--color-gray-600);
+}
+
+.powerImage {
+  flex-shrink: 0;
+}
+
+/* ---- 区切り（画面幅の帯） ---- */
+
+.milestone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin: 6px 0;
+}
+
+.milestoneBand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.milestoneLine {
+  flex: 1;
+  border-top: 1px solid var(--color-gray-400);
+  min-width: 12px;
+}
+
+.milestoneText {
+  color: var(--color-gray-800);
+  font-weight: 700;
+  font-size: 13px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+/* ---- 盤面編集のまとめ ---- */
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.groupToggle {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  border: 1px dashed var(--color-gray-300);
+  background-color: #fff;
+  padding: 2px 10px;
+  color: var(--color-gray-500);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.groupToggle:hover {
+  background-color: var(--color-gray-100);
+}
+
+.group[data-variant="log"] .groupToggle {
+  font-size: 12px;
+}
+
+.groupItems {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}

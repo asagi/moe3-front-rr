@@ -3,18 +3,34 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, within } from "storybook/test";
 
 import { filterLog } from "~/lib/chat";
-import { ghostMessages, message, readyMessages, springMessages } from "./fixtures/messages";
+import {
+  ghostMessages,
+  message,
+  noticeMessages,
+  readyMessages,
+  springMessages,
+} from "./fixtures/messages";
 import { ChatLogList } from "./ChatLogList";
 
 /** 終わった卓のログ（全部公開。墺露の密談も中身が見える） */
 const endedMessages = springMessages.map((m) =>
-  m.kind === "masked" ? { ...m, kind: "confidential" as const, context: "ガリツィアは空けておく。" } : m,
+  m.kind === "masked"
+    ? {
+        ...m,
+        kind: "confidential" as const,
+        context: "ガリツィアは空けておく。",
+      }
+    : m,
 );
 
 /** 進行中の卓を第三者が見たログ（密談は伏せられ、独り言は返らない） */
 const inProgressMessages = springMessages
   .filter((m) => m.kind !== "personal")
-  .map((m) => (m.kind === "confidential" ? { ...m, kind: "masked" as const, context: null } : m));
+  .map((m) =>
+    m.kind === "confidential"
+      ? { ...m, kind: "masked" as const, context: null }
+      : m,
+  );
 
 const meta = {
   title: "Components/Chat/ChatLogList",
@@ -33,7 +49,9 @@ type Story = StoryObj<typeof meta>;
 export const Ended: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByText("イギリス to: フランス、ドイツ")).toBeInTheDocument();
+    await expect(
+      canvas.getByText("イギリス to: フランス、ドイツ"),
+    ).toBeInTheDocument();
     await expect(canvas.getByText("ベルギーは秋に取る。")).toBeInTheDocument();
     await expect(canvas.getByText("11 月 24 日 (火)")).toBeInTheDocument();
   },
@@ -44,8 +62,12 @@ export const InProgress: Story = {
   args: { messages: inProgressMessages },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getAllByText("（内容は非公開）").length).toBeGreaterThan(0);
-    await expect(canvas.queryByText("ベルギーは秋に取る。")).not.toBeInTheDocument();
+    await expect(
+      canvas.getAllByText("（内容は非公開）").length,
+    ).toBeGreaterThan(0);
+    await expect(
+      canvas.queryByText("ベルギーは秋に取る。"),
+    ).not.toBeInTheDocument();
   },
 };
 
@@ -55,8 +77,12 @@ export const GermanyPov: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByText("ベルギーは秋に取る。")).toBeInTheDocument();
-    await expect(canvas.queryByText("イギリスは信用できるか要観察。")).not.toBeInTheDocument();
-    await expect(canvas.queryByText("ピエモンテには行きません。")).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByText("イギリスは信用できるか要観察。"),
+    ).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByText("ピエモンテには行きません。"),
+    ).not.toBeInTheDocument();
   },
 };
 
@@ -64,11 +90,35 @@ export const GermanyPov: Story = {
 export const Continued: Story = {
   args: {
     messages: [
-      message({ sender: "a", context: "よろしくお願いします。", created_at: "2026-11-24 09:00" }),
-      message({ sender: "a", context: "あいうえお", created_at: "2026-11-24 09:01" }),
-      message({ sender: "g", kind: "confidential", recipients: ["a", "f", "i", "r", "t"], context: "英を封じ込めましょう", created_at: "2026-11-24 09:05" }),
-      message({ sender: "g", kind: "confidential", recipients: ["e"], context: "手堅く英独同名で仏を狩りませんか。", created_at: "2026-11-24 09:06" }),
-      message({ sender: "i", context: "出遅れたぜ", created_at: "2026-11-25 08:00" }),
+      message({
+        sender: "a",
+        context: "よろしくお願いします。",
+        created_at: "2026-11-24 09:00",
+      }),
+      message({
+        sender: "a",
+        context: "あいうえお",
+        created_at: "2026-11-24 09:01",
+      }),
+      message({
+        sender: "g",
+        kind: "confidential",
+        recipients: ["a", "f", "i", "r", "t"],
+        context: "英を封じ込めましょう",
+        created_at: "2026-11-24 09:05",
+      }),
+      message({
+        sender: "g",
+        kind: "confidential",
+        recipients: ["e"],
+        context: "手堅く英独同名で仏を狩りませんか。",
+        created_at: "2026-11-24 09:06",
+      }),
+      message({
+        sender: "i",
+        context: "出遅れたぜ",
+        created_at: "2026-11-25 08:00",
+      }),
     ],
   },
 };
@@ -87,7 +137,22 @@ export const Empty: Story = {
 export const Ghost: Story = {
   args: { messages: ghostMessages },
   play: async ({ canvasElement }) => {
-    const images = canvasElement.querySelectorAll<HTMLImageElement>("img[src*='dfpli']");
+    const images =
+      canvasElement.querySelectorAll<HTMLImageElement>("img[src*='dfpli']");
     await expect(images.length).toBe(1);
+  },
+};
+
+/** システムメッセージの出し分け（区切りの帯・盤面編集のまとめ・国の画像） */
+export const Notices: Story = {
+  args: { messages: noticeMessages },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(
+      canvas.getByText("1901 年秋 メインフェイズ開始"),
+    ).toBeInTheDocument();
+    await expect(
+      canvas.getByRole("button", { name: /盤面が編集されました（3 件）/ }),
+    ).toBeInTheDocument();
   },
 };

@@ -20,6 +20,25 @@ body {
 
 :root {
   --min-width: 375px;
+  /* PC で開いても、スマホと同じ縦長のレイアウトのまま、この幅で中央に置く */
+  --app-max-width: 600px;
+}
+
+/*
+ * 画面幅が広いときに、アプリの枠の外側に見える色。
+ * アプリの枠があるときだけにする（Storybook の背景は変えない）
+ */
+html:has(.app-frame),
+html:has(.app-frame) body {
+  @apply bg-gray-300 dark:bg-black;
+}
+
+/* アプリ全体の枠（サイトヘッダからページの中身まで） */
+.app-frame {
+  @apply bg-gray-100 dark:bg-gray-950;
+  margin: 0 auto;
+  min-height: 100dvh;
+  max-width: var(--app-max-width);
 }
 
 @layer base {

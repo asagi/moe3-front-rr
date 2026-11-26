@@ -1,9 +1,22 @@
 import { Fragment } from "react";
 import { AdminImage, PowerImage } from "~/components/power-image/PowerImage";
 import { UserAvatar } from "~/components/user-avatar/UserAvatar";
-import { type ChatMessage, type ChatSelf, isGhost, isMine, senderName } from "~/lib/chat";
+import {
+  type ChatMessage,
+  type ChatSelf,
+  isGhost,
+  isMine,
+  senderName,
+} from "~/lib/chat";
 import { type GameRegulation, formatMonthDayJa } from "~/lib/game";
+import {
+  firstMessageOf,
+  groupChatItems,
+  itemKey,
+  lastMessageOf,
+} from "~/lib/system-notice";
 import styles from "./Chat.module.css";
+import { BoardEditGroup, SystemNoticeItem } from "./SystemNotice";
 
 export interface ChatMessageListProps {
   /** 古い順のメッセージ */
@@ -14,26 +27,47 @@ export interface ChatMessageListProps {
 }
 
 /** チャンネルのメッセージ一覧 */
-export const ChatMessageList = ({ messages, faceType, self }: ChatMessageListProps) => {
+export const ChatMessageList = ({
+  messages,
+  faceType,
+  self,
+}: ChatMessageListProps) => {
   if (messages.length === 0) {
     return <p className={styles.empty}>このシーズンの発言はまだありません</p>;
   }
+  // 盤面編集の通知が続いたら 1 行にまとめる
+  const items = groupChatItems(messages);
   return (
     <ol className={styles.messages} aria-label="メッセージ">
-      {messages.map((m, i) => {
-        const prev = messages[i - 1];
+      {items.map((item, i) => {
+        const m = firstMessageOf(item);
+        const prev = i > 0 ? lastMessageOf(items[i - 1]) : null;
         const date = m.created_at.slice(0, 10);
         const newDay = prev == null || prev.created_at.slice(0, 10) !== date;
         // 同じ人の続けての発言は、2 つ目からアイコンと名前を省く
-        const continued = !newDay && prev != null && senderKey(prev) === senderKey(m);
+        const continued =
+          !newDay && prev != null && senderKey(prev) === senderKey(m);
         return (
-          <Fragment key={m.message_uuid}>
+          <Fragment key={itemKey(item)}>
             {newDay && (
               <li className={styles.date} aria-hidden="true">
                 {formatMonthDayJa(date)}
               </li>
             )}
-            <MessageItem message={m} faceType={faceType} self={self} continued={continued} />
+            {item.kind === "boardEdits" ? (
+              <BoardEditGroup
+                messages={item.messages}
+                faceType={faceType}
+                variant="channel"
+              />
+            ) : (
+              <MessageItem
+                message={m}
+                faceType={faceType}
+                self={self}
+                continued={continued}
+              />
+            )}
           </Fragment>
         );
       })}
@@ -65,12 +99,8 @@ const MessageItem = ({
   );
   const name = senderName(m);
   if (m.sender_kind === "system" || name == null) {
-    // システムメッセージは点線枠で中央（時刻は右）
     return (
-      <li className={styles.systemRow}>
-        <p className={styles.system}>{m.context}</p>
-        {time}
-      </li>
+      <SystemNoticeItem message={m} faceType={faceType} variant="channel" />
     );
   }
   if (isMine(m, self)) {
@@ -100,7 +130,9 @@ const MessageItem = ({
   return (
     <li className={classes}>
       <span className={styles.icon}>
-        {!continued && <SenderIcon message={m} faceType={faceType} name={name} />}
+        {!continued && (
+          <SenderIcon message={m} faceType={faceType} name={name} />
+        )}
       </span>
       <div className={styles.messageBody}>
         {continued ? (
@@ -131,7 +163,11 @@ const SenderIcon = ({
       return <AdminImage faceType={faceType} size={32} />;
     case "user":
       return (
-        <UserAvatar name={name} avatarUrl={message.sender_user?.avatar_url} size={32} />
+        <UserAvatar
+          name={name}
+          avatarUrl={message.sender_user?.avatar_url}
+          size={32}
+        />
       );
     default:
       // Ghost 発言（滅亡した国）は白黒の画像

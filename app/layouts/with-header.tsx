@@ -101,7 +101,7 @@ export default function WithHeaderLayout({ loaderData }: Route.ComponentProps) {
     : loaderData.impersonateError;
 
   return (
-    <>
+    <div className="app-frame">
       {/* サイトヘッダ（管理者モードの帯を含む）は画面上部に固定する */}
       <div ref={headerRef} className="sticky top-0 z-30">
         <Header
@@ -145,6 +145,6 @@ export default function WithHeaderLayout({ loaderData }: Route.ComponentProps) {
       <main className="flex flex-col items-center justify-center pt-0 pb-4">
         <Outlet />
       </main>
-    </>
+    </div>
   );
 }

@@ -138,25 +138,7 @@
   text-align: center;
 }
 
-/* システムメッセージ（点線枠で中央、時刻は右） */
-.systemRow {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  gap: 6px;
-  padding-left: 48px;
-}
-
-.system {
-  border: 1px dashed var(--color-gray-500);
-  background-color: #fff;
-  padding: 4px 12px;
-  color: var(--color-gray-800);
-  font-size: 13px;
-  text-align: center;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
+/* システムメッセージは SystemNotice.module.css */
 
 .item {
   display: flex;

@@ -10,10 +10,36 @@
   max-width: 36rem;
 }
 
-.pageTitle {
-  color: var(--color-gray-600);
-  font-weight: 400;
-  font-size: 13px;
+/*
+ * チャンネル一覧・チャンネル画面の見出しのバー。
+ * ログビューアーの視点・フィルタのバーと同じく、卓ヘッダのすぐ下に固定する
+ */
+.subHeader {
+  position: sticky;
+  top: calc(var(--site-header-height, 47px) + var(--game-header-height, 41px));
+  /* 卓ヘッダ（25）より下、ページの中身より上 */
+  z-index: 24;
+  border-bottom: 1px solid var(--color-gray-200);
+  background-color: #fff;
+  width: 100%;
+}
+
+/* 左に戻るリンク、中央に見出し（卓ヘッダと同じ文字の大きさ） */
+.subHeaderInner {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+  margin: 0 auto;
+  padding: 0 16px;
+  min-height: 40px;
+  max-width: 36rem;
+}
+
+.subHeaderInner h3 {
+  grid-column: 2;
+  font-weight: 600;
+  font-size: 14px;
   text-align: center;
 }
 
@@ -126,21 +152,23 @@
 
 /* ---- チャンネル画面 ---- */
 
-.channelTitle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
+/* 一覧へ戻る。卓ヘッダのシーズン切り替えボタンと同じ色・高さ・押したときの背景にそろえる */
 .backLink {
-  color: var(--color-brand);
+  display: inline-flex;
+  grid-column: 1;
+  justify-self: start;
+  align-items: center;
+  gap: 2px;
+  margin-left: -8px;
+  border-radius: 6px;
+  padding: 0 8px 0 4px;
+  height: 32px;
+  color: var(--color-gray-700);
   font-size: 13px;
 }
 
-.channelTitle h3 {
-  flex: 1;
-  font-weight: 700;
-  font-size: 16px;
+.backLink:hover {
+  background-color: var(--color-gray-100);
 }
 
 /* ---- メッセージ ---- */
@@ -233,25 +261,7 @@
   text-align: center;
 }
 
-/* システムメッセージ（点線枠で中央、時刻は右） */
-.systemRow {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  gap: 6px;
-  padding-left: 40px;
-}
-
-.system {
-  border: 1px dashed var(--color-gray-500);
-  background-color: #fff;
-  padding: 4px 12px;
-  color: var(--color-gray-800);
-  font-size: 12px;
-  text-align: center;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
+/* システムメッセージは SystemNotice.module.css */
 
 /* ---- 送信フォーム ---- */
 
@@ -268,6 +278,9 @@
 /* 画面下のタブバーのすぐ上に固定する */
 .composerDock {
   position: fixed;
+  /* アプリの枠（app.css の --app-max-width）の幅に収める */
+  margin-inline: auto;
+  max-width: var(--app-max-width);
   right: 0;
   bottom: calc(56px + env(safe-area-inset-bottom));
   left: 0;

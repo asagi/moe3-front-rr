@@ -36,10 +36,14 @@ import { useMessageStream } from "~/lib/use-message-stream";
 import type { GameRouteHandle } from "./games.$gameUuid";
 import type { Route } from "./+types/games.$gameUuid.chat._index";
 
-export const handle: GameRouteHandle = { gameTitle: "チャット", seasonal: true };
+export const handle: GameRouteHandle = {
+  gameTitle: "チャット",
+  seasonal: true,
+};
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  const title = loaderData?.layout === "viewer" ? "チャットログ" : "チャンネル一覧";
+  const title =
+    loaderData?.layout === "viewer" ? "チャットログ" : "チャンネル一覧";
   return [{ title: `${title} | Diplomacy MOE` }];
 }
 
@@ -60,7 +64,10 @@ export function shouldRevalidate({
       params.sort();
       return params.toString();
     };
-    if (currentUrl.search !== nextUrl.search && strip(currentUrl) === strip(nextUrl)) {
+    if (
+      currentUrl.search !== nextUrl.search &&
+      strip(currentUrl) === strip(nextUrl)
+    ) {
       return false;
     }
   }
@@ -77,7 +84,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const game = requireGame(context);
   const viewer = await resolveChatViewer(request, context, game);
   const season = resolveSeason(request, game);
-  const messages = season ? await loadSeasonMessages(context, game, season) : [];
+  const messages = season
+    ? await loadSeasonMessages(context, game, season)
+    : [];
   const base = {
     gameUuid: game.game_uuid,
     faceType: game.regulation.face_type,
@@ -101,12 +110,14 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       // 進行中の卓の独り言は本人にしか見えない（ほかの人にはサーバーが返さない）ので、
       // 第三者にはフィルタにも出さない
       personalVisible:
-        game.status !== "in_progress" || (viewer.kind === "channels" && viewer.power != null),
+        game.status !== "in_progress" ||
+        (viewer.kind === "channels" && viewer.power != null),
       // 開戦前夜と感想戦はオープンチャンネルだけなので、フィルタも全体向けの発言だけにする
       openOnly: isOffGameSeason(season),
       live,
       streamAfter: messages.at(-1)?.message_uuid ?? null,
-      streamKey: viewer.kind === "channels" ? streamConnectionKey(viewer) : "viewer",
+      streamKey:
+        viewer.kind === "channels" ? streamConnectionKey(viewer) : "viewer",
     };
   }
   // 参加者の担当国（チャンネル名から自国を省く）
@@ -118,7 +129,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     seasonParam: new URL(request.url).searchParams.get("season"),
     myPower,
     // 開戦前夜と感想戦はオープンチャンネルだけ（独り言も出さない）
-    channels: summarizeChannels(messages, isOffGameSeason(season) ? null : myPower),
+    channels: summarizeChannels(
+      messages,
+      isOffGameSeason(season) ? null : myPower,
+    ),
     live,
     streamKey: streamConnectionKey(viewer),
   };
@@ -135,9 +149,21 @@ export default function GameChat({ loaderData }: Route.ComponentProps) {
 type LoaderData = Route.ComponentProps["loaderData"];
 
 /** 参加者向けのチャンネル一覧 */
-const ChannelIndex = ({ data }: { data: Extract<LoaderData, { layout: "channels" }> }) => {
-  const { gameUuid, faceType, season, seasonParam, myPower, channels, streamKey, live } =
-    data;
+const ChannelIndex = ({
+  data,
+}: {
+  data: Extract<LoaderData, { layout: "channels" }>;
+}) => {
+  const {
+    gameUuid,
+    faceType,
+    season,
+    seasonParam,
+    myPower,
+    channels,
+    streamKey,
+    live,
+  } = data;
   const revalidator = useRevalidator();
   const navigate = useNavigate();
 
@@ -154,21 +180,29 @@ const ChannelIndex = ({ data }: { data: Extract<LoaderData, { layout: "channels"
       onSeason: () => void navigate(chatPath(gameUuid, null, OPEN_CHANNEL_ID)),
       // 撤退・調整フェイズになったら書き込めないので、ログビューアーに移る
       onPhase: (phase) => {
-        if (chatClosedPhaseLabel(phase)) void navigate(chatPath(gameUuid, null));
+        if (chatClosedPhaseLabel(phase))
+          void navigate(chatPath(gameUuid, null));
       },
     },
   );
 
   return (
-    <div className={styles.page}>
-      <h3 className={styles.pageTitle}>チャンネル一覧</h3>
-      <ChannelList
-        channels={channels}
-        faceType={faceType}
-        myPower={myPower}
-        channelHref={(id) => chatPath(gameUuid, seasonParam, id)}
-      />
-    </div>
+    <>
+      {/* ログビューアーの視点・フィルタのバーと同じく、卓ヘッダのすぐ下に固定する */}
+      <div className={styles.subHeader}>
+        <div className={styles.subHeaderInner}>
+          <h3>チャンネル一覧</h3>
+        </div>
+      </div>
+      <div className={styles.page}>
+        <ChannelList
+          channels={channels}
+          faceType={faceType}
+          myPower={myPower}
+          channelHref={(id) => chatPath(gameUuid, seasonParam, id)}
+        />
+      </div>
+    </>
   );
 };
 
@@ -176,8 +210,13 @@ const ChannelIndex = ({ data }: { data: Extract<LoaderData, { layout: "channels"
  * 第三者用ログビューアー。
  * 視点とフィルタは URL（?pov=g&hide=system,personal）で持ち、リロードやリンクの共有でも保つ
  */
-const ChatLogViewer = ({ data }: { data: Extract<LoaderData, { layout: "viewer" }> }) => {
-  const { gameUuid, faceType, season, live, povEnabled, personalVisible } = data;
+const ChatLogViewer = ({
+  data,
+}: {
+  data: Extract<LoaderData, { layout: "viewer" }>;
+}) => {
+  const { gameUuid, faceType, season, live, povEnabled, personalVisible } =
+    data;
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -186,7 +225,12 @@ const ChatLogViewer = ({ data }: { data: Extract<LoaderData, { layout: "viewer" 
   useEffect(() => setMessages(data.messages), [data.messages]);
   useMessageStream(
     gameUuid,
-    { after: data.streamAfter, connectionKey: data.streamKey, season, enabled: live },
+    {
+      after: data.streamAfter,
+      connectionKey: data.streamKey,
+      season,
+      enabled: live,
+    },
     {
       onMessage: (m) => {
         if (m.turn === season) setMessages((list) => appendMessage(list, m));
@@ -239,7 +283,9 @@ const ChatLogViewer = ({ data }: { data: Extract<LoaderData, { layout: "viewer" 
         onPovChange={(p) => updateParam("pov", p)}
         onHiddenChange={(h) => updateParam("hide", serializeHidden(h))}
       />
-      <div className={`${styles.page} ${data.closedPhase ? styles.withPhaseDock : ""}`}>
+      <div
+        className={`${styles.page} ${data.closedPhase ? styles.withPhaseDock : ""}`}
+      >
         <ChatLogList
           messages={visible}
           faceType={faceType}

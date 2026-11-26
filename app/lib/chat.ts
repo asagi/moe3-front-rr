@@ -28,6 +28,57 @@ export interface ChatSenderUser {
   avatar_url: string | null;
 }
 
+/** システムメッセージの種類と値に出てくるユニット（GET /board の units[] と同じ形） */
+export interface SystemNoticeUnit {
+  power: PowerCode;
+  kind: "a" | "f";
+  location: string;
+}
+
+/**
+ * システムメッセージの種類と値（notice）。国・地域・ユニット種別はコードで入る。
+ * 今後種類が増えることがあるので、知らない type のときは本文（context）を出す
+ */
+export type SystemNotice =
+  | { type: "game_created" | "player_joined"; params: { username: string } }
+  | {
+      type:
+        | "ready"
+        | "aborted"
+        | "draw_proposed"
+        | "owner_absent"
+        | "draw_rescinded"
+        | "draw"
+        | "closed"
+        | "progress_mode_changed"
+        | "progress_consensus_reached";
+      params: Record<string, never>;
+    }
+  | { type: "start_season"; params: { season: string } }
+  | {
+      type:
+        | "solo"
+        | "progress_consented"
+        | "progress_consensus_rescinded"
+        | "power_returned";
+      params: { power: PowerCode };
+    }
+  | { type: "unit_placed" | "unit_removed"; params: { unit: SystemNoticeUnit } }
+  | {
+      type: "unit_replaced";
+      params: { old_unit: SystemNoticeUnit; new_unit: SystemNoticeUnit };
+    }
+  | { type: "territory_set"; params: { province: string; power: PowerCode } }
+  | {
+      type: "territory_replaced";
+      params: { province: string; old_power: PowerCode; new_power: PowerCode };
+    }
+  | {
+      type: "territory_released";
+      params: { province: string; old_power: PowerCode };
+    }
+  | { type: "next_update_at_changed"; params: { next_update_at: string } };
+
 /** 外交メッセージ */
 export interface ChatMessage {
   message_uuid: string;
@@ -45,6 +96,11 @@ export interface ChatMessage {
   recipients: PowerCode[] | null;
   /** 送信日時（JST、"YYYY-MM-DD HH:mm"） */
   created_at: string;
+  /**
+   * システムメッセージの種類と値。システムメッセージ以外と、種類が分からないものは null。
+   * サーバーが対応する前のデータでは省略されることがある
+   */
+  notice?: SystemNotice | null;
 }
 
 /** 滅亡した国の発言（Ghost 発言）か。アイコンを白黒にし、吹き出しを薄くする */
@@ -79,7 +135,10 @@ export const groupChannelId = (members: Iterable<PowerCode>) =>
 export const parseChannelId = (id: string): Channel | null => {
   if (id === OPEN_CHANNEL_ID) return { kind: "open", id };
   const codes = [...id];
-  if (codes.length === 0 || !codes.every((c) => POWER_ORDER.includes(c as PowerCode))) {
+  if (
+    codes.length === 0 ||
+    !codes.every((c) => POWER_ORDER.includes(c as PowerCode))
+  ) {
     return null;
   }
   const members = sortPowers(codes as PowerCode[]);
@@ -147,13 +206,19 @@ export const summarizeChannels = (
 
   const summary = (channel: Channel): ChannelSummary => {
     const list = groups.get(channel.id) ?? [];
-    return { channel, messageCount: list.length, lastMessage: list.at(-1) ?? null };
+    return {
+      channel,
+      messageCount: list.length,
+      lastMessage: list.at(-1) ?? null,
+    };
   };
 
   const channels = [...groups.keys()].map((id) => parseChannelId(id));
 
   const personals =
-    myPower != null ? [summary({ kind: "personal", id: myPower, power: myPower })] : [];
+    myPower != null
+      ? [summary({ kind: "personal", id: myPower, power: myPower })]
+      : [];
 
   const others = channels
     .filter((c) => c?.kind === "group")
@@ -161,10 +226,16 @@ export const summarizeChannels = (
     .map(summary)
     // 新しく発言があった順
     .sort((a, b) =>
-      (b.lastMessage?.created_at ?? "").localeCompare(a.lastMessage?.created_at ?? ""),
+      (b.lastMessage?.created_at ?? "").localeCompare(
+        a.lastMessage?.created_at ?? "",
+      ),
     );
 
-  return [summary({ kind: "open", id: OPEN_CHANNEL_ID }), ...personals, ...others];
+  return [
+    summary({ kind: "open", id: OPEN_CHANNEL_ID }),
+    ...personals,
+    ...others,
+  ];
 };
 
 /**
@@ -191,7 +262,9 @@ export const senderName = (m: ChatMessage) => {
     case "power":
       return m.sender ? POWER_LABELS[m.sender] : null;
     case "user":
-      return m.sender_user ? (m.sender_user.global_name ?? m.sender_user.username) : null;
+      return m.sender_user
+        ? (m.sender_user.global_name ?? m.sender_user.username)
+        : null;
     case "admin":
       return "管理人";
     case "system":
@@ -216,7 +289,9 @@ export const isMine = (m: ChatMessage, self: ChatSelf) =>
 
 /** SSE で受け取ったメッセージを、重複を除いて末尾に足す */
 export const appendMessage = (messages: ChatMessage[], m: ChatMessage) =>
-  messages.some((x) => x.message_uuid === m.message_uuid) ? messages : [...messages, m];
+  messages.some((x) => x.message_uuid === m.message_uuid)
+    ? messages
+    : [...messages, m];
 
 /** シーズンを保ったままチャット内の URL を作る */
 export const chatPath = (
@@ -291,7 +366,10 @@ export interface LogFilter {
 }
 
 /** 視点とフィルタで発言を絞る */
-export const filterLog = (messages: ChatMessage[], { pov, hidden }: LogFilter) =>
+export const filterLog = (
+  messages: ChatMessage[],
+  { pov, hidden }: LogFilter,
+) =>
   messages.filter((m) => {
     const category = logCategoryOf(m);
     if (category == null || hidden.has(category)) return false;
@@ -300,14 +378,18 @@ export const filterLog = (messages: ChatMessage[], { pov, hidden }: LogFilter) =
 
 /** URL の ?pov= を読む。不正なら null */
 export const parsePov = (value: string | null): PowerCode | null =>
-  value != null && POWER_ORDER.includes(value as PowerCode) ? (value as PowerCode) : null;
+  value != null && POWER_ORDER.includes(value as PowerCode)
+    ? (value as PowerCode)
+    : null;
 
 /** URL の ?hide=system,personal を読む。知らない値は捨てる */
 export const parseHidden = (value: string | null): Set<LogCategory> =>
   new Set(
     (value ?? "")
       .split(",")
-      .filter((v): v is LogCategory => LOG_CATEGORIES.some((c) => c.value === v)),
+      .filter((v): v is LogCategory =>
+        LOG_CATEGORIES.some((c) => c.value === v),
+      ),
   );
 
 /** ?hide= に入れる値（並びはメニューの順）。何も隠さなければ null */

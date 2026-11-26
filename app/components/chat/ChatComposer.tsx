@@ -132,7 +132,7 @@ const SenderIcon = ({ sender }: { sender: ChatComposerSender }) => {
     case "user":
       return (
         <span title={title}>
-          <UserAvatar name={sender.name} avatarUrl={sender.avatarUrl} size={28} />
+          <UserAvatar name={sender.name} avatarUrl={sender.avatarUrl} size={40} />
         </span>
       );
     case "power":
@@ -141,7 +141,7 @@ const SenderIcon = ({ sender }: { sender: ChatComposerSender }) => {
           <PowerImage
             faceType={sender.faceType}
             code={sender.power}
-            size={28}
+            size={40}
             defeated={sender.defeated}
           />
         </span>
@@ -149,7 +149,7 @@ const SenderIcon = ({ sender }: { sender: ChatComposerSender }) => {
     case "admin":
       return (
         <span title={title}>
-          <AdminImage faceType={sender.faceType} size={28} />
+          <AdminImage faceType={sender.faceType} size={40} />
         </span>
       );
   }

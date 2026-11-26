@@ -53,6 +53,9 @@ a.seasonNavButton:hover {
   bottom: 0;
   left: 0;
   z-index: 20;
+  /* アプリの枠（app.css の --app-max-width）の幅に収める */
+  margin-inline: auto;
+  max-width: var(--app-max-width);
   border-top: 1px solid var(--color-gray-200);
   background-color: #fff;
   padding-bottom: env(safe-area-inset-bottom);

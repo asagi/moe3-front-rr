@@ -8,8 +8,19 @@ import {
   recipientsOf,
   senderName,
 } from "~/lib/chat";
-import { type GameRegulation, POWER_LABELS, formatMonthDayJa } from "~/lib/game";
+import {
+  type GameRegulation,
+  POWER_LABELS,
+  formatMonthDayJa,
+} from "~/lib/game";
+import {
+  firstMessageOf,
+  groupChatItems,
+  itemKey,
+  lastMessageOf,
+} from "~/lib/system-notice";
 import styles from "./ChatLog.module.css";
+import { BoardEditGroup, SystemNoticeItem } from "./SystemNotice";
 
 export interface ChatLogListProps {
   /** 古い順のメッセージ（視点・フィルタで絞ったあと） */
@@ -31,25 +42,38 @@ export const ChatLogList = ({
   if (messages.length === 0) {
     return <p className={styles.empty}>{emptyText}</p>;
   }
+  // 盤面編集の通知が続いたら 1 行にまとめる
+  const items = groupChatItems(messages);
   return (
     <ol className={styles.log} aria-label="メッセージ">
-      {messages.map((m, i) => {
-        const prev = messages[i - 1];
+      {items.map((item, i) => {
+        const m = firstMessageOf(item);
+        const prev = i > 0 ? lastMessageOf(items[i - 1]) : null;
         const date = m.created_at.slice(0, 10);
         const newDay = prev == null || prev.created_at.slice(0, 10) !== date;
         return (
-          <Fragment key={m.message_uuid}>
+          <Fragment key={itemKey(item)}>
             {newDay && (
               <li className={styles.date} aria-hidden="true">
                 {formatMonthDayJa(date)}
               </li>
             )}
-            <LogItem
-              message={m}
-              faceType={faceType}
-              // 同じ人が同じ宛先に続けて発言したら、2 つ目からはアイコンと名前を省く
-              continued={!newDay && prev != null && groupKey(prev) === groupKey(m)}
-            />
+            {item.kind === "boardEdits" ? (
+              <BoardEditGroup
+                messages={item.messages}
+                faceType={faceType}
+                variant="log"
+              />
+            ) : (
+              <LogItem
+                message={m}
+                faceType={faceType}
+                // 同じ人が同じ宛先に続けて発言したら、2 つ目からはアイコンと名前を省く
+                continued={
+                  !newDay && prev != null && groupKey(prev) === groupKey(m)
+                }
+              />
+            )}
           </Fragment>
         );
       })}
@@ -91,12 +115,7 @@ const LogItem = ({
   );
   const name = senderName(m);
   if (m.sender_kind === "system" || name == null) {
-    return (
-      <li className={styles.systemRow}>
-        <p className={styles.system}>{m.context}</p>
-        {time}
-      </li>
-    );
+    return <SystemNoticeItem message={m} faceType={faceType} variant="log" />;
   }
 
   const category = logCategoryOf(m);
@@ -110,7 +129,9 @@ const LogItem = ({
   return (
     <li className={`${styles.item} ${continued ? styles.continued : ""}`}>
       <span className={styles.icon}>
-        {!continued && <SenderIcon message={m} faceType={faceType} name={name} />}
+        {!continued && (
+          <SenderIcon message={m} faceType={faceType} name={name} />
+        )}
       </span>
       <div className={styles.body}>
         {continued ? (
@@ -118,7 +139,9 @@ const LogItem = ({
         ) : (
           <span className={styles.head}>
             {label}
-            {category === "personal" && <span className="sr-only">（独り言）</span>}
+            {category === "personal" && (
+              <span className="sr-only">（独り言）</span>
+            )}
           </span>
         )}
         <div className={styles.bubbleRow}>
@@ -151,7 +174,11 @@ const SenderIcon = ({
       return <AdminImage faceType={faceType} size={40} />;
     case "user":
       return (
-        <UserAvatar name={name} avatarUrl={message.sender_user?.avatar_url} size={40} />
+        <UserAvatar
+          name={name}
+          avatarUrl={message.sender_user?.avatar_url}
+          size={40}
+        />
       );
     default:
       // Ghost 発言（滅亡した国）は白黒の画像

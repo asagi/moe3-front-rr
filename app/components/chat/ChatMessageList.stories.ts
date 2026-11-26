@@ -1,9 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { expect, within } from "storybook/test";
+import { expect, userEvent, within } from "storybook/test";
 
 import { channelMessages } from "~/lib/chat";
-import { ghostMessages, readyMessages, springMessages } from "./fixtures/messages";
+import {
+  ghostMessages,
+  noticeMessages,
+  readyMessages,
+  springMessages,
+} from "./fixtures/messages";
 import { ChatMessageList } from "./ChatMessageList";
 
 const meta = {
@@ -88,7 +93,44 @@ export const Ready: Story = {
 export const Ghost: Story = {
   args: { messages: ghostMessages },
   play: async ({ canvasElement }) => {
-    const images = canvasElement.querySelectorAll<HTMLImageElement>("img[src*='dfpli']");
+    const images =
+      canvasElement.querySelectorAll<HTMLImageElement>("img[src*='dfpli']");
     await expect(images.length).toBe(1);
+  },
+};
+
+/** システムメッセージの出し分け（区切りの帯・盤面編集のまとめ・国の画像） */
+export const Notices: Story = {
+  args: { messages: noticeMessages },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // 区切りは帯で、本文は日本語で組み立て直す
+    await expect(
+      canvas.getByText("1901 年秋 メインフェイズ開始"),
+    ).toBeInTheDocument();
+    await expect(
+      canvas.getByText("が制覇を達成しました。お疲れさまでした"),
+    ).toBeInTheDocument();
+    // 続いた盤面編集の通知（3 件）は 1 行にまとめる。発言を挟んだ 1 件はまとめない
+    const toggle = canvas.getByRole("button", {
+      name: /盤面が編集されました（3 件）/,
+    });
+    await expect(
+      canvas.queryByText("が配置されました"),
+    ).not.toBeInTheDocument();
+    await userEvent.click(toggle);
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
+    await expect(canvas.getByText("が配置されました")).toBeInTheDocument();
+    await expect(
+      canvas.getByText("の海軍（サンクトペテルブルク南岸）"),
+    ).toBeInTheDocument();
+    await expect(canvas.getByText("が除去されました")).toBeInTheDocument();
+    await expect(
+      canvas.getByText("次回更新時刻が 11 月 27 日 (金) 21:00 に変わりました"),
+    ).toBeInTheDocument();
+    // 知らない種類はサーバーの本文
+    await expect(
+      canvas.getByText("未来の種類のお知らせです。"),
+    ).toBeInTheDocument();
   },
 };
