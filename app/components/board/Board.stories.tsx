@@ -53,3 +53,20 @@ export const Selectable: Story = {
     await expect(args.onProvinceSelect).toHaveBeenCalledWith("bur");
   },
 };
+
+/**
+ * 撤退フェイズ。敗退したユニット（ブルゴーニュのフランス陸軍）に × を重ね、
+ * 攻めてきたユニット（ドイツ陸軍）は移動前の位置（ミュンヘン）に描く
+ */
+export const Retreat: Story = {
+  args: {
+    boardData: {
+      units: [
+        { power: "f", kind: "a", location: "bur", dislodged: true },
+        { power: "g", kind: "a", location: "mun" },
+        { power: "f", kind: "a", location: "mar" },
+        { power: "g", kind: "a", location: "ruh" },
+      ],
+    },
+  },
+};

@@ -138,11 +138,13 @@
 .channelHead {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
 }
 
 .channelName {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   font-weight: 600;
   font-size: 14px;
@@ -470,4 +472,18 @@
 .newChannelCancel {
   border: 1px solid var(--color-gray-400);
   background-color: #fff;
+}
+
+/* 未読の数（チャンネル一覧） */
+.unread {
+  flex-shrink: 0;
+  border-radius: 999px;
+  background-color: var(--color-brand);
+  padding: 0 7px;
+  min-width: 20px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 11px;
+  line-height: 20px;
+  text-align: center;
 }

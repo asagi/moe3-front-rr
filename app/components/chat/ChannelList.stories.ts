@@ -52,3 +52,12 @@ export const Empty: Story = {
 export const Flags: Story = {
   args: { faceType: "flags" },
 };
+
+/** 未読あり（オープンチャンネル 3 件、英独との密談 1 件） */
+export const WithUnread: Story = {
+  args: { unreadCounts: { open: 3, efg: 1 } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getAllByRole("link")[0]).toHaveTextContent("3 件の未読");
+  },
+};

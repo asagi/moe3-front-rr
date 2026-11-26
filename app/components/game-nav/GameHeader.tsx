@@ -20,11 +20,24 @@ export interface GameHeaderProps {
   title: string;
   /** 指定すると、タイトルの左右にシーズンを切り替えるボタンを出す（カレンダー・チャット・命令） */
   seasonNav?: SeasonNav;
+  /** タイトルに添えるフェイズ名（「撤退フェイズ」など。現在のシーズンを見ているときだけ） */
+  phase?: string | null;
 }
 
 /** サイトヘッダの下に出す卓ヘッダ（「#001： 卓情報」） */
-export const GameHeader = ({ numberLabel, title, seasonNav }: GameHeaderProps) => {
-  const heading = <h2>{numberLabel ? `${numberLabel}： ${title}` : title}</h2>;
+export const GameHeader = ({ numberLabel, title, seasonNav, phase }: GameHeaderProps) => {
+  // 狭い画面ではフェイズ名ごと 2 行目に回す（途中で折り返さない）
+  const heading = (
+    <h2>
+      <span className={styles.nowrap}>{numberLabel ? `${numberLabel}： ${title}` : title}</span>
+      {phase && (
+        <>
+          {" "}
+          <span className={styles.nowrap}>{phase}</span>
+        </>
+      )}
+    </h2>
+  );
   if (!seasonNav) return <div className={styles.header}>{heading}</div>;
   return (
     <div className={`${styles.header} ${styles.withSeasonNav}`}>

@@ -886,3 +886,16 @@
   top: 86.4%;
   left: 69.2%;
 }
+
+/* 撤退フェイズの敗退したユニットは半透明にして、赤い × を重ねる */
+.dislodgedUnit {
+  opacity: 0.55;
+}
+
+.dislodged {
+  filter: drop-shadow(0 0 1px #fff) drop-shadow(0 0 1px #fff);
+  transform: scale(0.75);
+  transform-origin: center;
+  fill: #dc2626;
+  pointer-events: none;
+}

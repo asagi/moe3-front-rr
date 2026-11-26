@@ -15,7 +15,7 @@ import {
   putOrders,
   putProgressConsensus,
 } from "~/lib/api.server";
-import { baseCode } from "~/lib/board";
+import { type BoardSnapshot, baseCode } from "~/lib/board";
 import { isLiveSeason, isOffGameSeason, isStarted } from "~/lib/game";
 import { requireGame, resolveSeason } from "~/lib/game.server";
 import { meContext } from "~/lib/me.server";
@@ -73,6 +73,8 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 
   const myPower = orders?.power ?? null;
   return {
+    // 地図に描くユニット（撤退フェイズは、攻めてきたユニットを移動前の位置に戻す）
+    mapUnits: retreatMapUnits(board, result),
     gameUuid: game.game_uuid,
     faceType: game.regulation.face_type,
     season,
@@ -93,6 +95,29 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     streamKey: state.kind === "ok" ? `${state.me.username}:${myPower ?? "-"}` : "guest",
   };
 }
+
+/**
+ * 撤退フェイズの地図に描くユニット。
+ * 敗退したユニットは今の位置のまま（地図で × を重ねる）、攻めてきたユニットはメインフェイズの
+ * 移動前の位置に描く（同じ地域に 2 つ重ならないようにするため）。撤退フェイズ以外はそのまま
+ */
+const retreatMapUnits = (board: BoardSnapshot, result: SeasonResult | null) => {
+  if (board.phase_kind !== "retreat" || !result) return board.units;
+  const dislodgedAt = new Set(board.units.filter((u) => u.dislodged).map((u) => baseCode(u.location)));
+  return board.units.map((unit) => {
+    if (unit.dislodged || !dislodgedAt.has(baseCode(unit.location))) return unit;
+    // その地域に移動して成功した、同じ国の命令が攻めてきたユニット
+    const attack = result.main_phase.orders.find(
+      (o) =>
+        o.order_kind === "move" &&
+        o.status === "success" &&
+        o.power === unit.power &&
+        o.dest != null &&
+        baseCode(o.dest) === baseCode(unit.location),
+    );
+    return attack ? { ...unit, location: attack.location } : unit;
+  });
+};
 
 type SubmitResult = { ok: true; error?: undefined } | { ok?: false; error: string };
 
@@ -157,7 +182,15 @@ export default function GameOrders({ loaderData }: Route.ComponentProps) {
   useMessageStream(
     gameUuid,
     { connectionKey: loaderData.streamKey, season, enabled: live },
-    { onBoard: refresh, onPhase: refresh, onSeason: refresh },
+    {
+      onBoard: refresh,
+      onPhase: refresh,
+      onSeason: refresh,
+      // 発言が届いたら、タブバーのチャットに未読の印を出すために読み直す
+      onMessage: (m) => {
+        if (m.sender_kind !== "system") refresh();
+      },
+    },
   );
 
   // 確定に失敗したときのエラー
@@ -217,7 +250,7 @@ export default function GameOrders({ loaderData }: Route.ComponentProps) {
   return (
     <div className={styles.page}>
       <BoardWithInfo
-        boardData={{ units: board.units, territories: board.territories }}
+        boardData={{ units: loaderData.mapUnits, territories: board.territories }}
         renderActions={mapActions}
       />
 

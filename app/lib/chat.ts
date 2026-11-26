@@ -400,3 +400,23 @@ export const serializeHidden = (hidden: ReadonlySet<LogCategory>) => {
 
 /** 密談の宛先（国の並び順） */
 export const recipientsOf = (m: ChatMessage) => sortPowers(m.recipients ?? []);
+
+/**
+ * 未読として数える発言の ID を、チャンネルごとに集める（古い順）。
+ * システムメッセージと自分の発言は数えない。見ている人のチャンネル（channelIds）の発言だけ
+ */
+export const unreadCandidatesOf = (
+  messages: ChatMessage[],
+  self: ChatSelf,
+  channelIds: Iterable<string>,
+): Record<string, string[]> => {
+  const result: Record<string, string[]> = {};
+  const ids = new Set(channelIds);
+  for (const m of messages) {
+    if (m.sender_kind === "system" || m.kind === "masked" || isMine(m, self)) continue;
+    const id = channelIdOf(m);
+    if (id == null || !ids.has(id)) continue;
+    (result[id] ??= []).push(m.message_uuid);
+  }
+  return result;
+};

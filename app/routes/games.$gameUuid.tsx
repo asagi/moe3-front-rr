@@ -3,7 +3,18 @@ import { Outlet, useLocation, useMatches } from "react-router";
 import { GameHeader, type SeasonNav } from "~/components/game-nav/GameHeader";
 import { GameTabBar } from "~/components/game-nav/GameTabBar";
 import { isBoardEditable } from "~/lib/board";
-import { gameNumberLabel, isStarted, seasonLabel } from "~/lib/game";
+import { summarizeChannels, unreadCandidatesOf } from "~/lib/chat";
+import { loadSeasonMessages, resolveChatViewer } from "~/lib/chat.server";
+import {
+  type GameDetail,
+  gameNumberLabel,
+  isOffGameSeason,
+  isStarted,
+  isWritableSeason,
+  phaseLabel,
+  seasonLabel,
+} from "~/lib/game";
+import { useUnreadCounts } from "~/lib/read-state";
 import {
   canMaintainGame,
   gameContext,
@@ -58,8 +69,38 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     })(),
     // 卓ヘッダのシーズン切り替えに使う、これまでのシーズン
     seasons: game.seasons,
+    // 卓ヘッダにシーズンと並べて出す今のフェイズ名（現在のシーズンを見ているときだけ出す）
+    phase: game.status === "in_progress" ? phaseLabel(game.phase_kind) : null,
+    // タブバーのチャットに未読の印を出すための材料
+    chatUnread: await loadChatUnread(request, context, game),
   };
 }
+
+/**
+ * タブバーの未読の印の材料（最新のシーズンの、見ている人のチャンネルの発言）。
+ * チャンネル一覧を使う人（参加者と管理者モード中の管理者）が、書き込めるシーズンにいるときだけ。
+ * 既読の位置はブラウザに持つので、未読かどうかは画面側で決める
+ */
+const loadChatUnread = async (
+  request: Request,
+  context: Route.LoaderArgs["context"],
+  game: GameDetail,
+) => {
+  const season = game.seasons.at(-1) ?? null;
+  if (season == null || !isWritableSeason(game, season)) return null;
+  const viewer = await resolveChatViewer(request, context, game);
+  if (viewer.kind !== "channels") return null;
+  const messages = await loadSeasonMessages(context, game, season);
+  const channels = summarizeChannels(messages, isOffGameSeason(season) ? null : viewer.power);
+  return {
+    candidates: unreadCandidatesOf(
+      messages,
+      { power: viewer.power, username: viewer.username },
+      channels.map((c) => c.channel.id),
+    ),
+    latest: messages.at(-1)?.message_uuid ?? null,
+  };
+};
 
 /**
  * 卓ヘッダのシーズン切り替えのリンク先。
@@ -124,6 +165,11 @@ export default function GameLayout({ loaderData }: Route.ComponentProps) {
   const headerRef = useRef<HTMLDivElement>(null);
   useStickyHeight(headerRef, "--game-header-height");
   const seasonNav = useSeasonNav(seasonal ? loaderData.season : null, loaderData.seasons);
+  const unreadCounts = useUnreadCounts(
+    loaderData.gameUuid,
+    loaderData.chatUnread?.candidates ?? null,
+    loaderData.chatUnread?.latest ?? null,
+  );
   const chatTo = useLastChatPath(loaderData.gameUuid, seasonal ? seasonParam : null);
 
   return (
@@ -132,7 +178,17 @@ export default function GameLayout({ loaderData }: Route.ComponentProps) {
       {/* 卓ヘッダはサイトヘッダのすぐ下に固定する（高さを測るまでは、管理者の帯がないときの 47px） */}
       {/* 地図の情報カード（z-index 20）より上、サイトヘッダ（30）より下 */}
       <div ref={headerRef} className="sticky top-(--site-header-height,47px) z-[25]">
-        <GameHeader numberLabel={loaderData.numberLabel} title={title} seasonNav={seasonNav} />
+        <GameHeader
+          numberLabel={loaderData.numberLabel}
+          title={title}
+          seasonNav={seasonNav}
+          // 過去のシーズンにはフェイズ名を出さない
+          phase={
+            seasonal && loaderData.season != null && loaderData.season === loaderData.seasons.at(-1)
+              ? loaderData.phase
+              : null
+          }
+        />
       </div>
       <Outlet />
       <GameTabBar
@@ -143,6 +199,7 @@ export default function GameLayout({ loaderData }: Route.ComponentProps) {
         season={seasonal ? seasonParam : null}
         // ほかのタブからチャットに戻ったら、最後に開いていたチャンネルを開く
         chatTo={chatTo}
+        chatUnread={Object.keys(unreadCounts).length > 0}
       />
     </div>
   );

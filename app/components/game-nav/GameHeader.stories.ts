@@ -84,3 +84,18 @@ export const SeasonNavFirst: Story = {
     seasonNav: { first: null, prev: null, next: `${ORDERS}?season=1901s`, latest: `${ORDERS}?season=1901s` },
   },
 };
+
+/** 現在のシーズン（フェイズ名を添える。狭い画面ではフェイズ名ごと 2 行目に回る） */
+export const WithPhase: Story = {
+  args: {
+    numberLabel: "#001",
+    title: "1901 年春",
+    phase: "撤退フェイズ",
+    seasonNav: { first: `${ORDERS}?season=ready`, prev: `${ORDERS}?season=ready`, next: null, latest: null },
+  },
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).getByRole("heading", { name: "#001： 1901 年春 撤退フェイズ" }),
+    ).toBeInTheDocument();
+  },
+};

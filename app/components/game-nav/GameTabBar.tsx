@@ -18,6 +18,8 @@ export interface GameTabBarProps {
    * 指定しなければチャンネル一覧（ログビューアー）
    */
   chatTo?: string | null;
+  /** チャットに未読の発言があるか（チャットのアイコンに印を付ける） */
+  chatUnread?: boolean;
 }
 
 /** 卓内のページを切り替える画面下のタブバー */
@@ -27,6 +29,7 @@ export const GameTabBar = ({
   maintenanceEnabled,
   season = null,
   chatTo = null,
+  chatUnread = false,
 }: GameTabBarProps) => {
   const base = `/games/${gameUuid}`;
   const query = season ? `?${new URLSearchParams({ season })}` : "";
@@ -34,7 +37,12 @@ export const GameTabBar = ({
     <nav className={styles.tabBar} aria-label="卓のメニュー">
       <ul>
         <Tab to={`${base}/calendar${query}`} label="カレンダー" icon={<CalendarIcon />} />
-        <Tab to={chatTo ?? `${base}/chat${query}`} label="チャット" icon={<ChatIcon />} />
+        <Tab
+          to={chatTo ?? `${base}/chat${query}`}
+          label={chatUnread ? "チャット（未読あり）" : "チャット"}
+          icon={<ChatIcon />}
+          badge={chatUnread}
+        />
         <Tab
           to={`${base}/orders${query}`}
           label="命令"
@@ -59,12 +67,15 @@ const Tab = ({
   label,
   icon,
   disabled = false,
+  badge = false,
 }: {
   to: string;
   end?: boolean;
   label: string;
   icon: ReactNode;
   disabled?: boolean;
+  /** アイコンの右上に印（未読など）を付ける */
+  badge?: boolean;
 }) => (
   <li>
     {disabled ? (
@@ -86,6 +97,7 @@ const Tab = ({
         title={label}
       >
         {icon}
+        {badge && <span className={styles.badge} aria-hidden="true" />}
       </NavLink>
     )}
   </li>

@@ -13,6 +13,10 @@
   line-height: 1.4;
 }
 
+.nowrap {
+  white-space: nowrap;
+}
+
 /* シーズンの切り替えボタンを左右に置くとき */
 .withSeasonNav {
   display: grid;
@@ -74,6 +78,7 @@ a.seasonNavButton:hover {
 
 .tab {
   display: flex;
+  position: relative;
   justify-content: center;
   align-items: center;
   transition: color 0.15s;
@@ -104,4 +109,16 @@ a.tab:focus-visible {
 .icon {
   width: 28px;
   height: 28px;
+}
+
+/* タブのアイコンの右上の印（チャットの未読） */
+.badge {
+  position: absolute;
+  top: 12px;
+  left: calc(50% + 6px);
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background-color: #ef4444;
+  width: 10px;
+  height: 10px;
 }

@@ -274,3 +274,17 @@ export const gameEntryPath = (
       return base;
   }
 };
+
+/** フェイズの名前（卓ヘッダに出す）。開戦前夜・感想戦は null（シーズン名だけで分かる） */
+export const phaseLabel = (phaseKind: PhaseKind) => {
+  switch (phaseKind) {
+    case "main":
+      return "メインフェイズ";
+    case "retreat":
+      return "撤退フェイズ";
+    case "adjustment":
+      return "調整フェイズ";
+    default:
+      return null;
+  }
+};

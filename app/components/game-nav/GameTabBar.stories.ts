@@ -75,3 +75,13 @@ export const WithSeason: Story = {
     await expect(canvas.getByRole("link", { name: "卓情報" })).toHaveAttribute("href", base);
   },
 };
+
+/** チャットに未読があるとき（アイコンの右上に印） */
+export const ChatUnread: Story = {
+  args: { ordersEnabled: true, chatUnread: true },
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).getByRole("link", { name: "チャット（未読あり）" }),
+    ).toBeInTheDocument();
+  },
+};

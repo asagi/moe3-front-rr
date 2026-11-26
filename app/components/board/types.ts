@@ -15,6 +15,8 @@ export type Unit = {
   power: string;
   kind: string;
   location: string;
+  /** 撤退フェイズの敗退したユニットか（× を重ねる） */
+  dislodged?: boolean;
 };
 
 // boardDefaults.json の形

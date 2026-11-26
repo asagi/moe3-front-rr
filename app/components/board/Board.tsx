@@ -131,12 +131,29 @@ const loadUnits = (data: BoardState) => {
     const ownerStyle = getOwnerStyleForTarget("unit", unit.power);
     const positionStyle = styles[`unit-on-${prov[0]}`];
     return (
-      <svg className={`${ownerStyle} ${positionStyle}`} key={index}>
+      <svg
+        className={`${ownerStyle} ${positionStyle} ${unit.dislodged ? styles.dislodgedUnit : ""}`}
+        key={index}
+      >
         <use xlinkHref={`#${unitKind}`} />
       </svg>
     );
   });
 };
+
+// 撤退フェイズの敗退したユニットに重ねる ×（ユニットと同じ位置）
+const loadDislodgedMarks = (data: BoardState) =>
+  data.units
+    .filter((unit) => unit.dislodged)
+    .map((unit) => (
+      <svg
+        className={`${styles[`unit-on-${unit.location.split("_")[0]}`]} ${styles.dislodged}`}
+        key={`dislodged-${unit.location}`}
+        aria-hidden="true"
+      >
+        <use xlinkHref="#dislodged" />
+      </svg>
+    ));
 
 // 選んでいる地域の印（〇）。その地域のユニットの表示位置に重ねる
 const loadSelection = (selectedCode?: string | null) => {
@@ -174,6 +191,7 @@ export default function Board({
   const Waters = loadWaters(data, interaction);
   const Lands = loadLands(data, interaction);
   const Units = loadUnits(data);
+  const DislodgedMarks = loadDislodgedMarks(data);
   const SupplyCenters = loadSupplyCenters(data);
   const Anchors = loadAnchors(data);
   const Selection = loadSelection(selectedCode);
@@ -207,6 +225,7 @@ export default function Board({
         {/* units */}
         <div className={styles.units}>
           {Units}
+          {DislodgedMarks}
           {Anchors}
           {Selection}
         </div>

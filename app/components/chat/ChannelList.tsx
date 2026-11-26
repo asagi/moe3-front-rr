@@ -6,6 +6,8 @@ import styles from "./Chat.module.css";
 
 export interface ChannelListProps {
   channels: ChannelSummary[];
+  /** チャンネルごとの未読の数（未読がないチャンネルは含まない） */
+  unreadCounts?: Record<string, number>;
   faceType: GameRegulation["face_type"];
   /** 参加者の担当国（チャンネル名とアイコンから自国を省く）。担当国が決まる前は null */
   myPower: PowerCode | null;
@@ -16,6 +18,7 @@ export interface ChannelListProps {
 /** チャンネル一覧（先頭はオープンチャンネル、以降は新しく発言があった順） */
 export const ChannelList = ({
   channels,
+  unreadCounts = {},
   faceType,
   myPower,
   channelHref,
@@ -45,6 +48,12 @@ export const ChannelList = ({
                 {lastMessage && (
                   <span className={styles.time}>
                     {lastMessage.created_at.slice(5)}
+                  </span>
+                )}
+                {unreadCounts[channel.id] != null && (
+                  <span className={styles.unread}>
+                    {unreadCounts[channel.id]}
+                    <span className="sr-only"> 件の未読</span>
                   </span>
                 )}
               </span>

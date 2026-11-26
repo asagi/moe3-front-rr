@@ -21,6 +21,7 @@ import {
   parsePov,
   serializeHidden,
   summarizeChannels,
+  unreadCandidatesOf,
 } from "~/lib/chat";
 import {
   loadSeasonMessages,
@@ -35,6 +36,7 @@ import {
   isWritableSeason,
 } from "~/lib/game";
 import { requireGame, resolveSeason } from "~/lib/game.server";
+import { useUnreadCounts } from "~/lib/read-state";
 import { useMessageStream } from "~/lib/use-message-stream";
 import type { GameRouteHandle } from "./games.$gameUuid";
 import type { Route } from "./+types/games.$gameUuid.chat._index";
@@ -125,6 +127,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   }
   // 参加者の担当国（チャンネル名から自国を省く）
   const myPower = viewer.power;
+  const channels = summarizeChannels(messages, isOffGameSeason(season) ? null : myPower);
   return {
     ...base,
     layout: "channels" as const,
@@ -132,10 +135,14 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     seasonParam: new URL(request.url).searchParams.get("season"),
     myPower,
     // 開戦前夜と感想戦はオープンチャンネルだけ（独り言も出さない）
-    channels: summarizeChannels(
+    channels,
+    // 未読の数を数える材料（既読の位置はブラウザに持つので、数えるのは画面側）
+    unreadCandidates: unreadCandidatesOf(
       messages,
-      isOffGameSeason(season) ? null : myPower,
+      { power: myPower, username: viewer.username },
+      channels.map((c) => c.channel.id),
     ),
+    latestMessage: messages.at(-1)?.message_uuid ?? null,
     // グループチャンネルを作れるときのメンバーの候補（作れなければ null）。
     // 進行中の卓の担当国のある参加者だけ。開戦前夜と感想戦はオープンチャンネルだけ、
     // 滅亡した国と管理人発言（管理者モード中）はグループチャンネルに書けないので作れない
@@ -183,6 +190,12 @@ const ChannelIndex = ({
   } = data;
   const revalidator = useRevalidator();
   const navigate = useNavigate();
+  // チャンネルごとの未読の数（現在のシーズンだけ）
+  const unreadCounts = useUnreadCounts(
+    gameUuid,
+    live ? data.unreadCandidates : null,
+    data.latestMessage,
+  );
 
   // 新しい発言が届いたら、一覧（最後の発言など）を読み直す
   const refresh = () => {
@@ -214,6 +227,7 @@ const ChannelIndex = ({
       <div className={styles.page}>
         <ChannelList
           channels={channels}
+          unreadCounts={unreadCounts}
           faceType={faceType}
           myPower={myPower}
           channelHref={(id) => chatPath(gameUuid, seasonParam, id)}

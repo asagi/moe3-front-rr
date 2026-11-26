@@ -43,6 +43,7 @@ import {
 } from "~/lib/game";
 import { requireGame, resolveSeason } from "~/lib/game.server";
 import { meContext } from "~/lib/me.server";
+import { ensureReadState, markChannelRead } from "~/lib/read-state";
 import { useMessageStream } from "~/lib/use-message-stream";
 import type { GameRouteHandle } from "./games.$gameUuid";
 import type { Route } from "./+types/games.$gameUuid.chat.$channelId";
@@ -177,6 +178,8 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   return {
     gameUuid: game.game_uuid,
     faceType: game.regulation.face_type,
+    // 既読にするのは最新のシーズンを見ているときだけ
+    latestSeason: game.seasons.at(-1) ?? null,
     listPath,
     season,
     // URL でシーズンを指定しているか（指定がなければ、読み直すと最新のシーズンになる）
@@ -282,6 +285,14 @@ export default function GameChatChannel({ loaderData }: Route.ComponentProps) {
   const [messages, setMessages] = useState(loaderData.messages);
   useEffect(() => setMessages(loaderData.messages), [loaderData.messages]);
 
+  // 開いているチャンネルは、表示した発言まで既読にする（未読の数とタブバーの印に使う）
+  const lastUuid = messages.at(-1)?.message_uuid ?? null;
+  useEffect(() => {
+    if (season !== loaderData.latestSeason) return;
+    ensureReadState(gameUuid, lastUuid);
+    if (lastUuid) markChannelRead(gameUuid, channelId, lastUuid);
+  }, [gameUuid, channelId, lastUuid, season, loaderData.latestSeason]);
+
   // 書きかけの発言があるか（シーズンが進んだときに、画面を移ってよいかの判断に使う）
   const hasDraftRef = useRef(false);
   // 書きかけがあって移らなかったときの、新しいシーズン（入力欄の上にお知らせを出す）
@@ -330,6 +341,9 @@ export default function GameChatChannel({ loaderData }: Route.ComponentProps) {
       onMessage: (m) => {
         if (m.turn === season && channelIdOf(m) === channelId) {
           setMessages((list) => appendMessage(list, m));
+        } else if (revalidator.state === "idle") {
+          // ほかのチャンネルの発言は、タブバーの未読の印を出すために読み直す
+          void revalidator.revalidate();
         }
       },
       onSeason: followSeason,
