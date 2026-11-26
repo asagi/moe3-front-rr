@@ -41,13 +41,22 @@ export const Main: Story = {
 export const Retreat: Story = {
   args: { title: "全軍の撤退命令結果", result: { status: "closed", orders: retreatOrders } },
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getByText("A Vie 撤退 → Boh")).toBeInTheDocument();
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText("A Vie 撤退 → Boh")).toBeInTheDocument();
+    // 未解決のまま残った解体は成功として出す
+    const disband = canvas.getByText("A Gas 解体").closest("li") as HTMLElement;
+    await expect(within(disband).getByText("成功")).toBeInTheDocument();
   },
 };
 
-/** 調整命令の結果 */
+/** 調整命令の結果（増設・解体は成功として出す） */
 export const Adjustment: Story = {
   args: { title: "全軍の調整命令結果", result: { status: "closed", orders: adjustmentOrders } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getAllByText("成功")).toHaveLength(2);
+    await expect(canvas.queryByText("有効")).not.toBeInTheDocument();
+  },
 };
 
 /** 進行中のフェイズ（命令は伏せて「—」） */

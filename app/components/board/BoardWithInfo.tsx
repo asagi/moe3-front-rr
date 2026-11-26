@@ -1,24 +1,32 @@
-import { useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import Board from "./Board";
 import boardDefaults from "./boardDefaults.json";
-import { ProvinceInfo } from "./ProvinceInfo";
+import { ProvinceInfo, type ProvinceInfoUnit } from "./ProvinceInfo";
 import type { BoardData } from "./types";
-import { type BoardUnit, baseCode, findProvince } from "~/lib/board";
+import { baseCode, findProvince } from "~/lib/board";
 import type { PowerCode } from "~/lib/game";
 import styles from "./ProvinceInfo.module.css";
 
 export interface BoardWithInfoProps {
-  /** 盤面（指定しなければ初期配置） */
+  /** 盤面（指定しなければ初期配置）。ユニットに dislodged があれば「敗退」と出す */
   boardData?: BoardData;
+  /**
+   * 情報カードの下に並べる操作（命令画面の「命令を変更」など）。
+   * @param code 選んでいる地域のコード（ベースのコード）
+   * @param close カードを閉じる
+   */
+  renderActions?: (code: string, close: () => void) => ReactNode;
 }
 
 /**
  * 地域を押すと、その情報を地図のすぐ下に重ねて出す地図。
- * 下のコンテンツは押し下げず、カードを上に重ねる。地図とカード以外を押すか Esc で閉じる
+ * 下のコンテンツは押し下げず、カードを上に重ねる。
+ * カードの「閉じる」、地図とカード以外を押す、Esc のどれかで閉じる
  */
-export const BoardWithInfo = ({ boardData }: BoardWithInfoProps) => {
+export const BoardWithInfo = ({ boardData, renderActions }: BoardWithInfoProps) => {
   const [selected, setSelected] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
+  const close = () => setSelected(null);
 
   useEffect(() => {
     if (!selected) return;
@@ -36,7 +44,7 @@ export const BoardWithInfo = ({ boardData }: BoardWithInfoProps) => {
     };
   }, [selected]);
 
-  const units = (boardData?.units ?? boardDefaults.initialUnits) as BoardUnit[];
+  const units = (boardData?.units ?? boardDefaults.initialUnits) as ProvinceInfoUnit[];
   const territories = (boardData?.territories ?? boardDefaults.initialTerritories) as {
     power: PowerCode;
     code: string;
@@ -51,7 +59,9 @@ export const BoardWithInfo = ({ boardData }: BoardWithInfoProps) => {
           <ProvinceInfo
             province={province}
             owner={territories.find((t) => t.code === province.code)?.power ?? null}
-            unit={units.find((u) => baseCode(u.location) === province.code) ?? null}
+            units={units.filter((u) => baseCode(u.location) === province.code)}
+            onClose={close}
+            actions={renderActions?.(province.code, close)}
           />
         </div>
       )}

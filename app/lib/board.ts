@@ -13,11 +13,11 @@ export interface BoardUnit {
   location: string;
 }
 
-/** GET /games/{uuid}/board のユニット（撤退フェイズの撃退の情報つき） */
+/** GET /games/{uuid}/board のユニット（撤退フェイズの敗退の情報つき） */
 export interface BoardSnapshotUnit extends BoardUnit {
-  /** 撃退されたユニットか（撤退フェイズでのみ true になりうる） */
+  /** 敗退したユニットか（撤退フェイズでのみ true になりうる） */
   dislodged: boolean;
-  /** 攻撃元の地域。撃退されていない・海路で攻められたときは null */
+  /** 攻撃元の地域。敗退していない・海路で攻められたときは null */
   dislodged_from: string | null;
 }
 
@@ -32,7 +32,7 @@ export interface BoardSnapshot {
   /** 返したフェイズのシーズン（"ready" / "1901s" など） */
   season: string;
   phase_kind: GameDetail["phase_kind"];
-  /** ユニット。撤退フェイズでは、撃退されたユニットと攻めてきたユニットが同じ地域に並ぶ */
+  /** ユニット。撤退フェイズでは、敗退したユニットと攻めてきたユニットが同じ地域に並ぶ */
   units: BoardSnapshotUnit[];
   territories: BoardTerritory[];
   /** 国ごとの状況（7 か国、国コード順）。フェイズがない卓では空 */

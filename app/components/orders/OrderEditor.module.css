@@ -1,0 +1,284 @@
+/* ---- 命令の一覧 ---- */
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--color-gray-400);
+  background-color: #fff;
+  padding: 10px 12px;
+}
+
+.listTitle {
+  font-weight: 700;
+  font-size: 14px;
+  text-align: center;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  border-top: 1px solid var(--color-gray-200);
+  padding: 4px 0;
+}
+
+.row:first-child {
+  border-top: 0;
+}
+
+.row[data-open="true"] {
+  background-color: #f8fafc;
+}
+
+.rowHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  font-size: 13px;
+}
+
+.notation {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  overflow-wrap: anywhere;
+}
+
+.changed {
+  flex-shrink: 0;
+  border-radius: 4px;
+  background-color: #fef3c7;
+  padding: 1px 6px;
+  color: #92400e;
+  font-size: 11px;
+}
+
+.editButton {
+  flex-shrink: 0;
+  cursor: pointer;
+  border: 1px solid var(--color-gray-300);
+  border-radius: 6px;
+  background-color: #fff;
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.editButton:hover {
+  background-color: var(--color-gray-100);
+}
+
+.addButton {
+  align-self: center;
+  cursor: pointer;
+  border: 1px dashed var(--color-gray-400);
+  border-radius: 6px;
+  background-color: #fff;
+  padding: 6px 14px;
+  font-size: 13px;
+}
+
+.note {
+  color: var(--color-gray-500);
+  font-size: 12px;
+  text-align: center;
+}
+
+/* ---- 1 ユニットの命令フォーム ---- */
+
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0 8px 32px;
+}
+
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  border: 1px solid var(--color-gray-300);
+  border-radius: 999px;
+  background-color: #fff;
+  padding: 4px 12px 4px 8px;
+  font-size: 13px;
+}
+
+.choice:has(input:checked) {
+  border-color: var(--color-brand);
+  background-color: #eef0fe;
+}
+
+.field {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.fieldLabel {
+  color: var(--color-gray-600);
+  font-size: 12px;
+}
+
+.select {
+  border: 1px solid var(--color-gray-300);
+  border-radius: 6px;
+  background-color: #fff;
+  padding: 6px 8px;
+  width: 100%;
+  font-size: 14px;
+}
+
+/* ---- 調整フェイズ ---- */
+
+.adjustment {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.adjustRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+/* ---- 即時進行・更新・キャンセル ---- */
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.toggle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+/* チェックボックスをスイッチの見た目にする */
+.toggle input {
+  appearance: none;
+  position: relative;
+  transition: background-color 0.15s;
+  cursor: pointer;
+  border: 1px solid var(--color-gray-500);
+  border-radius: 999px;
+  background-color: var(--color-gray-200);
+  width: 44px;
+  height: 24px;
+}
+
+.toggle input::after {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.15s;
+  border-radius: 50%;
+  background-color: #fff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
+  width: 18px;
+  height: 18px;
+  content: "";
+}
+
+.toggle input:checked {
+  border-color: var(--color-brand);
+  background-color: var(--color-brand);
+}
+
+.toggle input:checked::after {
+  transform: translateX(20px);
+}
+
+.toggle input:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+.buttons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.primaryButton,
+.secondaryButton,
+.dangerButton {
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 8px 24px;
+  font-size: 14px;
+}
+
+.primaryButton {
+  border: 1px solid var(--color-brand);
+  background-color: var(--color-brand);
+  color: #fff;
+}
+
+.primaryButton:hover:not(:disabled) {
+  background-color: var(--color-brand-hover);
+}
+
+.secondaryButton {
+  border: 1px solid var(--color-gray-400);
+  background-color: #fff;
+}
+
+.dangerButton {
+  border: 1px solid #b91c1c;
+  background-color: #b91c1c;
+  color: #fff;
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.confirm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  background-color: #fffbeb;
+  padding: 10px 14px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.error {
+  color: #b91c1c;
+  font-size: 13px;
+  text-align: center;
+}
+
+/* ---- 命令欄全体 ---- */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}

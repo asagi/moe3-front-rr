@@ -1,4 +1,4 @@
-import type { UnitKind } from "~/lib/board";
+import { type UnitKind, findProvince } from "~/lib/board";
 import {
   type GameDetail,
   type PhaseKind,
@@ -86,12 +86,25 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   unresolved: "未解決",
   success: "成功",
   failure: "失敗",
-  dislodged: "撃退",
+  dislodged: "敗退",
   cut: "カット",
   valid: "有効",
   invalid: "無効",
   unreachable: "到達不能",
 };
+
+/**
+ * 結果一覧に出す結果。
+ * 解体（撤退・調整）と増設は失敗しようがない（候補にない命令はサーバーが受け付けず、
+ * 調整フェイズのあいだは盤面も変わらない）ので、成功として出す。
+ * サーバーは撤退フェイズの解体を「未解決」のまま、調整フェイズの命令を「有効」で返す。
+ * 「無効」が返ってきたときだけは、そのまま出す
+ */
+export const displayStatus = (order: Pick<ResultOrder, "order_kind" | "status">): OrderStatus =>
+  (order.order_kind === "disband" || order.order_kind === "build") &&
+  (order.status === "unresolved" || order.status === "valid")
+    ? "success"
+    : order.status;
 
 /** 成功とみなす結果（色分けに使う） */
 export const isSuccessStatus = (status: OrderStatus) => status === "success" || status === "valid";
@@ -183,4 +196,92 @@ export const orderSystemMessage = ({ game, isLive, needsAction }: OrderSystemMes
     return `${sub}です。あなたの国は操作がありません。ほかの国の操作が終わるまでお待ちください`;
   }
   return deadline ? `${sub}です。次回更新は ${deadline} です` : `${sub}です`;
+};
+
+/* ---- 命令の取得・確定（GET / PUT /games/{uuid}/orders） ---- */
+
+/**
+ * 命令（GET /orders の OrderEntry、PUT /orders の Order）。
+ * unit_power が担当国と違えば仮定命令
+ */
+export interface OrderInput {
+  /** 命令の対象ユニットの国 */
+  unit_power: PowerCode;
+  unit_kind: UnitKind;
+  /** 対象ユニットの位置（増設は増設先） */
+  location: string;
+  order_kind: OrderKind;
+  dest?: string;
+  target_location?: string;
+  target_dest?: string;
+  via_convoy?: boolean;
+}
+
+/** 支援できるユニットと支援先（null は維持の支援） */
+export interface SupportTarget {
+  target_location: string;
+  target_dests: (string | null)[];
+}
+
+/** 輸送できる陸軍と移動先 */
+export interface ConvoyTarget {
+  target_location: string;
+  target_dests: string[];
+}
+
+/** ユニットごとの命令の候補（フェイズに関係しないフィールドは省略される） */
+export interface UnitOptions {
+  unit_power: PowerCode;
+  unit_kind: UnitKind;
+  location: string;
+  /** 陸路（海軍は海路）で移動できる地域（メイン） */
+  move_dests?: string[];
+  /** 海路移動できる海岸（メイン。海軍と内陸の陸軍は空） */
+  convoy_dests?: string[];
+  support_targets?: SupportTarget[];
+  /** 輸送できる陸軍（メイン。海にいる海軍だけ） */
+  convoy_targets?: ConvoyTarget[];
+  /** 撤退できる地域（撤退） */
+  retreat_dests?: string[];
+}
+
+/** 調整フェイズの候補 */
+export interface AdjustmentOptions {
+  /** 増設できる最大数 */
+  build_count: number;
+  /** 解体しなければならない数（自国ユニットならどれでも選べる） */
+  disband_count: number;
+  /** 増設できる場所と種類（海岸が複数ある地域は海岸ごと） */
+  buildable: { location: string; unit_kinds: UnitKind[] }[];
+}
+
+/** 命令を出すフェイズ */
+export type OrderPhaseKind = "main" | "retreat" | "adjustment";
+
+/** GET /games/{uuid}/orders（PUT の成功レスポンスも同じ形） */
+export interface OrdersResponse {
+  season: string;
+  phase_kind: OrderPhaseKind;
+  /** 担当国 */
+  power: PowerCode;
+  /** このフェイズで操作が必要か（false なら確定できない） */
+  needs_action: boolean;
+  /** 今出している命令（自国ユニットへの命令と、メインでは自分の仮定命令） */
+  orders: OrderInput[];
+  /** 命令を出せるユニットごとの候補（メイン：全ユニット、撤退：自国の敗退したユニット、調整：空） */
+  options: UnitOptions[];
+  adjustment: AdjustmentOptions | null;
+}
+
+/** PUT /games/{uuid}/orders のリクエスト */
+export interface PutOrdersBody {
+  season: string;
+  phase_kind: OrderPhaseKind;
+  orders: OrderInput[];
+}
+
+/** 地域コードの表示に日本語名を添えたもの（"Bur（ブルゴーニュ）"） */
+export const locationOptionLabel = (location: string) => {
+  const province = findProvince(location);
+  return province ? `${locationLabel(location)}（${province.jname}）` : locationLabel(location);
 };

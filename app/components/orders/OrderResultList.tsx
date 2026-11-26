@@ -3,6 +3,7 @@ import { POWER_LABELS, type GameRegulation } from "~/lib/game";
 import {
   ORDER_STATUS_LABELS,
   type PhaseResult,
+  displayStatus,
   isSuccessStatus,
   orderNotation,
   sortOrdersByPower,
@@ -36,9 +37,9 @@ export const OrderResultList = ({ title, faceType, result }: OrderResultListProp
               <span className={styles.resultNotation}>{orderNotation(order)}</span>
               <span
                 className={styles.resultStatus}
-                data-success={isSuccessStatus(order.status)}
+                data-success={isSuccessStatus(displayStatus(order))}
               >
-                {ORDER_STATUS_LABELS[order.status]}
+                {ORDER_STATUS_LABELS[displayStatus(order)]}
               </span>
             </li>
           ))}

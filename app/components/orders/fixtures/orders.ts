@@ -28,11 +28,12 @@ export const mainOrders: ResultOrder[] = [
 /** ストーリー用の撤退命令の結果 */
 export const retreatOrders: ResultOrder[] = [
   { power: "a", unit_kind: "a", location: "vie", order_kind: "retreat", status: "success", dest: "boh" },
+  // サーバーは撤退フェイズの解体命令の結果を設定しない
+  { power: "i", unit_kind: "a", location: "gas", order_kind: "disband", status: "unresolved" },
 ];
 
 /** ストーリー用の調整命令の結果 */
 export const adjustmentOrders: ResultOrder[] = [
   { power: "f", unit_kind: "f", location: "bre", order_kind: "build", status: "valid" },
-  { power: "f", unit_kind: "a", location: "par", order_kind: "build", status: "invalid" },
   { power: "a", unit_kind: "a", location: "boh", order_kind: "disband", status: "valid" },
 ];

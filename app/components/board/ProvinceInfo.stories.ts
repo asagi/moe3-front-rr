@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { expect, within } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 
 import { findProvince } from "~/lib/board";
 import { ProvinceInfo } from "./ProvinceInfo";
@@ -19,7 +19,8 @@ const meta = {
   args: {
     province: province("stp"),
     owner: "r",
-    unit: { power: "r", kind: "f", location: "stp_sc" },
+    units: [{ power: "r", kind: "f", location: "stp_sc" }],
+    onClose: fn(),
   },
 } satisfies Meta<typeof ProvinceInfo>;
 
@@ -28,22 +29,47 @@ type Story = StoryObj<typeof meta>;
 
 /** サンクトペテルブルク（ロシア領、南岸に海軍） */
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByText("（ロシア領）")).toBeInTheDocument();
-    await expect(canvas.getByText("駐留ユニット： Russian F stp (sc)")).toBeInTheDocument();
+    await expect(canvas.getByText("ロシア領")).toBeInTheDocument();
+    await expect(canvas.getByText("Russian F stp (sc)")).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("button", { name: "閉じる" }));
+    await expect(args.onClose).toHaveBeenCalled();
   },
 };
 
 /** 占領されていない地域・ユニットなし */
 export const Empty: Story = {
-  args: { province: province("bel"), owner: null, unit: null },
+  args: { province: province("bel"), owner: null, units: [] },
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getByText("駐留ユニット： なし")).toBeInTheDocument();
+    await expect(within(canvasElement).getAllByText("なし")).toHaveLength(2);
   },
 };
 
 /** 海 */
 export const Water: Story = {
-  args: { province: province("nth"), owner: null, unit: { power: "e", kind: "f", location: "nth" } },
+  args: { province: province("nth"), owner: null, units: [{ power: "e", kind: "f", location: "nth" }] },
+};
+
+/** 撤退フェイズ（敗退したユニットと攻めてきたユニット） */
+export const Retreat: Story = {
+  args: {
+    province: province("bur"),
+    owner: "f",
+    units: [
+      { power: "f", kind: "a", location: "bur", dislodged: true },
+      { power: "g", kind: "a", location: "bur" },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByText("敗退")).toBeInTheDocument();
+  },
+};
+
+/** 閉じるボタンなし */
+export const WithoutClose: Story = {
+  args: { onClose: undefined },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).queryByRole("button", { name: "閉じる" })).not.toBeInTheDocument();
+  },
 };

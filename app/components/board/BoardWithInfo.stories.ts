@@ -14,13 +14,16 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** 地域を押すと、地図の下に情報を重ねて出す。Esc で閉じる */
+/** 地域を押すと、地図の下に情報を重ねて出す。Esc か「閉じる」で閉じる */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole("button", { name: "ワルシャワ" }));
-    await expect(canvas.getByText("駐留ユニット： Russian A war")).toBeInTheDocument();
+    await expect(canvas.getByText("Russian A war")).toBeInTheDocument();
     await userEvent.keyboard("{Escape}");
-    await expect(canvas.queryByText(/駐留ユニット/)).not.toBeInTheDocument();
+    await expect(canvas.queryByText("Russian A war")).not.toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("button", { name: "ワルシャワ" }));
+    await userEvent.click(canvas.getByRole("button", { name: "閉じる" }));
+    await expect(canvas.queryByText("Russian A war")).not.toBeInTheDocument();
   },
 };

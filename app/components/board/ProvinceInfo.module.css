@@ -1,39 +1,99 @@
+/* 命令画面の一覧や状況表と同じく、白地に細い枠。地図の上に重ねるので影を付ける */
 .card {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 4px;
+  gap: 6px;
   box-shadow:
-    0 10px 15px -3px rgb(0 0 0 / 0.1),
-    0 4px 6px -2px rgb(0 0 0 / 0.05);
-  border: 2px solid #718096;
+    0 8px 16px -4px rgb(0 0 0 / 0.15),
+    0 2px 4px -1px rgb(0 0 0 / 0.08);
+  border: 1px solid var(--color-gray-400);
   border-radius: 8px;
   background-color: #fff;
-  padding: 12px 16px 20px;
-  text-align: center;
+  padding: 10px 12px 12px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 .title {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
-  gap: 4px;
+  gap: 2px 8px;
+  min-width: 0;
 }
 
 .code {
-  font-size: 24px;
+  font-weight: 700;
+  font-size: 20px;
+  font-family: var(--font-mono, ui-monospace, monospace);
 }
 
-.owner {
-  font-size: 14px;
+.jname {
+  font-weight: 700;
+  font-size: 15px;
 }
 
-.names {
-  font-size: 16px;
+/* 命令画面の「変更」ボタンと同じ見た目 */
+.close {
+  flex-shrink: 0;
+  cursor: pointer;
+  border: 1px solid var(--color-gray-300);
+  border-radius: 6px;
+  background-color: #fff;
+  padding: 4px 10px;
+  font-size: 12px;
 }
 
-.unit {
-  margin-top: 12px;
-  font-size: 16px;
+.close:hover {
+  background-color: var(--color-gray-100);
+}
+
+.full {
+  margin-top: -4px;
+  color: var(--color-gray-500);
+  font-size: 12px;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  border-top: 1px solid var(--color-gray-200);
+  padding-top: 8px;
+  font-size: 13px;
+}
+
+.facts dt {
+  color: var(--color-gray-600);
+}
+
+.facts dd {
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+
+.facts dd:first-of-type {
+  font-family: inherit;
+}
+
+.dislodged {
+  margin-left: 6px;
+  border-radius: 4px;
+  background-color: #fee2e2;
+  padding: 1px 6px;
+  color: #991b1b;
+  font-size: 11px;
+  font-family: var(--font-sans);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 /* ---- 地図に重ねるとき（BoardWithInfo） ---- */

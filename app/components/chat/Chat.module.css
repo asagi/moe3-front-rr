@@ -260,6 +260,11 @@
   padding-bottom: 72px;
 }
 
+/* 入力フォームの代わりに、書き込めない理由だけを出すとき（ログビューアーの撤退・調整フェイズ） */
+.withPhaseDock {
+  padding-bottom: 56px;
+}
+
 /* 画面下のタブバーのすぐ上に固定する */
 .composerDock {
   position: fixed;

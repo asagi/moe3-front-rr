@@ -2,11 +2,14 @@ import { requireEnv } from "~/lib/env.server";
 import type { BoardSnapshot, UnitKind } from "~/lib/board";
 import type { ChatMessage } from "~/lib/chat";
 import type { GameDetail, GameSummary } from "~/lib/game";
+import type { OrdersResponse, PutOrdersBody, SeasonResult } from "~/lib/orders";
 
 /** API サーバーが返すエラー形式 */
 export interface ApiErrorBody {
   code: string;
   message: string;
+  /** 命令の確定（PUT /orders）の invalid_order で、だめだった命令の対象地域 */
+  location?: string;
 }
 
 /** API サーバーがエラーを返したときの例外 */
@@ -15,6 +18,8 @@ export class ApiError extends Error {
     readonly status: number,
     readonly code: string,
     message: string,
+    /** だめだった命令の対象地域（PUT /orders の invalid_order のみ） */
+    readonly location: string | null = null,
   ) {
     super(message);
     this.name = "ApiError";
@@ -29,6 +34,7 @@ const request = async <T>(path: string, init: RequestInit): Promise<T> => {
       res.status,
       body?.code ?? "unknown",
       body?.message ?? `API エラー: ${res.status}`,
+      body?.location ?? null,
     );
   }
   return (await res.json()) as T;
@@ -312,4 +318,38 @@ export const deleteTerritory = (gameUuid: string, code: string, season: string, 
   request<unknown>(
     `${adminGamePath(gameUuid, "territories", code)}?${new URLSearchParams({ season })}`,
     { method: "DELETE", headers: authHeaders(auth) },
+  );
+
+/* ---- 命令 ---- */
+
+/** GET /games/{uuid}/result/{season}: シーズンの命令と解決結果（進行中のフェイズの命令は空） */
+export const getSeasonResult = (gameUuid: string, season: string) =>
+  request<SeasonResult>(
+    `/games/${encodeURIComponent(gameUuid)}/result/${encodeURIComponent(season)}`,
+    { headers: {} },
+  );
+
+/** GET /games/{uuid}/orders: 自分の命令と候補（担当国のある参加者だけ。メイン・撤退・調整のみ） */
+export const getOrders = (gameUuid: string, auth: ApiAuth) =>
+  request<OrdersResponse>(`/games/${encodeURIComponent(gameUuid)}/orders`, {
+    headers: authHeaders(auth),
+  });
+
+/** PUT /games/{uuid}/orders: 自分の命令を丸ごと置き換えて確定する。確定後の状態が返る */
+export const putOrders = (gameUuid: string, body: PutOrdersBody, auth: ApiAuth) =>
+  request<OrdersResponse>(`/games/${encodeURIComponent(gameUuid)}/orders`, {
+    method: "PUT",
+    headers: { ...authHeaders(auth), "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+/** PUT /games/{uuid}/progress-consensus: 即時進行への合意を表明・撤回する（合意進行の卓だけ） */
+export const putProgressConsensus = (gameUuid: string, agreed: boolean, auth: ApiAuth) =>
+  request<{ game_uuid: string; agreed: boolean }>(
+    `/games/${encodeURIComponent(gameUuid)}/progress-consensus`,
+    {
+      method: "PUT",
+      headers: { ...authHeaders(auth), "Content-Type": "application/json" },
+      body: JSON.stringify({ agreed }),
+    },
   );
