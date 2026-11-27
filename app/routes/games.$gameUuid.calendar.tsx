@@ -28,7 +28,7 @@ export default function GameCalendar({ loaderData }: Route.ComponentProps) {
   const { gameUuid, seasons, phaseKind, selected } = loaderData;
   const latest = seasons.at(-1);
   return (
-    <section className="flex w-full max-w-md flex-col gap-3 px-3 py-4">
+    <section className="mx-auto flex w-full max-w-md flex-col gap-3 px-3 py-4">
       {seasons.length === 0 ? (
         <p className="rounded-md border border-dashed border-gray-300 px-3 py-4 text-center text-sm text-gray-600">
           まだシーズンがありません。卓が始まると、ここからシーズンを選べます。
