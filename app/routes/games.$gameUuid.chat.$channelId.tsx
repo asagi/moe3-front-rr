@@ -25,6 +25,7 @@ import {
   channelMessages,
   channelName,
   chatPath,
+  isMine,
   parseChannelId,
   withAssignedPowers,
 } from "~/lib/chat";
@@ -47,6 +48,7 @@ import { requireGame, resolveSeason } from "~/lib/game.server";
 import { meContext } from "~/lib/me.server";
 import { ensureReadState, markChannelRead } from "~/lib/read-state";
 import { useMessageStream } from "~/lib/use-message-stream";
+import { useStickyHeight } from "~/lib/use-sticky-height";
 import type { GameRouteHandle } from "./games.$gameUuid";
 import type { Route } from "./+types/games.$gameUuid.chat.$channelId";
 
@@ -297,6 +299,22 @@ export default function GameChatChannel({ loaderData }: Route.ComponentProps) {
     if (lastUuid) markChannelRead(gameUuid, channelId, lastUuid);
   }, [gameUuid, channelId, lastUuid, season, loaderData.latestSeason]);
 
+  // 自分の発言が届いたら、全部見えるように一番下までスクロールする
+  // （ほかの人の発言では、読んでいる位置を動かさない）
+  const prevLastUuidRef = useRef(lastUuid);
+  useEffect(() => {
+    if (prevLastUuidRef.current === lastUuid) return;
+    prevLastUuidRef.current = lastUuid;
+    const last = messages.at(-1);
+    if (last && isMine(last, self)) {
+      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
+    }
+  }, [lastUuid, messages, self]);
+
+  // 送信フォームの高さ（複数行の入力やお知らせで変わる）。最後の発言が隠れないよう、ページの下の余白に使う
+  const composerRef = useRef<HTMLDivElement>(null);
+  useStickyHeight(composerRef, "--composer-height");
+
   // 書きかけの発言があるか（シーズンが進んだときに、画面を移ってよいかの判断に使う）
   const hasDraftRef = useRef(false);
   // 書きかけがあって移らなかったときの、新しいシーズン（入力欄の上にお知らせを出す）
@@ -414,7 +432,7 @@ export default function GameChatChannel({ loaderData }: Route.ComponentProps) {
       </div>
       <div className={`${styles.page} ${styles.withComposer}`}>
         <ChatMessageList messages={messages} faceType={faceType} self={self} />
-        <div className={styles.composerDock}>
+        <div ref={composerRef} className={styles.composerDock}>
           <ChatComposer
             // チャンネルを移ったら書きかけを持ち越さない（密談の下書きをオープンに出さないため）
             key={channelId}
