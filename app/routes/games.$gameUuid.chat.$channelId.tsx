@@ -1,23 +1,27 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Link,
+  type ShouldRevalidateFunctionArgs,
   data,
   redirect,
   useFetcher,
   useNavigate,
   useRevalidator,
+  useSearchParams,
 } from "react-router";
 import {
   ChatComposer,
   type ChatComposerSender,
   MAX_MESSAGE_LENGTH,
 } from "~/components/chat/ChatComposer";
+import { ChatLogToolbar } from "~/components/chat/ChatLogToolbar";
 import { ChatMessageList } from "~/components/chat/ChatMessageList";
 import { PowerImage } from "~/components/power-image/PowerImage";
 import styles from "~/components/chat/Chat.module.css";
 import { ApiError, type PostMessageBody, postMessage } from "~/lib/api.server";
 import {
   type Channel,
+  type LogCategory,
   OPEN_CHANNEL_ID,
   appendMessage,
   assignedPowersOf,
@@ -25,8 +29,12 @@ import {
   channelMessages,
   channelName,
   chatPath,
+  filterLog,
   isMine,
+  isShownInChannel,
   parseChannelId,
+  parseHidden,
+  serializeHidden,
   withAssignedPowers,
 } from "~/lib/chat";
 import {
@@ -61,6 +69,33 @@ export function meta({ loaderData }: Route.MetaArgs) {
   return [
     { title: `${loaderData?.channelName ?? "チャット"} | Diplomacy MOE` },
   ];
+}
+
+/** オープンチャンネルのフィルタ（システムメッセージ・オープンの発言・密談） */
+const OPEN_FILTER_CATEGORIES: LogCategory[] = ["system", "open", "private"];
+
+/** フィルタを変えただけ（?hide= の変化だけ）なら、データを取り直さない */
+export function shouldRevalidate({
+  currentUrl,
+  nextUrl,
+  formMethod,
+  defaultShouldRevalidate,
+}: ShouldRevalidateFunctionArgs) {
+  if (formMethod == null && currentUrl.pathname === nextUrl.pathname) {
+    const strip = (url: URL) => {
+      const params = new URLSearchParams(url.search);
+      params.delete("hide");
+      params.sort();
+      return params.toString();
+    };
+    if (
+      currentUrl.search !== nextUrl.search &&
+      strip(currentUrl) === strip(nextUrl)
+    ) {
+      return false;
+    }
+  }
+  return defaultShouldRevalidate;
 }
 
 type ChannelsViewer = Extract<ChatViewer, { kind: "channels" }>;
@@ -121,7 +156,10 @@ const composerSender = (
   },
 ): ChatComposerSender => {
   if (asAdmin) return { kind: "admin", faceType: game.regulation.face_type };
-  if ((game.status === "in_progress" || game.status === "ready") && viewer.power) {
+  if (
+    (game.status === "in_progress" || game.status === "ready") &&
+    viewer.power
+  ) {
     return {
       kind: "power",
       faceType: game.regulation.face_type,
@@ -186,6 +224,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     latestSeason: game.seasons.at(-1) ?? null,
     listPath,
     season,
+    seasonParam,
     // URL でシーズンを指定しているか（指定がなければ、読み直すと最新のシーズンになる）
     seasonFixed: seasonParam != null,
     channelId: channel.id,
@@ -198,7 +237,8 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
             .map((code) => ({
               code,
               eliminated:
-                game.players.find((p) => p.power === code)?.is_eliminated ?? false,
+                game.players.find((p) => p.power === code)?.is_eliminated ??
+                false,
             }))
         : null,
     self: { power: viewer.power, username: viewer.username },
@@ -214,8 +254,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 }
 
 type PostResult =
-  | { ok: true; error?: undefined }
-  | { ok?: false; error: string };
+  { ok: true; error?: undefined } | { ok?: false; error: string };
 
 /** 発言フォームの送信 */
 export async function action({ request, params, context }: Route.ActionArgs) {
@@ -291,13 +330,50 @@ export default function GameChatChannel({ loaderData }: Route.ComponentProps) {
   const [messages, setMessages] = useState(loaderData.messages);
   useEffect(() => setMessages(loaderData.messages), [loaderData.messages]);
 
-  // 開いているチャンネルは、表示した発言まで既読にする（未読の数とタブバーの印に使う）
+  // オープンチャンネルのフィルタ（?hide=system,private）。URL で持ち、リロードしても保つ。
+  // 開戦前夜と感想戦は密談がないので出さない
+  const filterEnabled =
+    channelId === OPEN_CHANNEL_ID && !isOffGameSeason(season);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const hiddenParam = filterEnabled ? searchParams.get("hide") : null;
+  const hidden = useMemo(() => parseHidden(hiddenParam), [hiddenParam]);
+  const visible = filterEnabled
+    ? filterLog(messages, { pov: null, hidden })
+    : messages;
+  const filtering = OPEN_FILTER_CATEGORIES.some((c) => hidden.has(c));
+  const updateHidden = (next: Set<LogCategory>) =>
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev);
+        const value = serializeHidden(next);
+        if (value == null) params.delete("hide");
+        else params.set("hide", value);
+        return params;
+      },
+      { replace: true, preventScrollReset: true },
+    );
+  // 密談を押したときに開くグループチャンネル（今見ているシーズンのまま）
+  const channelHref = (id: string) =>
+    chatPath(gameUuid, loaderData.seasonParam, id);
+
+  // 開いているチャンネルは、表示した発言まで既読にする（未読の数とタブバーの印に使う）。
+  // オープンチャンネルに混ぜた密談は、そのグループチャンネルを開くまで既読にしない
   const lastUuid = messages.at(-1)?.message_uuid ?? null;
+  const readUuid =
+    visible.filter((m) => channelIdOf(m) === channelId).at(-1)?.message_uuid ??
+    null;
   useEffect(() => {
     if (season !== loaderData.latestSeason) return;
     ensureReadState(gameUuid, lastUuid);
-    if (lastUuid) markChannelRead(gameUuid, channelId, lastUuid);
-  }, [gameUuid, channelId, lastUuid, season, loaderData.latestSeason]);
+    if (readUuid) markChannelRead(gameUuid, channelId, readUuid);
+  }, [
+    gameUuid,
+    channelId,
+    lastUuid,
+    readUuid,
+    season,
+    loaderData.latestSeason,
+  ]);
 
   // 自分の発言が届いたら、全部見えるように一番下までスクロールする
   // （ほかの人の発言では、読んでいる位置を動かさない）
@@ -307,7 +383,10 @@ export default function GameChatChannel({ loaderData }: Route.ComponentProps) {
     prevLastUuidRef.current = lastUuid;
     const last = messages.at(-1);
     if (last && isMine(last, self)) {
-      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
+      window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: "smooth",
+      });
     }
   }, [lastUuid, messages, self]);
 
@@ -361,13 +440,20 @@ export default function GameChatChannel({ loaderData }: Route.ComponentProps) {
     },
     {
       onMessage: (m) => {
-        if (m.turn === season && channelIdOf(m) === channelId) {
+        if (m.turn === season && isShownInChannel(m, channelId)) {
           setMessages((list) =>
-            withAssignedPowers(appendMessage(list, m), loaderData.assignedPowers),
+            withAssignedPowers(
+              appendMessage(list, m),
+              loaderData.assignedPowers,
+            ),
           );
           // 担当国が割り当てられたら、担当国を読み直す（以降の発言と発言フォームのアイコンを国にする）
           if (m.notice?.type === "ready") void revalidator.revalidate();
-        } else if (revalidator.state === "idle") {
+        }
+        if (
+          (m.turn !== season || channelIdOf(m) !== channelId) &&
+          revalidator.state === "idle"
+        ) {
           // ほかのチャンネルの発言は、タブバーの未読の印を出すために読み直す
           void revalidator.revalidate();
         }
@@ -397,9 +483,18 @@ export default function GameChatChannel({ loaderData }: Route.ComponentProps) {
           {isOffGameSeason(season) ? (
             <span />
           ) : (
-            <Link to={listPath} className={styles.backLink} aria-label="チャンネル一覧へ">
+            <Link
+              to={listPath}
+              className={styles.backLink}
+              aria-label="チャンネル一覧へ"
+            >
               {/* 卓ヘッダのシーズン切り替えと同じ線のアイコン */}
-              <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+              <svg
+                viewBox="0 0 16 16"
+                width="16"
+                height="16"
+                aria-hidden="true"
+              >
                 <path
                   d="M10 3 5 8l5 5"
                   fill="none"
@@ -413,7 +508,10 @@ export default function GameChatChannel({ loaderData }: Route.ComponentProps) {
             </Link>
           )}
           {loaderData.headerPowers ? (
-            <h3 className={styles.subHeaderPowers} title={loaderData.channelName}>
+            <h3
+              className={styles.subHeaderPowers}
+              title={loaderData.channelName}
+            >
               {loaderData.headerPowers.map((p) => (
                 <PowerImage
                   key={p.code}
@@ -428,10 +526,28 @@ export default function GameChatChannel({ loaderData }: Route.ComponentProps) {
           ) : (
             <h3>{loaderData.channelName}</h3>
           )}
+          {filterEnabled && (
+            <ChatLogToolbar
+              variant="inline"
+              hidden={hidden}
+              categories={OPEN_FILTER_CATEGORIES}
+              onHiddenChange={updateHidden}
+            />
+          )}
         </div>
       </div>
       <div className={`${styles.page} ${styles.withComposer}`}>
-        <ChatMessageList messages={messages} faceType={faceType} self={self} />
+        <ChatMessageList
+          messages={visible}
+          faceType={faceType}
+          self={self}
+          channelHref={channelId === OPEN_CHANNEL_ID ? channelHref : undefined}
+          emptyText={
+            filtering && messages.length > 0
+              ? "フィルタの条件に合う発言はありません"
+              : undefined
+          }
+        />
         <div ref={composerRef} className={styles.composerDock}>
           <ChatComposer
             // チャンネルを移ったら書きかけを持ち越さない（密談の下書きをオープンに出さないため）

@@ -40,6 +40,17 @@
   max-width: 36rem;
 }
 
+/* チャンネル画面の見出しのバーの右端に置くとき（メニューの位置の基準にする） */
+.toolbarInline {
+  display: flex;
+  position: relative;
+  grid-column: 3;
+  justify-self: end;
+  align-items: center;
+  gap: 4px;
+  margin-right: -8px;
+}
+
 .toolbarStatus {
   margin-right: auto;
   color: var(--color-gray-600);

@@ -252,6 +252,36 @@
   background-color: #e0e7ff;
 }
 
+/* オープンチャンネルに混ぜて出す密談（ログビューアーの密談と同じ青系。自分の発言でもこの色） */
+.bubble.private {
+  border-color: #6c8ebf;
+  background-color: #dae8fc;
+}
+
+/* 本文が読める密談は、押すとそのグループチャンネルへ移る */
+.bubbleLink {
+  border-radius: 8px;
+  min-width: 0;
+}
+
+.bubbleLink:hover .bubble {
+  background-color: #c6dbf9;
+}
+
+.bubbleLink:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+/* 自分の密談（吹き出しの上に宛先を出す） */
+.mineBody {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 0;
+}
+
 /* 内容が見えない密談 */
 .masked .bubble {
   color: var(--color-gray-500);

@@ -178,9 +178,17 @@ export const channelIdOf = (message: ChatMessage): string | null => {
   }
 };
 
-/** チャンネルに属するメッセージだけを取り出す */
+/**
+ * チャンネル画面に出すメッセージか。
+ * オープンチャンネルには、そのシーズンの密談も混ぜて出す（関与していない密談はサーバーが masked で返す）
+ */
+export const isShownInChannel = (message: ChatMessage, channelId: string) =>
+  channelIdOf(message) === channelId ||
+  (channelId === OPEN_CHANNEL_ID && logCategoryOf(message) === "private");
+
+/** チャンネル画面に出すメッセージだけを取り出す */
 export const channelMessages = (messages: ChatMessage[], channelId: string) =>
-  messages.filter((m) => channelIdOf(m) === channelId);
+  messages.filter((m) => isShownInChannel(m, channelId));
 
 /** チャンネル一覧の 1 行 */
 export interface ChannelSummary {

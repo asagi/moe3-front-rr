@@ -5,25 +5,32 @@ import styles from "./ChatLog.module.css";
 
 export interface ChatLogToolbarProps {
   /** 視点にしている国（null なら指定なし） */
-  pov: PowerCode | null;
+  pov?: PowerCode | null;
   /** 視点変更を使えるか（開戦前夜・感想戦は国ごとの密談がないので使えない） */
-  povEnabled: boolean;
+  povEnabled?: boolean;
   /** 出さない種類 */
   hidden: ReadonlySet<LogCategory>;
   /** フィルタに出す種類（進行中の卓は独り言が見えないので出さない） */
   categories: LogCategory[];
-  onPovChange: (pov: PowerCode | null) => void;
+  /** 視点を変えたとき。指定しなければ視点変更のボタンを出さない（オープンチャンネル） */
+  onPovChange?: (pov: PowerCode | null) => void;
   onHiddenChange: (hidden: Set<LogCategory>) => void;
+  /**
+   * bar: 卓ヘッダの下に固定するバーとして出す（ログビューアー）。
+   * inline: ボタンだけを出す（チャンネル画面の見出しのバーの右端に置く）
+   */
+  variant?: "bar" | "inline";
 }
 
-/** ログビューアーの上のツールバー（視点変更とフィルタ） */
+/** ログビューアーの上のツールバー（視点変更とフィルタ）。オープンチャンネルではフィルタだけを使う */
 export const ChatLogToolbar = ({
-  pov,
-  povEnabled,
+  pov = null,
+  povEnabled = false,
   hidden,
   categories,
   onPovChange,
   onHiddenChange,
+  variant = "bar",
 }: ChatLogToolbarProps) => {
   const [open, setOpen] = useState<"pov" | "filter" | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -48,18 +55,25 @@ export const ChatLogToolbar = ({
 
   const activePov = povEnabled ? pov : null;
   const filtering = categories.some((c) => hidden.has(c));
-  const toggle = (menu: "pov" | "filter") => setOpen((v) => (v === menu ? null : menu));
+  const toggle = (menu: "pov" | "filter") =>
+    setOpen((v) => (v === menu ? null : menu));
 
-  return (
-    // 卓ヘッダのすぐ下に固定するバー（中身はページと同じ幅にそろえる）
-    <div className={styles.toolbarBar}>
-      <div ref={rootRef} className={styles.toolbar}>
-        {activePov && (
-          <span className={styles.toolbarStatus}>{POWER_LABELS[activePov]}の視点</span>
-        )}
+  const toolbar = (
+    <div
+      ref={rootRef}
+      className={variant === "inline" ? styles.toolbarInline : styles.toolbar}
+    >
+      {activePov && (
+        <span className={styles.toolbarStatus}>
+          {POWER_LABELS[activePov]}の視点
+        </span>
+      )}
+      {onPovChange && (
         <ToolButton
           label="視点変更"
-          title={povEnabled ? "視点変更" : "開戦前夜と感想戦では視点変更できません"}
+          title={
+            povEnabled ? "視点変更" : "開戦前夜と感想戦では視点変更できません"
+          }
           active={activePov != null}
           disabled={!povEnabled}
           expanded={open === "pov"}
@@ -68,43 +82,45 @@ export const ChatLogToolbar = ({
         >
           <EyeIcon />
         </ToolButton>
-        <ToolButton
-          label="フィルタ"
-          title="フィルタ"
-          active={filtering}
-          expanded={open === "filter"}
-          controls={open === "filter" ? panelId : undefined}
-          onClick={() => toggle("filter")}
-        >
-          <FilterIcon />
-        </ToolButton>
+      )}
+      <ToolButton
+        label="フィルタ"
+        title="フィルタ"
+        active={filtering}
+        expanded={open === "filter"}
+        controls={open === "filter" ? panelId : undefined}
+        onClick={() => toggle("filter")}
+      >
+        <FilterIcon />
+      </ToolButton>
 
-        {open === "pov" && (
-          <fieldset id={panelId} className={styles.menu}>
-            <legend className={styles.menuTitle}>視点</legend>
-            <p className={styles.menuNote}>
-              選んだ国が進行中に読めなかった発言を隠します
-            </p>
-            {[{ code: null, label: "指定なし" }, ...POWERS].map((p) => (
-              <label key={p.code ?? "none"} className={styles.menuItem}>
-                <input
-                  type="radio"
-                  name={`${panelId}-pov`}
-                  checked={activePov === p.code}
-                  onChange={() => {
-                    onPovChange(p.code);
-                    setOpen(null);
-                  }}
-                />
-                {p.label}
-              </label>
-            ))}
-          </fieldset>
-        )}
-        {open === "filter" && (
-          <fieldset id={panelId} className={styles.menu}>
-            <legend className={styles.menuTitle}>表示する発言</legend>
-            {LOG_CATEGORIES.filter((c) => categories.includes(c.value)).map((c) => (
+      {open === "pov" && onPovChange && (
+        <fieldset id={panelId} className={styles.menu}>
+          <legend className={styles.menuTitle}>視点</legend>
+          <p className={styles.menuNote}>
+            選んだ国が進行中に読めなかった発言を隠します
+          </p>
+          {[{ code: null, label: "指定なし" }, ...POWERS].map((p) => (
+            <label key={p.code ?? "none"} className={styles.menuItem}>
+              <input
+                type="radio"
+                name={`${panelId}-pov`}
+                checked={activePov === p.code}
+                onChange={() => {
+                  onPovChange(p.code);
+                  setOpen(null);
+                }}
+              />
+              {p.label}
+            </label>
+          ))}
+        </fieldset>
+      )}
+      {open === "filter" && (
+        <fieldset id={panelId} className={styles.menu}>
+          <legend className={styles.menuTitle}>表示する発言</legend>
+          {LOG_CATEGORIES.filter((c) => categories.includes(c.value)).map(
+            (c) => (
               <label key={c.value} className={styles.menuItem}>
                 <input
                   type="checkbox"
@@ -118,12 +134,15 @@ export const ChatLogToolbar = ({
                 />
                 {c.label}
               </label>
-            ))}
-          </fieldset>
-        )}
-      </div>
+            ),
+          )}
+        </fieldset>
+      )}
     </div>
   );
+  if (variant === "inline") return toolbar;
+  // 卓ヘッダのすぐ下に固定するバー（中身はページと同じ幅にそろえる）
+  return <div className={styles.toolbarBar}>{toolbar}</div>;
 };
 
 const ToolButton = ({

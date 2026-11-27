@@ -1,4 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { createElement } from "react";
+import { MemoryRouter } from "react-router";
 
 import { expect, userEvent, within } from "storybook/test";
 
@@ -15,6 +17,10 @@ const meta = {
   title: "Components/Chat/ChatMessageList",
   component: ChatMessageList,
   tags: ["autodocs"],
+  // 密談の吹き出しはグループチャンネルへのリンクになる
+  decorators: [
+    (Story) => createElement(MemoryRouter, null, createElement(Story)),
+  ],
   args: {
     messages: channelMessages(springMessages, "open"),
     faceType: "girls",
@@ -25,12 +31,28 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** オープンチャンネル（システムメッセージを含む） */
+/**
+ * オープンチャンネル（システムメッセージを含む）。密談も混ぜて出す（フランスの視点）。
+ * 関与している密談は本文を出してグループチャンネルへのリンクに、関与していない密談は「……」
+ */
 export const Open: Story = {
+  args: { channelHref: (id: string) => `/games/demo/chat/${id}` },
   play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
     await expect(
-      within(canvasElement).getByText(/メインフェイズが開始されました/),
+      canvas.getByText(/メインフェイズが開始されました/),
     ).toBeInTheDocument();
+    await expect(
+      canvas.getByText("イギリス to: フランス、ドイツ"),
+    ).toBeInTheDocument();
+    await expect(canvas.getByText("to: イギリス、ドイツ")).toBeInTheDocument();
+    await expect(
+      canvas.getByRole("link", { name: /北海の扱いを相談したい/ }),
+    ).toHaveAttribute("href", "/games/demo/chat/efg");
+    await expect(
+      canvas.getByText("オーストリア to: ロシア"),
+    ).toBeInTheDocument();
+    await expect(canvas.getByText("……")).toBeInTheDocument();
   },
 };
 

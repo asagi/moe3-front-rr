@@ -1,14 +1,22 @@
 import { Fragment } from "react";
+import { Link } from "react-router";
 import { AdminImage, PowerImage } from "~/components/power-image/PowerImage";
 import { UserAvatar } from "~/components/user-avatar/UserAvatar";
 import {
   type ChatMessage,
   type ChatSelf,
+  channelIdOf,
   isGhost,
   isMine,
+  logCategoryOf,
+  recipientsOf,
   senderName,
 } from "~/lib/chat";
-import { type GameRegulation, formatMonthDayJa } from "~/lib/game";
+import {
+  type GameRegulation,
+  POWER_LABELS,
+  formatMonthDayJa,
+} from "~/lib/game";
 import {
   firstMessageOf,
   groupChatItems,
@@ -24,6 +32,13 @@ export interface ChatMessageListProps {
   faceType: GameRegulation["face_type"];
   /** 見ている人（自分の発言の色と位置を変える） */
   self: ChatSelf;
+  /**
+   * オープンチャンネルに密談を混ぜて出すときの、グループチャンネルの URL。
+   * 指定すると、密談に宛先を出して青系の吹き出しにし、本文が読める密談はそのチャンネルへのリンクにする
+   */
+  channelHref?: (channelId: string) => string;
+  /** 何も出すものがないときの文言 */
+  emptyText?: string;
 }
 
 /** チャンネルのメッセージ一覧 */
@@ -31,9 +46,11 @@ export const ChatMessageList = ({
   messages,
   faceType,
   self,
+  channelHref,
+  emptyText = "このシーズンの発言はまだありません",
 }: ChatMessageListProps) => {
   if (messages.length === 0) {
-    return <p className={styles.empty}>このシーズンの発言はまだありません</p>;
+    return <p className={styles.empty}>{emptyText}</p>;
   }
   // 盤面編集の通知が続いたら 1 行にまとめる
   const items = groupChatItems(messages);
@@ -66,6 +83,7 @@ export const ChatMessageList = ({
                 faceType={faceType}
                 self={self}
                 continued={continued}
+                channelHref={channelHref}
               />
             )}
           </Fragment>
@@ -75,22 +93,47 @@ export const ChatMessageList = ({
   );
 };
 
-/** 発言者を区別するキー（システムメッセージは毎回別） */
+/** 発言者を区別するキー（システムメッセージは毎回別。密談は宛先が変わったら別） */
 const senderKey = (m: ChatMessage) =>
   m.sender_kind === "system"
     ? m.message_uuid
-    : [m.sender_kind, m.sender ?? "", m.sender_user?.username ?? ""].join(":");
+    : [
+        m.sender_kind,
+        m.sender ?? "",
+        m.sender_user?.username ?? "",
+        logCategoryOf(m),
+        recipientsOf(m).join(""),
+      ].join(":");
+
+/** 密談の宛先（「オーストリア、フランス」） */
+const recipientsLabel = (m: ChatMessage) =>
+  recipientsOf(m)
+    .map((c) => POWER_LABELS[c])
+    .join("、");
+
+/** 吹き出しの中身。内容が見えない密談は「……」 */
+const BubbleText = ({ message: m }: { message: ChatMessage }) =>
+  m.kind === "masked" ? (
+    <>
+      <span aria-hidden="true">……</span>
+      <span className="sr-only">（内容は非公開）</span>
+    </>
+  ) : (
+    <>{m.context}</>
+  );
 
 const MessageItem = ({
   message: m,
   faceType,
   self,
   continued,
+  channelHref,
 }: {
   message: ChatMessage;
   faceType: GameRegulation["face_type"];
   self: ChatSelf;
   continued: boolean;
+  channelHref?: (channelId: string) => string;
 }) => {
   const time = (
     <time className={styles.time} dateTime={m.created_at}>
@@ -103,6 +146,28 @@ const MessageItem = ({
       <SystemNoticeItem message={m} faceType={faceType} variant="channel" />
     );
   }
+  // オープンチャンネルに混ぜて出す密談（宛先を出し、青系の吹き出しにする）
+  const mixedPrivate = channelHref != null && logCategoryOf(m) === "private";
+  // 本文が読める密談は、押すとそのグループチャンネルへ移る
+  const groupId = mixedPrivate && m.kind !== "masked" ? channelIdOf(m) : null;
+  const bubbleClass = `${styles.bubble} ${mixedPrivate ? styles.private : ""}`;
+  const bubble = (srLabel: string) => {
+    const content = (
+      <p className={bubbleClass}>
+        {srLabel && <span className="sr-only">{srLabel}</span>}
+        <BubbleText message={m} />
+      </p>
+    );
+    return groupId && channelHref ? (
+      <Link to={channelHref(groupId)} className={styles.bubbleLink}>
+        {content}
+        <span className="sr-only">（グループチャンネルを開く）</span>
+      </Link>
+    ) : (
+      content
+    );
+  };
+
   if (isMine(m, self)) {
     // 自分の発言はアイコンと名前を出さず、右に寄せる（時刻は吹き出しの左下）
     const mineClasses = [
@@ -111,16 +176,30 @@ const MessageItem = ({
       isGhost(m) ? styles.ghost : "",
       continued ? styles.continued : "",
     ].join(" ");
+    if (mixedPrivate) {
+      // 自分の密談は、吹き出しの上に宛先だけを出す
+      return (
+        <li className={mineClasses}>
+          {time}
+          <div className={styles.mineBody}>
+            {!continued && (
+              <span className={styles.sender} aria-hidden="true">
+                to: {recipientsLabel(m)}
+              </span>
+            )}
+            {bubble(`${name} to: ${recipientsLabel(m)}: `)}
+          </div>
+        </li>
+      );
+    }
     return (
       <li className={mineClasses}>
         {time}
-        <p className={styles.bubble}>
-          <span className="sr-only">{name}: </span>
-          {m.context}
-        </p>
+        {bubble(`${name}: `)}
       </li>
     );
   }
+  const label = mixedPrivate ? `${name} to: ${recipientsLabel(m)}` : name;
   const classes = [
     styles.message,
     m.kind === "masked" ? styles.masked : "",
@@ -136,12 +215,12 @@ const MessageItem = ({
       </span>
       <div className={styles.messageBody}>
         {continued ? (
-          <span className="sr-only">{name}</span>
+          <span className="sr-only">{label}</span>
         ) : (
-          <span className={styles.sender}>{name}</span>
+          <span className={styles.sender}>{label}</span>
         )}
         <div className={styles.bubbleRow}>
-          <p className={styles.bubble}>{m.context ?? "（内容は非公開）"}</p>
+          {bubble("")}
           {time}
         </div>
       </div>
