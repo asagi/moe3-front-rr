@@ -14,6 +14,7 @@ import {
   type LogCategory,
   OPEN_CHANNEL_ID,
   appendMessage,
+  assignedPowersOf,
   chatPath,
   filterLog,
   groupChannelId,
@@ -22,6 +23,7 @@ import {
   serializeHidden,
   summarizeChannels,
   unreadCandidatesOf,
+  withAssignedPowers,
 } from "~/lib/chat";
 import {
   loadSeasonMessages,
@@ -106,6 +108,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       ...base,
       layout: "viewer" as const,
       messages,
+      // SSE で届いた発言も、担当国の割り当て後なら担当国の発言として出す
+      assignedPowers: assignedPowersOf(game.players),
       // チャンネル一覧で見られる人か（シーズンが進んだらオープンチャンネルに移す）
       canUseChannels: viewer.kind === "channels",
       // 撤退・調整フェイズで書き込めないときの、フェイズの名前
@@ -260,6 +264,7 @@ const ChatLogViewer = ({
   const { gameUuid, faceType, season, live, povEnabled, personalVisible } =
     data;
   const navigate = useNavigate();
+  const revalidator = useRevalidator();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // SSE で届いたメッセージを足していく。読み直したら loader の結果に戻す
@@ -275,7 +280,12 @@ const ChatLogViewer = ({
     },
     {
       onMessage: (m) => {
-        if (m.turn === season) setMessages((list) => appendMessage(list, m));
+        if (m.turn !== season) return;
+        setMessages((list) =>
+          withAssignedPowers(appendMessage(list, m), data.assignedPowers),
+        );
+        // 担当国が割り当てられたら、担当国を読み直す（以降の発言を国の発言にする）
+        if (m.notice?.type === "ready") void revalidator.revalidate();
       },
       // シーズンが進んだら、チャンネルを使える人は最新シーズンのオープンチャンネルに、
       // 第三者は最新シーズンのログビューアーに移る（視点とフィルタは保つ）

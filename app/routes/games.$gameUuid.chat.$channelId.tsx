@@ -20,11 +20,13 @@ import {
   type Channel,
   OPEN_CHANNEL_ID,
   appendMessage,
+  assignedPowersOf,
   channelIdOf,
   channelMessages,
   channelName,
   chatPath,
   parseChannelId,
+  withAssignedPowers,
 } from "~/lib/chat";
 import {
   type ChatViewer,
@@ -102,8 +104,8 @@ const resolvePostAs = (
 
 /**
  * 発言フォームのアイコン。
- * 管理人発言なら管理人の画像。進行中は担当国（滅亡していれば白黒の画像）、
- * 開戦前夜・感想戦は Discord のアバター
+ * 管理人発言なら管理人の画像。進行中と担当国の割り当て後の開戦前夜は担当国
+ * （滅亡していれば白黒の画像）、割り当て前の開戦前夜・感想戦は Discord のアバター
  * （視点変更中は切り替え先のアカウント）
  */
 const composerSender = (
@@ -117,7 +119,7 @@ const composerSender = (
   },
 ): ChatComposerSender => {
   if (asAdmin) return { kind: "admin", faceType: game.regulation.face_type };
-  if (game.status === "in_progress" && viewer.power) {
+  if ((game.status === "in_progress" || game.status === "ready") && viewer.power) {
     return {
       kind: "power",
       faceType: game.regulation.face_type,
@@ -198,6 +200,8 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
             }))
         : null,
     self: { power: viewer.power, username: viewer.username },
+    // SSE で届いた発言も、担当国の割り当て後なら担当国の発言として出す
+    assignedPowers: assignedPowersOf(game.players),
     sender: composerSender(game, viewer, postAs.ok && postAs.asAdmin, state.me),
     disabledReason: postAs.ok ? undefined : postAs.reason,
     messages: channelMessages(messages, channel.id),
@@ -340,7 +344,11 @@ export default function GameChatChannel({ loaderData }: Route.ComponentProps) {
     {
       onMessage: (m) => {
         if (m.turn === season && channelIdOf(m) === channelId) {
-          setMessages((list) => appendMessage(list, m));
+          setMessages((list) =>
+            withAssignedPowers(appendMessage(list, m), loaderData.assignedPowers),
+          );
+          // 担当国が割り当てられたら、担当国を読み直す（以降の発言と発言フォームのアイコンを国にする）
+          if (m.notice?.type === "ready") void revalidator.revalidate();
         } else if (revalidator.state === "idle") {
           // ほかのチャンネルの発言は、タブバーの未読の印を出すために読み直す
           void revalidator.revalidate();

@@ -1,6 +1,7 @@
 import { type RouterContextProvider, data } from "react-router";
 import { ApiError, getGameLogs } from "~/lib/api.server";
 import { type GameDetail, type PowerCode, isEnded } from "~/lib/game";
+import { withAssignedPowers, assignedPowersOf } from "~/lib/chat";
 import { meContext } from "~/lib/me.server";
 import { getSessionStorage } from "~/lib/session.server";
 
@@ -82,7 +83,7 @@ export const loadSeasonMessages = async (
       season,
       state.kind === "ok" ? state.auth : null,
     );
-    return messages;
+    return withAssignedPowers(messages, assignedPowersOf(game.players));
   } catch (e) {
     if (e instanceof ApiError && e.status === 404) {
       throw data("シーズンが見つかりませんでした", { status: 404 });

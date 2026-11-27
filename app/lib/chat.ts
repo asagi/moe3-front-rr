@@ -1,4 +1,9 @@
-import { POWERS, POWER_LABELS, type PowerCode } from "~/lib/game";
+import {
+  type GamePlayer,
+  POWERS,
+  POWER_LABELS,
+  type PowerCode,
+} from "~/lib/game";
 
 /**
  * メッセージの種類（GET /games/{uuid}/logs/{season} の kind）。
@@ -286,6 +291,35 @@ export const isMine = (m: ChatMessage, self: ChatSelf) =>
   (m.sender_kind === "user" &&
     self.username != null &&
     m.sender_user?.username === self.username);
+
+/** 参加者のユーザー名 → 担当国（担当国のある参加者だけ） */
+export type AssignedPowers = Record<string, PowerCode>;
+
+export const assignedPowersOf = (players: GamePlayer[]): AssignedPowers =>
+  Object.fromEntries(
+    players.flatMap((p) => (p.power ? [[p.user.username, p.power]] : [])),
+  );
+
+/**
+ * 開戦前夜で担当国が割り当てられた（ready のシステムメッセージ）あとのユーザー発言を、
+ * 担当国の発言として出す。割り当て前の発言は Discord のアバターと名前のまま
+ */
+export const withAssignedPowers = (
+  messages: ChatMessage[],
+  powers: AssignedPowers,
+) => {
+  let assigned = false;
+  let changed = false;
+  const result = messages.map((m) => {
+    if (m.notice?.type === "ready") assigned = true;
+    if (!assigned || m.sender_kind !== "user" || !m.sender_user) return m;
+    const power = powers[m.sender_user.username];
+    if (!power) return m;
+    changed = true;
+    return { ...m, sender_kind: "power" as const, sender: power };
+  });
+  return changed ? result : messages;
+};
 
 /** SSE で受け取ったメッセージを、重複を除いて末尾に足す */
 export const appendMessage = (messages: ChatMessage[], m: ChatMessage) =>
