@@ -12,7 +12,8 @@ import {
 // サーバーの実装で名前が変わったら、ここを直す。
 
 /** 命令の種類（GET /result の order_kind） */
-export type OrderKind = "hold" | "move" | "support" | "convoy" | "retreat" | "build" | "disband";
+export type OrderKind =
+  "hold" | "move" | "support" | "convoy" | "retreat" | "build" | "disband";
 
 /** 命令の解決結果（GET /result の status） */
 export type OrderStatus =
@@ -69,8 +70,21 @@ export interface PowerStatus {
   progress_consented: boolean | null;
   /** 無政府状態か。過去のシーズンは記録がないので null */
   is_idle: boolean | null;
+  /**
+   * 担当者の最終アクセスからの経過分数（サーバーがレスポンスを作った時点）。
+   * 担当者がいない国・過去のシーズンは null
+   */
+  absent_minutes: number | null;
   is_eliminated: boolean;
 }
+
+/** 無政府と判定されるまでの時間（放置上限時間、分）。短期の卓は 60 分、通常の卓は 24 時間 */
+export const idleLimitMinutes = (durationType: "short" | "normal") =>
+  durationType === "short" ? 60 : 24 * 60;
+
+/** 不在時間の表示。1 時間未満は 1 分刻み、それ以降は 1 時間刻み（どちらも切り捨て） */
+export const formatAbsentMinutes = (minutes: number) =>
+  minutes < 60 ? `${minutes}分` : `${Math.floor(minutes / 60)}時間`;
 
 export const ORDER_KIND_LABELS: Record<OrderKind, string> = {
   hold: "維持",
@@ -101,14 +115,17 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
  * サーバーは撤退フェイズの解体を「未解決」のまま、調整フェイズの命令を「有効」で返す。
  * 「無効」が返ってきたときだけは、そのまま出す
  */
-export const displayStatus = (order: Pick<ResultOrder, "order_kind" | "status">): OrderStatus =>
+export const displayStatus = (
+  order: Pick<ResultOrder, "order_kind" | "status">,
+): OrderStatus =>
   (order.order_kind === "disband" || order.order_kind === "build") &&
   (order.status === "unresolved" || order.status === "valid")
     ? "success"
     : order.status;
 
 /** 成功とみなす結果（色分けに使う） */
-export const isSuccessStatus = (status: OrderStatus) => status === "success" || status === "valid";
+export const isSuccessStatus = (status: OrderStatus) =>
+  status === "success" || status === "valid";
 
 /** 地域コードの表示（"spa_nc" → "Spa (nc)"、"lon" → "Lon"） */
 export const locationLabel = (location: string) => {
@@ -125,7 +142,13 @@ export const locationLabel = (location: string) => {
 export const orderNotation = (
   order: Pick<
     ResultOrder,
-    "unit_kind" | "location" | "order_kind" | "dest" | "target_location" | "target_dest" | "via_convoy"
+    | "unit_kind"
+    | "location"
+    | "order_kind"
+    | "dest"
+    | "target_location"
+    | "target_dest"
+    | "via_convoy"
   >,
 ) => {
   const unit = `${order.unit_kind.toUpperCase()} ${locationLabel(order.location)}`;
@@ -154,9 +177,13 @@ export const orderNotation = (
 };
 
 /** 国の並び順（POWERS の順）で命令を並べる。同じ国の中は元の順 */
-export const sortOrdersByPower = <T extends { power: PowerCode }>(orders: T[]) => {
+export const sortOrdersByPower = <T extends { power: PowerCode }>(
+  orders: T[],
+) => {
   const rank = Object.keys(POWER_LABELS);
-  return [...orders].sort((a, b) => rank.indexOf(a.power) - rank.indexOf(b.power));
+  return [...orders].sort(
+    (a, b) => rank.indexOf(a.power) - rank.indexOf(b.power),
+  );
 };
 
 /** システムメッセージ枠の文言を決めるための情報 */
@@ -173,16 +200,26 @@ export interface OrderSystemMessageInput {
 
 /** 撤退・調整フェイズの名前（メインフェイズなどは null） */
 const subPhaseLabel = (phaseKind: PhaseKind) =>
-  phaseKind === "retreat" ? "撤退フェイズ" : phaseKind === "adjustment" ? "調整フェイズ" : null;
+  phaseKind === "retreat"
+    ? "撤退フェイズ"
+    : phaseKind === "adjustment"
+      ? "調整フェイズ"
+      : null;
 
 /**
  * システムメッセージ枠の文言。出すものがなければ null。
  * - メインフェイズ：次回更新時刻
  * - 撤退・調整フェイズ：操作が必要な国には「何時までに操作してね」、ほかの国には「ほかの人を待ってね」
  */
-export const orderSystemMessage = ({ game, isLive, needsAction }: OrderSystemMessageInput) => {
+export const orderSystemMessage = ({
+  game,
+  isLive,
+  needsAction,
+}: OrderSystemMessageInput) => {
   if (!isLive || game.status !== "in_progress") return null;
-  const deadline = game.next_update_at ? formatDateTimeJa(game.next_update_at) : null;
+  const deadline = game.next_update_at
+    ? formatDateTimeJa(game.next_update_at)
+    : null;
   const sub = subPhaseLabel(game.phase_kind);
   if (sub == null) {
     if (game.phase_kind !== "main") return null;
@@ -284,5 +321,7 @@ export interface PutOrdersBody {
 /** 地域コードの表示に日本語名を添えたもの（"Bur（ブルゴーニュ）"） */
 export const locationOptionLabel = (location: string) => {
   const province = findProvince(location);
-  return province ? `${locationLabel(location)}（${province.jname}）` : locationLabel(location);
+  return province
+    ? `${locationLabel(location)}（${province.jname}）`
+    : locationLabel(location);
 };

@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { data, redirect, useBlocker, useFetcher, useRevalidator } from "react-router";
+import {
+  data,
+  redirect,
+  useBlocker,
+  useFetcher,
+  useRevalidator,
+} from "react-router";
 import { BoardWithInfo } from "~/components/board/BoardWithInfo";
 import { OrderForm, type OrderFormSubmit } from "~/components/orders/OrderForm";
 import { OrderResultList } from "~/components/orders/OrderResultList";
@@ -24,6 +30,7 @@ import {
   type OrderPhaseKind,
   type OrdersResponse,
   type SeasonResult,
+  idleLimitMinutes,
   locationLabel,
   orderSystemMessage,
 } from "~/lib/orders";
@@ -58,15 +65,20 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   // 命令を出せるのは、進行中の卓の現在のシーズンで、メイン・撤退・調整フェイズのとき。
   // 担当国のある参加者かどうかは API に任せる（403 なら第三者として見せる）
   const canOrder =
-    live && game.status === "in_progress" && ORDER_PHASES.includes(game.phase_kind as OrderPhaseKind);
+    live &&
+    game.status === "in_progress" &&
+    ORDER_PHASES.includes(game.phase_kind as OrderPhaseKind);
 
   const [board, result, orders] = await Promise.all([
     getBoard(game.game_uuid, auth, season),
     // 開戦前夜と感想戦には命令がない
-    isOffGameSeason(season) ? Promise.resolve(null) : getSeasonResult(game.game_uuid, season),
+    isOffGameSeason(season)
+      ? Promise.resolve(null)
+      : getSeasonResult(game.game_uuid, season),
     canOrder && auth && game.is_joined
       ? getOrders(game.game_uuid, auth).catch((e) => {
-          if (e instanceof ApiError && (e.status === 403 || e.status === 401)) return null;
+          if (e instanceof ApiError && (e.status === 403 || e.status === 401))
+            return null;
           throw e;
         })
       : Promise.resolve(null),
@@ -84,6 +96,11 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     board,
     result,
     orders,
+    // 不在時間は、進行中の卓の現在のシーズンだけ出す（開戦前夜・感想戦・過去のシーズンは出さない）
+    idleLimitMinutes:
+      live && game.status === "in_progress" && !isOffGameSeason(season)
+        ? idleLimitMinutes(game.regulation.duration_type)
+        : null,
     myStatus: board.powers.find((p) => p.power === myPower) ?? null,
     systemMessage: orderSystemMessage({
       game,
@@ -93,7 +110,8 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     // 即時進行は合意進行の卓の現在のシーズンだけ
     consensus: game.regulation.progress_mode === "consensus" && live,
     // SSE をつなぎ直す鍵（視点変更などで見ている人が変わったとき）
-    streamKey: state.kind === "ok" ? `${state.me.username}:${myPower ?? "-"}` : "guest",
+    streamKey:
+      state.kind === "ok" ? `${state.me.username}:${myPower ?? "-"}` : "guest",
   };
 }
 
@@ -104,9 +122,12 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
  */
 const retreatMapUnits = (board: BoardSnapshot, result: SeasonResult | null) => {
   if (board.phase_kind !== "retreat" || !result) return board.units;
-  const dislodgedAt = new Set(board.units.filter((u) => u.dislodged).map((u) => baseCode(u.location)));
+  const dislodgedAt = new Set(
+    board.units.filter((u) => u.dislodged).map((u) => baseCode(u.location)),
+  );
   return board.units.map((unit) => {
-    if (unit.dislodged || !dislodgedAt.has(baseCode(unit.location))) return unit;
+    if (unit.dislodged || !dislodgedAt.has(baseCode(unit.location)))
+      return unit;
     // その地域に移動して成功した、同じ国の命令が攻めてきたユニット
     const attack = result.main_phase.orders.find(
       (o) =>
@@ -120,7 +141,8 @@ const retreatMapUnits = (board: BoardSnapshot, result: SeasonResult | null) => {
   });
 };
 
-type SubmitResult = { ok: true; error?: undefined } | { ok?: false; error: string };
+type SubmitResult =
+  { ok: true; error?: undefined } | { ok?: false; error: string };
 
 /** 命令の確定のエラーごとの文言 */
 const submitErrorMessage = (e: ApiError) => {
@@ -143,7 +165,10 @@ export async function action({ request, context }: Route.ActionArgs) {
   const game = requireGame(context);
   const state = context.get(meContext);
   if (state.kind !== "ok") {
-    return data<SubmitResult>({ error: "ログイン情報を確認できませんでした。" }, { status: 401 });
+    return data<SubmitResult>(
+      { error: "ログイン情報を確認できませんでした。" },
+      { status: 401 },
+    );
   }
   const body = (await request.json()) as {
     season: string;
@@ -158,21 +183,41 @@ export async function action({ request, context }: Route.ActionArgs) {
       { season: body.season, phase_kind: body.phase_kind, orders: body.orders },
       state.auth,
     );
-    if (body.progressConsented != null && body.progressConsented !== body.savedProgress) {
-      await putProgressConsensus(game.game_uuid, body.progressConsented, state.auth);
+    if (
+      body.progressConsented != null &&
+      body.progressConsented !== body.savedProgress
+    ) {
+      await putProgressConsensus(
+        game.game_uuid,
+        body.progressConsented,
+        state.auth,
+      );
     }
     return data<SubmitResult>({ ok: true });
   } catch (e) {
     if (e instanceof ApiError) {
-      return data<SubmitResult>({ error: submitErrorMessage(e) }, { status: e.status });
+      return data<SubmitResult>(
+        { error: submitErrorMessage(e) },
+        { status: e.status },
+      );
     }
     throw e;
   }
 }
 
 export default function GameOrders({ loaderData }: Route.ComponentProps) {
-  const { gameUuid, faceType, season, live, board, result, orders, myStatus, systemMessage, consensus } =
-    loaderData;
+  const {
+    gameUuid,
+    faceType,
+    season,
+    live,
+    board,
+    result,
+    orders,
+    myStatus,
+    systemMessage,
+    consensus,
+  } = loaderData;
   const revalidator = useRevalidator();
   const fetcher = useFetcher<typeof action>();
 
@@ -251,13 +296,18 @@ export default function GameOrders({ loaderData }: Route.ComponentProps) {
   return (
     <div className={styles.page}>
       <BoardWithInfo
-        boardData={{ units: loaderData.mapUnits, territories: board.territories }}
+        boardData={{
+          units: loaderData.mapUnits,
+          territories: board.territories,
+        }}
         renderActions={mapActions}
       />
 
       {systemMessage && <OrderSystemMessage message={systemMessage} />}
 
-      {orders && myStatus && <PowerSummaryCard faceType={faceType} status={myStatus} />}
+      {orders && myStatus && (
+        <PowerSummaryCard faceType={faceType} status={myStatus} />
+      )}
 
       {showForm && (
         <OrderForm
@@ -275,10 +325,22 @@ export default function GameOrders({ loaderData }: Route.ComponentProps) {
         />
       )}
 
-      {result && <ResultLists result={result} faceType={faceType} orders={orders} live={live} />}
+      {result && (
+        <ResultLists
+          result={result}
+          faceType={faceType}
+          orders={orders}
+          live={live}
+        />
+      )}
 
       {board.powers.length > 0 && (
-        <PowerStatusTable faceType={faceType} powers={board.powers} showProgress={consensus} />
+        <PowerStatusTable
+          faceType={faceType}
+          powers={board.powers}
+          showProgress={consensus}
+          idleLimitMinutes={loaderData.idleLimitMinutes}
+        />
       )}
     </div>
   );
@@ -302,17 +364,33 @@ const ResultLists = ({
 }) => {
   const ordering = live && orders?.phase_kind === "main";
   const closedWithOrders = (phase: SeasonResult["retreat_phase"]) =>
-    phase != null && phase.status === "closed" && phase.orders.length > 0 ? phase : null;
+    phase != null && phase.status === "closed" && phase.orders.length > 0
+      ? phase
+      : null;
   const retreat = closedWithOrders(result.retreat_phase);
   const adjustment = closedWithOrders(result.adjustment_phase);
   return (
     <>
       {!ordering && (
-        <OrderResultList title="全軍の行軍命令結果" faceType={faceType} result={result.main_phase} />
+        <OrderResultList
+          title="全軍の行軍命令結果"
+          faceType={faceType}
+          result={result.main_phase}
+        />
       )}
-      {retreat && <OrderResultList title="全軍の撤退命令結果" faceType={faceType} result={retreat} />}
+      {retreat && (
+        <OrderResultList
+          title="全軍の撤退命令結果"
+          faceType={faceType}
+          result={retreat}
+        />
+      )}
       {adjustment && (
-        <OrderResultList title="全軍の調整命令結果" faceType={faceType} result={adjustment} />
+        <OrderResultList
+          title="全軍の調整命令結果"
+          faceType={faceType}
+          result={adjustment}
+        />
       )}
     </>
   );
@@ -326,7 +404,11 @@ const useUnsavedChangesGuard = (dirty: boolean) => {
   );
   useEffect(() => {
     if (blocker.state !== "blocked") return;
-    if (window.confirm("確定していない命令の変更があります。破棄して移動しますか？")) {
+    if (
+      window.confirm(
+        "確定していない命令の変更があります。破棄して移動しますか？",
+      )
+    ) {
       blocker.proceed();
     } else {
       blocker.reset();
