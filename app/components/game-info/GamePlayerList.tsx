@@ -48,8 +48,9 @@ export const GamePlayerList = ({
               </span>
               {player.power && (
                 <span className={styles.playerPower}>
-                  <PowerImage faceType={faceType} code={player.power} size={32} />
+                  {/* 画像を右端で縦に揃えるため、国名を先に出す */}
                   <span>{POWER_LABELS[player.power]}</span>
+                  <PowerImage faceType={faceType} code={player.power} size={32} />
                 </span>
               )}
             </li>
