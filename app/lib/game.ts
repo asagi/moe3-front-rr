@@ -161,10 +161,6 @@ export interface GameDetail {
 export const isRecruiting = (game: Pick<GameDetail, "status">) =>
   game.status === "preparing";
 
-/** 開始済み（開戦前夜より後）の卓か */
-export const isStarted = (game: Pick<GameDetail, "status">) =>
-  game.status !== "preparing" && game.status !== "ready";
-
 /** 卓ヘッダ用の卓番号（"#001"）。採番前は null */
 export const gameNumberLabel = (game: Pick<GameDetail, "game_number">) =>
   game.game_number == null

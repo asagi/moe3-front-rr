@@ -9,7 +9,7 @@ import {
   type GameDetail,
   gameNumberLabel,
   isOffGameSeason,
-  isStarted,
+  isRecruiting,
   isWritableSeason,
   phaseLabel,
   seasonLabel,
@@ -55,7 +55,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   return {
     gameUuid: game.game_uuid,
     numberLabel: gameNumberLabel(game),
-    ordersEnabled: isStarted(game),
+    // 開戦前夜から開ける（初期配置を見る）
+    ordersEnabled: !isRecruiting(game),
     // 盤面の編集は、卓主か管理者モード中の管理者が、開戦前夜かメインフェイズのときだけ
     maintenanceEnabled:
       isBoardEditable(game) && (await canMaintainGame(request, context, game)),

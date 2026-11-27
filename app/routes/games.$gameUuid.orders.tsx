@@ -16,7 +16,7 @@ import {
   putProgressConsensus,
 } from "~/lib/api.server";
 import { type BoardSnapshot, baseCode } from "~/lib/board";
-import { isLiveSeason, isOffGameSeason, isStarted } from "~/lib/game";
+import { isLiveSeason, isOffGameSeason, isRecruiting } from "~/lib/game";
 import { requireGame, resolveSeason } from "~/lib/game.server";
 import { meContext } from "~/lib/me.server";
 import {
@@ -41,13 +41,14 @@ const ORDER_PHASES: OrderPhaseKind[] = ["main", "retreat", "adjustment"];
 
 /**
  * 命令画面。
+ * - 開戦前夜：誰でも初期配置を見る（命令はない）
  * - 現在のシーズン：参加者は命令を出す（操作の要らない国は命令欄なし）。第三者は結果を見る
  * - 過去のシーズン：誰でも結果を見る
  */
 export async function loader({ request, params, context }: Route.LoaderArgs) {
   const game = requireGame(context);
-  // 開始前は開けないので卓情報へ戻す
-  if (!isStarted(game)) throw redirect(`/games/${params.gameUuid}`);
+  // 募集中は盤面がないので卓情報へ戻す（開戦前夜は初期配置を見られる）
+  if (isRecruiting(game)) throw redirect(`/games/${params.gameUuid}`);
   const season = resolveSeason(request, game);
   if (season == null) throw redirect(`/games/${params.gameUuid}`);
   const live = isLiveSeason(game, season);
