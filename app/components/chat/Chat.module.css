@@ -221,10 +221,12 @@
   gap: 6px;
 }
 
+/* 枠線と余白はログビューアー（ChatLog.module.css）の吹き出しに合わせる */
 .bubble {
+  border: 1px solid var(--color-gray-700);
   border-radius: 8px;
   background-color: #fff;
-  padding: 8px 10px;
+  padding: 6px 12px;
   min-width: 0;
   font-size: 14px;
   line-height: 1.6;
@@ -246,6 +248,7 @@
 }
 
 .mine .bubble {
+  border-color: #6c7bd9;
   background-color: #e0e7ff;
 }
 
