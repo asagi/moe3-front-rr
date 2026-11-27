@@ -356,8 +356,8 @@
 }
 .supply-center-on-smy {
   composes: supply-center;
-  top: var(--pos-y-19);
-  left: var(--pos-x-19);
+  top: var(--pos-y-18);
+  left: var(--pos-x-17);
 }
 
 /* neutral supply centers (initial values computed from province geometry; adjust visually) */
