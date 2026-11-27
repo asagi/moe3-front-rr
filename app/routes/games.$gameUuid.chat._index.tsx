@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   type ShouldRevalidateFunctionArgs,
+  redirect,
   useNavigate,
   useRevalidator,
   useSearchParams,
@@ -129,6 +130,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
         viewer.kind === "channels" ? streamConnectionKey(viewer) : "viewer",
     };
   }
+  const seasonParam = new URL(request.url).searchParams.get("season");
+  // 開戦前夜と感想戦はオープンチャンネルだけなので、一覧を出さずにオープンチャンネルを開く
+  // （参加者でない管理者モード中の管理者も同じ）
+  if (isOffGameSeason(season)) {
+    throw redirect(chatPath(game.game_uuid, seasonParam, OPEN_CHANNEL_ID));
+  }
   // 参加者の担当国（チャンネル名から自国を省く）
   const myPower = viewer.power;
   const channels = summarizeChannels(messages, isOffGameSeason(season) ? null : myPower);
@@ -136,7 +143,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     ...base,
     layout: "channels" as const,
     // URL で指定されたシーズン（チャンネル画面へのリンクに引き継ぐ）
-    seasonParam: new URL(request.url).searchParams.get("season"),
+    seasonParam,
     myPower,
     // 開戦前夜と感想戦はオープンチャンネルだけ（独り言も出さない）
     channels,

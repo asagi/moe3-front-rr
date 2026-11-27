@@ -374,20 +374,26 @@ export default function GameChatChannel({ loaderData }: Route.ComponentProps) {
       {/* チャンネル一覧と同じく、卓ヘッダのすぐ下に固定する */}
       <div className={styles.subHeader}>
         <div className={styles.subHeaderInner}>
-          <Link to={listPath} className={styles.backLink} aria-label="チャンネル一覧へ">
-            {/* 卓ヘッダのシーズン切り替えと同じ線のアイコン */}
-            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
-              <path
-                d="M10 3 5 8l5 5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <span aria-hidden="true">一覧</span>
-          </Link>
+          {/* 開戦前夜と感想戦はオープンチャンネルだけなので、一覧へ戻るリンクを出さない */}
+          {/* （見出しを中央に保つため、代わりに空の要素を置く） */}
+          {isOffGameSeason(season) ? (
+            <span />
+          ) : (
+            <Link to={listPath} className={styles.backLink} aria-label="チャンネル一覧へ">
+              {/* 卓ヘッダのシーズン切り替えと同じ線のアイコン */}
+              <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                <path
+                  d="M10 3 5 8l5 5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <span aria-hidden="true">一覧</span>
+            </Link>
+          )}
           {loaderData.headerPowers ? (
             <h3 className={styles.subHeaderPowers} title={loaderData.channelName}>
               {loaderData.headerPowers.map((p) => (
