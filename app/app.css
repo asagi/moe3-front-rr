@@ -39,7 +39,12 @@ html:has(.app-frame) body {
 .app-frame {
   @apply bg-gray-100;
   margin: 0 auto;
-  min-height: 100dvh;
+  /*
+   * 画面の高さより 1px だけ高くして、中身が少ないページでも常にスクロールできるようにする。
+   * スクロールできないページで下に引っ張って離すと、iOS（少なくとも iPhone の Brave）で
+   * ページ全体が上にずれたまま戻らず、サイトヘッダが画面の外に出てタブバーの下に隙間ができるため
+   */
+  min-height: calc(100dvh + 1px);
   max-width: var(--app-max-width);
 }
 
