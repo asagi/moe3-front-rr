@@ -257,7 +257,7 @@
   background-color: #fff;
 }
 
-/* オープンチャンネルに混ぜて出す密談（ログビューアーの密談と同じ青系。自分の発言でもこの色） */
+/* 密談（ログビューアーの密談と同じ青系。グループチャンネルでも、オープンチャンネルに混ぜて出すときも。自分の発言でもこの色） */
 .bubble.private {
   border-color: #6c8ebf;
   background-color: #dae8fc;

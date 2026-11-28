@@ -160,8 +160,8 @@ const MessageItem = ({
   const bubbleClass = [
     styles.bubble,
     category === "open" ? styles.open : "",
-    mixedPrivate ? styles.private : "",
-    // 独り言は、独り言のチャンネルでもログビューアーと同じ暗いグレー地に白字にする
+    // 密談と独り言は、それぞれのチャンネルでもログビューアーと同じ色にする（密談は青系、独り言は暗いグレー地に白字）
+    category === "private" ? styles.private : "",
     category === "personal" ? styles.personal : "",
   ].join(" ");
   const bubble = (srLabel: string) => {
