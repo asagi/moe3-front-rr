@@ -8,6 +8,7 @@ import {
   MAX_PLAYERS,
   PROGRESS_MODE_LABELS,
   gameTitle,
+  isRecruiting,
 } from "~/lib/game";
 import styles from "./GameList.module.css";
 
@@ -50,12 +51,15 @@ export const GameList = ({ games, emptyMessage }: GameListProps) => {
                 <dt>次回更新</dt>
                 <dd>{game.next_update_at ?? "未定"}</dd>
               </div>
-              <div>
-                <dt>参加</dt>
-                <dd>
-                  {game.player_count} / {MAX_PLAYERS} 人
-                </dd>
-              </div>
+              {/* 参加者数は募集中だけ出す（開戦前夜以降は 7 人そろっているので自明） */}
+              {isRecruiting(game) && (
+                <div>
+                  <dt>参加</dt>
+                  <dd>
+                    {game.player_count} / {MAX_PLAYERS} 人
+                  </dd>
+                </div>
+              )}
             </dl>
             <ul className={styles.tags} aria-label="レギュレーション">
               <li>{FACE_TYPE_LABELS[game.regulation.face_type]}</li>
