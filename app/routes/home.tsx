@@ -25,6 +25,12 @@ export default function Home() {
         >
           稼働中の卓を見る
         </Link>
+        {/* ログインには Discord の identify スコープ（ユーザー名とアイコン）だけを使う */}
+        <p className="mx-auto mt-3 max-w-sm text-xs leading-relaxed text-gray-500">
+          {"卓への参加には Discord アカウントでのログインが必要ですが、" +
+            "ユーザー名とアイコンの設定を取得する以外には使用されません。" +
+            "ゲーム自体はこのサイト内で完結します。"}
+        </p>
       </div>
       <Greeting />
     </>
