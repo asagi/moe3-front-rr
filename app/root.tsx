@@ -33,7 +33,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#ffffff" />
-        <meta name="apple-mobile-web-app-title" content="MOE" />
+        <meta name="apple-mobile-web-app-title" content="Diplomacy MOE" />
         <Meta />
         <Links />
       </head>
