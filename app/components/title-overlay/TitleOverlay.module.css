@@ -22,17 +22,18 @@
 }
 
 .title {
-  /* 碑文のような格調のある書体（トップページで Google Fonts から読み込む） */
-  font-family: "Cinzel", "Times New Roman", serif;
+  /* 古典的なセリフ体（トップページで Google Fonts から読み込む）。小文字もある書体にする */
+  font-family: "Playfair Display", "Times New Roman", serif;
   font-weight: 700;
   font-size: clamp(24px, 7vw, 40px);
   line-height: 1.2;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.01em;
   text-align: center;
   white-space: nowrap;
   color: var(--color-gray-900);
 }
 
+/* 閉じるボタン（タイトルより目立たないよう、小さく薄くする） */
 .close {
   display: flex;
   position: absolute;
@@ -40,14 +41,15 @@
   right: 4px;
   justify-content: center;
   align-items: center;
-  border-radius: 6px;
-  width: 32px;
-  height: 32px;
-  color: var(--color-gray-600);
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  color: var(--color-gray-400);
 }
 
 .close:hover {
   background-color: var(--color-gray-100);
+  color: var(--color-gray-600);
 }
 
 .close:focus-visible {

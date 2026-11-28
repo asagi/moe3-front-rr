@@ -5,11 +5,11 @@ import { BoardWithInfo } from "~/components/board/BoardWithInfo";
 import { Greeting } from "~/components/greeting/Greeting";
 import { TitleOverlay } from "~/components/title-overlay/TitleOverlay";
 
-/** タイトルの書体（Cinzel）。トップページでだけ使う */
+/** タイトルの書体（Playfair Display）。トップページでだけ使う */
 export const links: Route.LinksFunction = () => [
   {
     rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap",
+    href: "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap",
   },
 ];
 
