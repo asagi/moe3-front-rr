@@ -1,0 +1,56 @@
+/* 地図全体を覆う半透明の白い膜（地図の地域を押せないようにする） */
+.veil {
+  display: flex;
+  position: absolute;
+  inset: 0;
+  justify-content: center;
+  align-items: center;
+  z-index: 30;
+  cursor: pointer;
+  background-color: rgb(255 255 255 / 0.45);
+}
+
+/* 中央のタイトル */
+.card {
+  position: relative;
+  box-shadow: 0 4px 24px rgb(0 0 0 / 0.18);
+  border: 1px solid var(--color-gray-700);
+  border-radius: 10px;
+  background-color: rgb(255 255 255 / 0.92);
+  padding: 20px 44px;
+  max-width: calc(100% - 32px);
+}
+
+.title {
+  /* 碑文のような格調のある書体（トップページで Google Fonts から読み込む） */
+  font-family: "Cinzel", "Times New Roman", serif;
+  font-weight: 700;
+  font-size: clamp(24px, 7vw, 40px);
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--color-gray-900);
+}
+
+.close {
+  display: flex;
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  color: var(--color-gray-600);
+}
+
+.close:hover {
+  background-color: var(--color-gray-100);
+}
+
+.close:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 1px;
+}
