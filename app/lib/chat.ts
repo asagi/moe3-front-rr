@@ -10,12 +10,7 @@ import {
  * ghost は滅亡した国の発言（通常発言の代わり）。オープンチャンネルに出す
  */
 export type ChatMessageKind =
-  | "public"
-  | "confidential"
-  | "masked"
-  | "personal"
-  | "ghost"
-  | "system";
+  "public" | "confidential" | "masked" | "personal" | "ghost" | "system";
 
 /**
  * 発言者の種類。
@@ -180,15 +175,32 @@ export const channelIdOf = (message: ChatMessage): string | null => {
 
 /**
  * チャンネル画面に出すメッセージか。
- * オープンチャンネルには、そのシーズンの密談も混ぜて出す（関与していない密談はサーバーが masked で返す）
+ * オープンチャンネルには、そのシーズンの密談（関与していない密談はサーバーが masked で返す）と、
+ * 見ている人の担当国（myPower）の独り言も混ぜて出す
  */
-export const isShownInChannel = (message: ChatMessage, channelId: string) =>
-  channelIdOf(message) === channelId ||
-  (channelId === OPEN_CHANNEL_ID && logCategoryOf(message) === "private");
+export const isShownInChannel = (
+  message: ChatMessage,
+  channelId: string,
+  myPower: PowerCode | null = null,
+) => {
+  if (channelIdOf(message) === channelId) return true;
+  if (channelId !== OPEN_CHANNEL_ID) return false;
+  switch (logCategoryOf(message)) {
+    case "private":
+      return true;
+    case "personal":
+      return myPower != null && message.sender === myPower;
+    default:
+      return false;
+  }
+};
 
 /** チャンネル画面に出すメッセージだけを取り出す */
-export const channelMessages = (messages: ChatMessage[], channelId: string) =>
-  messages.filter((m) => isShownInChannel(m, channelId));
+export const channelMessages = (
+  messages: ChatMessage[],
+  channelId: string,
+  myPower: PowerCode | null = null,
+) => messages.filter((m) => isShownInChannel(m, channelId, myPower));
 
 /** チャンネル一覧の 1 行 */
 export interface ChannelSummary {
@@ -455,7 +467,8 @@ export const unreadCandidatesOf = (
   const result: Record<string, string[]> = {};
   const ids = new Set(channelIds);
   for (const m of messages) {
-    if (m.sender_kind === "system" || m.kind === "masked" || isMine(m, self)) continue;
+    if (m.sender_kind === "system" || m.kind === "masked" || isMine(m, self))
+      continue;
     const id = channelIdOf(m);
     if (id == null || !ids.has(id)) continue;
     (result[id] ??= []).push(m.message_uuid);

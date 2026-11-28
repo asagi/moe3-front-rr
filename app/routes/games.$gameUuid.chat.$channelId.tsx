@@ -71,8 +71,13 @@ export function meta({ loaderData }: Route.MetaArgs) {
   ];
 }
 
-/** オープンチャンネルのフィルタ（システムメッセージ・オープンの発言・密談） */
-const OPEN_FILTER_CATEGORIES: LogCategory[] = ["system", "open", "private"];
+/** オープンチャンネルのフィルタ（システムメッセージ・オープンの発言・密談・独り言） */
+const OPEN_FILTER_CATEGORIES: LogCategory[] = [
+  "system",
+  "open",
+  "private",
+  "personal",
+];
 
 /** フィルタを変えただけ（?hide= の変化だけ）なら、データを取り直さない */
 export function shouldRevalidate({
@@ -246,7 +251,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     assignedPowers: assignedPowersOf(game.players),
     sender: composerSender(game, viewer, postAs.ok && postAs.asAdmin, state.me),
     disabledReason: postAs.ok ? undefined : postAs.reason,
-    messages: channelMessages(messages, channel.id),
+    messages: channelMessages(messages, channel.id, viewer.power),
     // SSE で最初に送り直してもらう起点
     streamAfter: messages.at(-1)?.message_uuid ?? null,
     streamKey: streamConnectionKey(viewer),
@@ -440,7 +445,7 @@ export default function GameChatChannel({ loaderData }: Route.ComponentProps) {
     },
     {
       onMessage: (m) => {
-        if (m.turn === season && isShownInChannel(m, channelId)) {
+        if (m.turn === season && isShownInChannel(m, channelId, self.power)) {
           setMessages((list) =>
             withAssignedPowers(
               appendMessage(list, m),

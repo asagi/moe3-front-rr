@@ -34,7 +34,8 @@ export interface ChatMessageListProps {
   self: ChatSelf;
   /**
    * オープンチャンネルに密談を混ぜて出すときの、グループチャンネルの URL。
-   * 指定すると、密談に宛先を出して青系の吹き出しにし、本文が読める密談はそのチャンネルへのリンクにする
+   * 指定すると、密談に宛先を出して青系の吹き出しに、自分の独り言は暗いグレーの吹き出しにし、
+   * 本文が読める密談と独り言はそのチャンネルへのリンクにする
    */
   channelHref?: (channelId: string) => string;
   /** 何も出すものがないときの文言 */
@@ -146,11 +147,21 @@ const MessageItem = ({
       <SystemNoticeItem message={m} faceType={faceType} variant="channel" />
     );
   }
-  // オープンチャンネルに混ぜて出す密談（宛先を出し、青系の吹き出しにする）
-  const mixedPrivate = channelHref != null && logCategoryOf(m) === "private";
-  // 本文が読める密談は、押すとそのグループチャンネルへ移る
-  const groupId = mixedPrivate && m.kind !== "masked" ? channelIdOf(m) : null;
-  const bubbleClass = `${styles.bubble} ${mixedPrivate ? styles.private : ""}`;
+  // オープンチャンネルに混ぜて出す密談（宛先を出し、青系の吹き出しにする）と
+  // 自分の独り言（暗いグレーの吹き出しにする）
+  const category = logCategoryOf(m);
+  const mixedPrivate = channelHref != null && category === "private";
+  const mixedPersonal = channelHref != null && category === "personal";
+  // 本文が読める密談と独り言は、押すとそのチャンネルへ移る
+  const groupId =
+    (mixedPrivate || mixedPersonal) && m.kind !== "masked"
+      ? channelIdOf(m)
+      : null;
+  const bubbleClass = [
+    styles.bubble,
+    mixedPrivate ? styles.private : "",
+    mixedPersonal ? styles.personal : "",
+  ].join(" ");
   const bubble = (srLabel: string) => {
     const content = (
       <p className={bubbleClass}>
@@ -161,7 +172,9 @@ const MessageItem = ({
     return groupId && channelHref ? (
       <Link to={channelHref(groupId)} className={styles.bubbleLink}>
         {content}
-        <span className="sr-only">（グループチャンネルを開く）</span>
+        <span className="sr-only">
+          {mixedPersonal ? "（独り言を開く）" : "（グループチャンネルを開く）"}
+        </span>
       </Link>
     ) : (
       content
@@ -176,18 +189,19 @@ const MessageItem = ({
       isGhost(m) ? styles.ghost : "",
       continued ? styles.continued : "",
     ].join(" ");
-    if (mixedPrivate) {
-      // 自分の密談は、吹き出しの上に宛先だけを出す
+    if (mixedPrivate || mixedPersonal) {
+      // 自分の密談は吹き出しの上に宛先だけを、独り言は「独り言」と出す
+      const head = mixedPrivate ? `to: ${recipientsLabel(m)}` : "独り言";
       return (
         <li className={mineClasses}>
           {time}
           <div className={styles.mineBody}>
             {!continued && (
               <span className={styles.sender} aria-hidden="true">
-                to: {recipientsLabel(m)}
+                {head}
               </span>
             )}
-            {bubble(`${name} to: ${recipientsLabel(m)}: `)}
+            {bubble(mixedPrivate ? `${name} ${head}: ` : `${name}（独り言）: `)}
           </div>
         </li>
       );

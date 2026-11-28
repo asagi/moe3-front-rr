@@ -258,6 +258,17 @@
   background-color: #dae8fc;
 }
 
+/* オープンチャンネルに混ぜて出す自分の独り言（ログビューアーの独り言と同じ暗いグレー地に白字） */
+.bubble.personal {
+  border-color: #314354;
+  background-color: #647687;
+  color: #fff;
+}
+
+.bubbleLink:hover .bubble.personal {
+  background-color: #56687a;
+}
+
 /* 本文が読める密談は、押すとそのグループチャンネルへ移る */
 .bubbleLink {
   border-radius: 8px;

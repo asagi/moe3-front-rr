@@ -22,7 +22,7 @@ const meta = {
     (Story) => createElement(MemoryRouter, null, createElement(Story)),
   ],
   args: {
-    messages: channelMessages(springMessages, "open"),
+    messages: channelMessages(springMessages, "open", "f"),
     faceType: "girls",
     self: { power: "f", username: "asagix" },
   },
@@ -32,7 +32,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * オープンチャンネル（システムメッセージを含む）。密談も混ぜて出す（フランスの視点）。
+ * オープンチャンネル（システムメッセージを含む）。密談と自分の独り言も混ぜて出す（フランスの視点）。
  * 関与している密談は本文を出してグループチャンネルへのリンクに、関与していない密談は「……」
  */
 export const Open: Story = {
@@ -53,6 +53,13 @@ export const Open: Story = {
       canvas.getByText("オーストリア to: ロシア"),
     ).toBeInTheDocument();
     await expect(canvas.getByText("……")).toBeInTheDocument();
+    // 自分（フランス）の独り言だけを出し、独り言のチャンネルへのリンクにする
+    await expect(
+      canvas.getByRole("link", { name: /イギリスは信用できるか要観察/ }),
+    ).toHaveAttribute("href", "/games/demo/chat/f");
+    await expect(
+      canvas.queryByText("ベルギーは秋に取る。"),
+    ).not.toBeInTheDocument();
   },
 };
 
