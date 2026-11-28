@@ -45,7 +45,12 @@ html:has(.app-frame) body {
 
 @layer base {
   html {
-    overflow-x: hidden;
+    /*
+     * 横にはみ出したものを隠す。hidden だと iOS の WebKit で html がスクロールの入れ物になり、
+     * 中身が画面より短いときに引っ張って離すと、固定したヘッダの下に中身がめり込んだままになることがある。
+     * clip はスクロールの入れ物を作らないので、その心配がない
+     */
+    overflow-x: clip;
   }
 }
 
