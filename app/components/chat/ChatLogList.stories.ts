@@ -156,3 +156,12 @@ export const Notices: Story = {
     ).toBeInTheDocument();
   },
 };
+
+/** 参加者（フランス）が見たログ。自分のオープンチャンネルの発言だけ枠線の色を変える */
+export const Mine: Story = {
+  args: { self: { power: "f", username: "asagix" } },
+  play: async ({ canvasElement }) => {
+    const bubble = within(canvasElement).getByText("フランスです。皆さんよろしく。");
+    await expect(getComputedStyle(bubble).borderTopColor).toBe("rgb(108, 123, 217)");
+  },
+};

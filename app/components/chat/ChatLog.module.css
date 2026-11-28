@@ -213,6 +213,11 @@
   font-weight: 600;
 }
 
+/* 見ている人自身のオープンチャンネルの発言（チャンネル画面の自分の発言と同じ枠線の色） */
+.mine {
+  border-color: #6c7bd9;
+}
+
 /* Ghost 発言（滅亡した国。枠線と文字を薄くする） */
 .ghost {
   border-color: var(--color-gray-400);

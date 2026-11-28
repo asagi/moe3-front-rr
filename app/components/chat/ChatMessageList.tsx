@@ -159,8 +159,10 @@ const MessageItem = ({
       : null;
   const bubbleClass = [
     styles.bubble,
+    category === "open" ? styles.open : "",
     mixedPrivate ? styles.private : "",
-    mixedPersonal ? styles.personal : "",
+    // 独り言は、独り言のチャンネルでもログビューアーと同じ暗いグレー地に白字にする
+    category === "personal" ? styles.personal : "",
   ].join(" ");
   const bubble = (srLabel: string) => {
     const content = (

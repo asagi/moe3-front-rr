@@ -12,6 +12,7 @@ import styles from "~/components/chat/Chat.module.css";
 import { ChatLogList } from "~/components/chat/ChatLogList";
 import { ChatLogToolbar } from "~/components/chat/ChatLogToolbar";
 import {
+  type ChatSelf,
   type LogCategory,
   OPEN_CHANNEL_ID,
   appendMessage,
@@ -32,6 +33,7 @@ import {
   streamConnectionKey,
 } from "~/lib/chat.server";
 import {
+  type GameDetail,
   POWERS,
   chatClosedPhaseLabel,
   isLiveSeason,
@@ -39,6 +41,7 @@ import {
   isWritableSeason,
 } from "~/lib/game";
 import { requireGame, resolveSeason } from "~/lib/game.server";
+import { meContext } from "~/lib/me.server";
 import { useUnreadCounts } from "~/lib/read-state";
 import { useMessageStream } from "~/lib/use-message-stream";
 import type { GameRouteHandle } from "./games.$gameUuid";
@@ -83,6 +86,22 @@ export function shouldRevalidate({
 }
 
 /**
+ * ログビューアーで自分の発言を見分けるための、見ている人。
+ * 卓の参加者（視点変更中は切り替え先）だけ。終了した卓でも参加者なら返す
+ */
+const viewerSelf = (
+  context: Route.LoaderArgs["context"],
+  game: GameDetail,
+): ChatSelf | null => {
+  const state = context.get(meContext);
+  if (state.kind !== "ok") return null;
+  const player = game.players.find(
+    (p) => p.user.discord_user_id === state.me.discord_user_id,
+  );
+  return player ? { power: player.power, username: state.me.username } : null;
+};
+
+/**
  * 参加者と管理者モード中の管理者にはチャンネル一覧を（参加者でない管理者はオープンチャンネルだけ）、
  * それ以外（第三者・終了した卓）と、書き込めないシーズン（終わったシーズン・撤退フェイズ・調整フェイズ）には、
  * 誰にでもログビューアーを出す。
@@ -109,6 +128,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       ...base,
       layout: "viewer" as const,
       messages,
+      // 自分の発言の枠線の色を変えるための、見ている人（参加者だけ。終了した卓も含む）
+      self: viewerSelf(context, game),
       // SSE で届いた発言も、担当国の割り当て後なら担当国の発言として出す
       assignedPowers: assignedPowersOf(game.players),
       // チャンネル一覧で見られる人か（シーズンが進んだらオープンチャンネルに移す）
@@ -138,7 +159,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   }
   // 参加者の担当国（チャンネル名から自国を省く）
   const myPower = viewer.power;
-  const channels = summarizeChannels(messages, isOffGameSeason(season) ? null : myPower);
+  const channels = summarizeChannels(
+    messages,
+    isOffGameSeason(season) ? null : myPower,
+  );
   return {
     ...base,
     layout: "channels" as const,
@@ -165,7 +189,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       !viewer.canPostAsAdmin
         ? // 国の並び順にする
           POWERS.map((p) => p.code).filter((code) =>
-            game.players.some((p) => p.power === code && code !== myPower && !p.is_eliminated),
+            game.players.some(
+              (p) => p.power === code && code !== myPower && !p.is_eliminated,
+            ),
           )
         : null,
     live,
@@ -250,7 +276,13 @@ const ChannelIndex = ({
             // チャンネル ID は顔ぶれで決まるので、そのチャンネル画面を開くだけでよい
             // （最初の発言でチャンネルが始まる。同じ顔ぶれのチャンネルがあればそれが開く）
             onCreate={(members) =>
-              void navigate(chatPath(gameUuid, seasonParam, groupChannelId([myPower, ...members])))
+              void navigate(
+                chatPath(
+                  gameUuid,
+                  seasonParam,
+                  groupChannelId([myPower, ...members]),
+                ),
+              )
             }
           />
         )}
@@ -348,6 +380,7 @@ const ChatLogViewer = ({
         <ChatLogList
           messages={visible}
           faceType={faceType}
+          self={data.self}
           emptyText={
             narrowed && messages.length > 0
               ? "視点・フィルタの条件に合う発言はありません"

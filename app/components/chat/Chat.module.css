@@ -252,17 +252,23 @@
   background-color: #e0e7ff;
 }
 
+/* オープンチャンネルの自分の発言は白地（枠線の色だけで自分の発言と分かるようにする。ログビューアーも同じ） */
+.mine .bubble.open {
+  background-color: #fff;
+}
+
 /* オープンチャンネルに混ぜて出す密談（ログビューアーの密談と同じ青系。自分の発言でもこの色） */
 .bubble.private {
   border-color: #6c8ebf;
   background-color: #dae8fc;
 }
 
-/* オープンチャンネルに混ぜて出す自分の独り言（ログビューアーの独り言と同じ暗いグレー地に白字） */
+/* 独り言（ログビューアーの独り言と同じ暗いグレー地に白字。自分の発言でもこの色） */
 .bubble.personal {
   border-color: #314354;
   background-color: #647687;
   color: #fff;
+  font-weight: 600;
 }
 
 .bubbleLink:hover .bubble.personal {

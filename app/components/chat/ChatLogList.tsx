@@ -3,7 +3,9 @@ import { AdminImage, PowerImage } from "~/components/power-image/PowerImage";
 import { UserAvatar } from "~/components/user-avatar/UserAvatar";
 import {
   type ChatMessage,
+  type ChatSelf,
   isGhost,
+  isMine,
   logCategoryOf,
   recipientsOf,
   senderName,
@@ -28,6 +30,8 @@ export interface ChatLogListProps {
   faceType: GameRegulation["face_type"];
   /** 何も出すものがないときの文言 */
   emptyText?: string;
+  /** 見ている人（参加者なら、自分のオープンチャンネルの発言の枠線の色を変える）。参加者でなければ null */
+  self?: ChatSelf | null;
 }
 
 /**
@@ -38,6 +42,7 @@ export const ChatLogList = ({
   messages,
   faceType,
   emptyText = "このシーズンの発言はまだありません",
+  self = null,
 }: ChatLogListProps) => {
   if (messages.length === 0) {
     return <p className={styles.empty}>{emptyText}</p>;
@@ -68,6 +73,7 @@ export const ChatLogList = ({
               <LogItem
                 message={m}
                 faceType={faceType}
+                self={self}
                 // 同じ人が同じ宛先に続けて発言したら、2 つ目からはアイコンと名前を省く
                 continued={
                   !newDay && prev != null && groupKey(prev) === groupKey(m)
@@ -102,10 +108,12 @@ const headLabel = (m: ChatMessage, name: string) => {
 const LogItem = ({
   message: m,
   faceType,
+  self,
   continued,
 }: {
   message: ChatMessage;
   faceType: GameRegulation["face_type"];
+  self: ChatSelf | null;
   continued: boolean;
 }) => {
   const time = (
@@ -123,6 +131,7 @@ const LogItem = ({
     styles.bubble,
     category === "private" ? styles.private : "",
     category === "personal" ? styles.personal : "",
+    category === "open" && self && isMine(m, self) ? styles.mine : "",
     isGhost(m) ? styles.ghost : "",
   ].join(" ");
   const label = headLabel(m, name);
