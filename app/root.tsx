@@ -45,28 +45,44 @@ export default function App() {
   return <Outlet />;
 }
 
+/**
+ * どのページでも拾われなかったエラーの画面。
+ * throw data("文言", { status }) で投げたエラーは、その文言をそのまま出す
+ */
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
+  let title = "エラーが発生しました";
+  let details =
+    "予期しないエラーが発生しました。時間をおいて再度お試しください。";
   let stack: string | undefined;
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
-    details =
-      error.status === 404
-        ? "The requested page could not be found."
-        : error.statusText || details;
+    if (error.status === 404) {
+      title = "ページが見つかりません";
+      details = "URL が正しいか確認してください。";
+    }
+    // 画面向けの文言を付けて投げたエラーは、それを出す
+    if (typeof error.data === "string" && error.data.trim() !== "") {
+      details = error.data;
+    }
   } else if (import.meta.env.DEV && error && error instanceof Error) {
     details = error.message;
     stack = error.stack;
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
+    <main className="mx-auto flex max-w-xl flex-col gap-4 p-4 pt-16">
+      <h1 className="text-lg font-bold">{title}</h1>
+      <p className="whitespace-pre-wrap text-sm text-gray-700">{details}</p>
+      <p>
+        <a
+          href="/"
+          className="text-sm font-semibold text-[var(--color-brand)] underline"
+        >
+          トップページへ戻る
+        </a>
+      </p>
       {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
+        <pre className="w-full overflow-x-auto p-4 text-xs">
           <code>{stack}</code>
         </pre>
       )}

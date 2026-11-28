@@ -11,6 +11,7 @@ import type {
   ImpersonateUser,
 } from "~/components/admin-header/AdminHeader";
 import { Header, type HeaderUser } from "~/components/header/Header";
+import { discordLoginPath } from "~/lib/auth";
 import { loadMe, meContext } from "~/lib/me.server";
 import { useStickyHeight } from "~/lib/use-sticky-height";
 import { getSessionStorage } from "~/lib/session.server";
@@ -134,7 +135,7 @@ export default function WithHeaderLayout({ loaderData }: Route.ComponentProps) {
         <Header
           user={loaderData.user}
           onLogin={() => {
-            window.location.href = "/auth/discord";
+            window.location.href = discordLoginPath();
           }}
           onHome={() => {
             navigate("/");

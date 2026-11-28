@@ -2,8 +2,10 @@ import { data, redirect } from "react-router";
 import { ApiError, login } from "~/lib/api.server";
 import {
   DiscordTokenError,
+  discordReturnCookie,
   discordStateCookie,
   exchangeDiscordCode,
+  safeReturnPath,
 } from "~/lib/discord.server";
 import { getSessionStorage } from "~/lib/session.server";
 import type { Route } from "./+types/auth.discord.callback";
@@ -21,18 +23,33 @@ export async function loader({ request }: Route.LoaderArgs) {
   const savedState = await discordStateCookie.parse(
     request.headers.get("Cookie"),
   );
-  // 使い終わった state は破棄する
+  // ログインを始めたページ（ログイン後とキャンセル時に戻る）
+  const returnTo = safeReturnPath(
+    await discordReturnCookie.parse(request.headers.get("Cookie")),
+  );
+  // 使い終わった state と戻り先は破棄する
   const headers = new Headers();
   headers.append(
     "Set-Cookie",
     await discordStateCookie.serialize("", { maxAge: 0 }),
   );
+  headers.append(
+    "Set-Cookie",
+    await discordReturnCookie.serialize("", { maxAge: 0 }),
+  );
 
+  // 認可画面でキャンセルされたら、エラーにせずログインを始めたページへ戻す
+  if (error === "access_denied") {
+    return redirect(returnTo, { headers });
+  }
   if (error) {
-    throw data(`Discord 認証がキャンセルされました: ${error}`, {
-      status: 400,
-      headers,
-    });
+    throw data(
+      `Discord でのログインに失敗しました（${error}）。もう一度お試しください。`,
+      {
+        status: 400,
+        headers,
+      },
+    );
   }
   if (!state) {
     throw data("state がありません", { status: 400, headers });
@@ -86,5 +103,5 @@ export async function loader({ request }: Route.LoaderArgs) {
   session.unset("viewAsThirdParty");
   headers.append("Set-Cookie", await sessionStorage.commitSession(session));
 
-  return redirect("/", { headers });
+  return redirect(returnTo, { headers });
 }

@@ -14,6 +14,32 @@ export const discordStateCookie = createCookie("discord_oauth_state", {
   maxAge: 60 * 10,
 });
 
+/** ログインを始めたページ（ログイン後とキャンセル時に戻る先）を一時的に保持する Cookie */
+export const discordReturnCookie = createCookie("discord_oauth_return", {
+  httpOnly: true,
+  sameSite: "lax",
+  secure: process.env.NODE_ENV === "production",
+  path: "/auth/discord",
+  maxAge: 60 * 10,
+});
+
+/**
+ * ログイン後に戻るページとして使える値か。サイト内のパス（クエリ付き可）だけを受け付け、
+ * 外部サイト（"//example.com" など）とログイン処理自体のパスは受け付けない
+ */
+export const safeReturnPath = (value: unknown): string => {
+  if (typeof value !== "string") return "/";
+  if (
+    !value.startsWith("/") ||
+    value.startsWith("//") ||
+    value.startsWith("/\\")
+  ) {
+    return "/";
+  }
+  if (value.startsWith("/auth/")) return "/";
+  return value;
+};
+
 /**
  * コールバックを受けるオリジン（DISCORD_REDIRECT_URI のオリジン）。
  * state の Cookie はホスト単位なので、ログイン開始もこのオリジンで行う必要がある。

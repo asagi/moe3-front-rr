@@ -8,6 +8,7 @@ import { GamePlayerList } from "~/components/game-info/GamePlayerList";
 import { GameRegulationTable } from "~/components/game-info/GameRegulationTable";
 import styles from "~/components/game-info/GameInfo.module.css";
 import { ApiError, joinGame } from "~/lib/api.server";
+import { discordLoginPath } from "~/lib/auth";
 import { MAX_PLAYERS, POWERS, isRecruiting } from "~/lib/game";
 import { joinErrorMessage, requireGame } from "~/lib/game.server";
 import { meContext } from "~/lib/me.server";
@@ -102,7 +103,7 @@ export default function GameInfo({ loaderData }: Route.ComponentProps) {
         ) : !loggedIn ? (
           <GameJoinLoginPrompt
             onLogin={() => {
-              window.location.href = "/auth/discord";
+              window.location.href = discordLoginPath();
             }}
           />
         ) : (
