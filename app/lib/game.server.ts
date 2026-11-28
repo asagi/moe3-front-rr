@@ -2,7 +2,6 @@ import { type RouterContextProvider, createContext, data } from "react-router";
 import { ApiError, type ApiAuth, getGame, listGames } from "~/lib/api.server";
 import type { GameDetail } from "~/lib/game";
 import { meContext } from "~/lib/me.server";
-import { getSessionStorage } from "~/lib/session.server";
 
 /**
  * 自分が卓主のアクティブな卓（Aborted・Closed 以外）があるか。
@@ -68,21 +67,18 @@ export const requireGame = (context: Readonly<RouterContextProvider>) => {
  * 盤面の編集ページを開けるか。その卓の卓主か、管理者モード中の管理者のとき。
  * 管理者モードでない管理者は一般のアカウントと同じ扱い。
  * 視点変更中は切り替え先のアカウントで判定する（is_owner も切り替え先の値が返る）。
- * 切り替え先は管理者モードではないので、卓主でなければ開けない
+ * 切り替え先は管理者モードではないので、卓主でなければ開けない。
+ * 視点変更で「第三者」を選んでいるときは開けない
  */
 export const canMaintainGame = async (
-  request: Request,
   context: Readonly<RouterContextProvider>,
   game: GameDetail,
 ) => {
-  if (game.is_owner) return true;
   const state = context.get(meContext);
-  if (state.kind !== "ok") return false;
-  if (state.auth.impersonateUsername) return false;
-  const session = await getSessionStorage().getSession(
-    request.headers.get("Cookie"),
-  );
-  return !!session.get("isAdmin") && !!session.get("adminMode");
+  // 管理者モードの視点変更で「第三者」を選んでいれば、卓主でも開けない
+  if (state.kind === "ok" && state.thirdParty) return false;
+  if (game.is_owner) return true;
+  return state.kind === "ok" && state.adminActive;
 };
 
 /**

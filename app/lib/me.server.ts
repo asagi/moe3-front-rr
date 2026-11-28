@@ -6,7 +6,12 @@ import {
   getMe,
   isImpersonateError,
 } from "~/lib/api.server";
-import { type SessionData, getApiAuth } from "~/lib/session.server";
+import {
+  type SessionData,
+  getApiAuth,
+  isAdminModeSession,
+  isThirdPartySession,
+} from "~/lib/session.server";
 
 /**
  * 視点変更のユーザー名として API に送れるか。
@@ -32,6 +37,15 @@ export type MeState =
       auth: ApiAuth;
       /** 視点変更のユーザー名が不正で、本人として取得し直したときのエラーメッセージ */
       impersonateError: string | null;
+      /** 管理者モード中の管理者か（視点変更中も含む） */
+      adminMode: boolean;
+      /** 管理者モード中に、視点変更で第三者として見ているか */
+      thirdParty: boolean;
+      /**
+       * 管理者として振る舞うか（管理者モード中で、視点変更も第三者表示もしていない）。
+       * 管理人発言や盤面の編集ができる
+       */
+      adminActive: boolean;
     };
 
 /**
@@ -40,10 +54,30 @@ export type MeState =
  */
 export const meContext = createContext<MeState>({ kind: "loggedOut" });
 
+type LoadedMe = Omit<
+  Extract<MeState, { kind: "ok" }>,
+  "adminMode" | "thirdParty" | "adminActive"
+>;
+
 /** セッションのトークンでログインユーザーを取得する */
 export const loadMe = async (
   session: Session<SessionData>,
 ): Promise<MeState> => {
+  const loaded = await loadMeWithAuth(session);
+  if (loaded.kind !== "ok") return loaded;
+  const adminMode = isAdminModeSession(session);
+  const thirdParty = isThirdPartySession(session);
+  return {
+    ...loaded,
+    adminMode,
+    thirdParty,
+    adminActive: adminMode && !thirdParty && !loaded.auth.impersonateUsername,
+  };
+};
+
+const loadMeWithAuth = async (
+  session: Session<SessionData>,
+): Promise<Exclude<MeState, { kind: "ok" }> | LoadedMe> => {
   const auth = getApiAuth(session);
   if (!auth) return { kind: "loggedOut" };
 
@@ -92,7 +126,8 @@ export const loadMe = async (
       impersonateError: target.reason.message,
     };
   } catch (e) {
-    if (e instanceof ApiError && e.status === 401) return { kind: "unauthorized" };
+    if (e instanceof ApiError && e.status === 401)
+      return { kind: "unauthorized" };
     console.error("ユーザー情報の取得に失敗しました", e);
     return { kind: "failed" };
   }

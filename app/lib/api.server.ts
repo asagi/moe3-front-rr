@@ -61,7 +61,8 @@ const authHeaders = ({ accessToken, impersonateUsername }: ApiAuth) => {
   const headers: Record<string, string> = {
     Authorization: `Bearer ${accessToken}`,
   };
-  if (impersonateUsername) headers["X-Impersonate-User-Name"] = impersonateUsername;
+  if (impersonateUsername)
+    headers["X-Impersonate-User-Name"] = impersonateUsername;
   return headers;
 };
 
@@ -186,14 +187,11 @@ export interface JoinGameResponse {
 
 /** POST /games/{uuid}/players: 卓に参加を申請する */
 export const joinGame = (gameUuid: string, body: JoinGameBody, auth: ApiAuth) =>
-  request<JoinGameResponse>(
-    `/games/${encodeURIComponent(gameUuid)}/players`,
-    {
-      method: "POST",
-      headers: { ...authHeaders(auth), "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    },
-  );
+  request<JoinGameResponse>(`/games/${encodeURIComponent(gameUuid)}/players`, {
+    method: "POST",
+    headers: { ...authHeaders(auth), "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
 
 export interface GetGameLogsResponse {
   messages: ChatMessage[];
@@ -228,7 +226,11 @@ export interface PostMessageBody {
 }
 
 /** POST /games/{uuid}/messages: 発言する。作ったメッセージを返す */
-export const postMessage = (gameUuid: string, body: PostMessageBody, auth: ApiAuth) =>
+export const postMessage = (
+  gameUuid: string,
+  body: PostMessageBody,
+  auth: ApiAuth,
+) =>
   request<ChatMessage>(`/games/${encodeURIComponent(gameUuid)}/messages`, {
     method: "POST",
     headers: { ...authHeaders(auth), "Content-Type": "application/json" },
@@ -242,14 +244,20 @@ export const postMessage = (gameUuid: string, body: PostMessageBody, auth: ApiAu
 export const openMessageStream = (
   gameUuid: string,
   auth: ApiAuth | null,
-  options: { lastEventId?: string | null; after?: string | null; signal?: AbortSignal },
+  options: {
+    lastEventId?: string | null;
+    after?: string | null;
+    signal?: AbortSignal;
+  },
 ) => {
   const headers: Record<string, string> = {
     Accept: "text/event-stream",
     ...(auth ? authHeaders(auth) : {}),
   };
   if (options.lastEventId) headers["Last-Event-ID"] = options.lastEventId;
-  const query = options.after ? `?${new URLSearchParams({ after: options.after })}` : "";
+  const query = options.after
+    ? `?${new URLSearchParams({ after: options.after })}`
+    : "";
   return fetch(
     new URL(
       `/games/${encodeURIComponent(gameUuid)}/messages/stream${query}`,
@@ -261,14 +269,22 @@ export const openMessageStream = (
 
 /* ---- 盤面の編集（卓主と管理者） ---- */
 
-const adminGamePath = (gameUuid: string, kind: "units" | "territories", code: string) =>
+const adminGamePath = (
+  gameUuid: string,
+  kind: "units" | "territories",
+  code: string,
+) =>
   `/admin/games/${encodeURIComponent(gameUuid)}/${kind}/${encodeURIComponent(code)}`;
 
 /**
  * GET /games/{uuid}/board: 盤面（ユニット配置・占領情報・国ごとの状況）を取得する。
  * @param season 指定すればそのシーズンの最後のフェイズ、省略すれば最新フェイズ
  */
-export const getBoard = (gameUuid: string, auth?: ApiAuth | null, season?: string | null) =>
+export const getBoard = (
+  gameUuid: string,
+  auth?: ApiAuth | null,
+  season?: string | null,
+) =>
   request<BoardSnapshot>(
     `/games/${encodeURIComponent(gameUuid)}/board${season ? `?${new URLSearchParams({ season })}` : ""}`,
     { headers: auth ? authHeaders(auth) : {} },
@@ -293,7 +309,12 @@ export const putUnit = (
   });
 
 /** DELETE /admin/games/{uuid}/units/{location}: ユニットを消す（そのユニットの命令も消える） */
-export const deleteUnit = (gameUuid: string, location: string, season: string, auth: ApiAuth) =>
+export const deleteUnit = (
+  gameUuid: string,
+  location: string,
+  season: string,
+  auth: ApiAuth,
+) =>
   request<unknown>(
     `${adminGamePath(gameUuid, "units", location)}?${new URLSearchParams({ season })}`,
     { method: "DELETE", headers: authHeaders(auth) },
@@ -314,7 +335,12 @@ export const putTerritory = (
   });
 
 /** DELETE /admin/games/{uuid}/territories/{code}: 地域の占領を解除する */
-export const deleteTerritory = (gameUuid: string, code: string, season: string, auth: ApiAuth) =>
+export const deleteTerritory = (
+  gameUuid: string,
+  code: string,
+  season: string,
+  auth: ApiAuth,
+) =>
   request<unknown>(
     `${adminGamePath(gameUuid, "territories", code)}?${new URLSearchParams({ season })}`,
     { method: "DELETE", headers: authHeaders(auth) },
@@ -336,7 +362,11 @@ export const getOrders = (gameUuid: string, auth: ApiAuth) =>
   });
 
 /** PUT /games/{uuid}/orders: 自分の命令を丸ごと置き換えて確定する。確定後の状態が返る */
-export const putOrders = (gameUuid: string, body: PutOrdersBody, auth: ApiAuth) =>
+export const putOrders = (
+  gameUuid: string,
+  body: PutOrdersBody,
+  auth: ApiAuth,
+) =>
   request<OrdersResponse>(`/games/${encodeURIComponent(gameUuid)}/orders`, {
     method: "PUT",
     headers: { ...authHeaders(auth), "Content-Type": "application/json" },
@@ -344,7 +374,11 @@ export const putOrders = (gameUuid: string, body: PutOrdersBody, auth: ApiAuth) 
   });
 
 /** PUT /games/{uuid}/progress-consensus: 即時進行への合意を表明・撤回する（合意進行の卓だけ） */
-export const putProgressConsensus = (gameUuid: string, agreed: boolean, auth: ApiAuth) =>
+export const putProgressConsensus = (
+  gameUuid: string,
+  agreed: boolean,
+  auth: ApiAuth,
+) =>
   request<{ game_uuid: string; agreed: boolean }>(
     `/games/${encodeURIComponent(gameUuid)}/progress-consensus`,
     {
@@ -362,7 +396,12 @@ export const putProgressConsensus = (gameUuid: string, agreed: boolean, auth: Ap
  * @param season 最新フェイズのシーズン。食い違うと 409 phase_conflict
  * @param nextUpdateAt JST の "YYYY-MM-DD HH:mm"
  */
-export const putNextUpdateAt = (gameUuid: string, season: string, nextUpdateAt: string, auth: ApiAuth) =>
+export const putNextUpdateAt = (
+  gameUuid: string,
+  season: string,
+  nextUpdateAt: string,
+  auth: ApiAuth,
+) =>
   request<{ game_uuid: string; next_update_at: string }>(
     `/admin/games/${encodeURIComponent(gameUuid)}/next-update-at`,
     {
@@ -376,7 +415,12 @@ export const putNextUpdateAt = (gameUuid: string, season: string, nextUpdateAt: 
  * PUT /admin/games/{uuid}/draw-proposal: 和平終了（講和）を宣言・撤回する（卓主のみ・メインフェイズのみ）
  * @param season 最新フェイズのシーズン。食い違うと 409 phase_conflict
  */
-export const putDrawProposal = (gameUuid: string, season: string, drawProposal: boolean, auth: ApiAuth) =>
+export const putDrawProposal = (
+  gameUuid: string,
+  season: string,
+  drawProposal: boolean,
+  auth: ApiAuth,
+) =>
   request<{ game_uuid: string; draw_proposal: boolean }>(
     `/admin/games/${encodeURIComponent(gameUuid)}/draw-proposal`,
     {
@@ -390,7 +434,11 @@ export const putDrawProposal = (gameUuid: string, season: string, drawProposal: 
  * PUT /admin/games/{uuid}/progress-mode: 定時進行から合意進行に切り替える（卓主のみ・メインフェイズのみ）。
  * 合意進行から定時進行には戻せない
  */
-export const putProgressModeConsensus = (gameUuid: string, season: string, auth: ApiAuth) =>
+export const putProgressModeConsensus = (
+  gameUuid: string,
+  season: string,
+  auth: ApiAuth,
+) =>
   request<{ game_uuid: string; progress_mode: "consensus" }>(
     `/admin/games/${encodeURIComponent(gameUuid)}/progress-mode`,
     {

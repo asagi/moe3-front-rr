@@ -1,6 +1,15 @@
 import { useRef } from "react";
-import { Outlet, data, useFetcher, useNavigate } from "react-router";
-import type { ImpersonateUser } from "~/components/admin-header/AdminHeader";
+import {
+  Outlet,
+  data,
+  useFetcher,
+  useMatches,
+  useNavigate,
+} from "react-router";
+import type {
+  AdminViewpoints,
+  ImpersonateUser,
+} from "~/components/admin-header/AdminHeader";
 import { Header, type HeaderUser } from "~/components/header/Header";
 import { loadMe, meContext } from "~/lib/me.server";
 import { useStickyHeight } from "~/lib/use-sticky-height";
@@ -25,6 +34,8 @@ const loggedOut = {
   impersonateUser: null as ImpersonateUser | null,
   /** 視点変更のユーザー名が不正で、本人として取得し直したときのエラーメッセージ */
   impersonateError: null as string | null,
+  /** 視点変更で第三者として見ているか */
+  thirdParty: false,
 };
 
 /** ヘッダ表示用のログイン中ユーザー情報を返す */
@@ -48,7 +59,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const session = await getSessionStorage().getSession(
     request.headers.get("Cookie"),
   );
-  const { me, self, auth, impersonateError } = state;
+  const { me, self, auth, impersonateError, thirdParty } = state;
   const isAdmin = session.get("isAdmin") ?? false;
   // 右上には視点変更中でもログインしている本人を出す
   const user: HeaderUser = {
@@ -67,8 +78,18 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       ? { name: me.global_name ?? me.username, avatarUrl: me.avatar_url }
       : null,
     impersonateError,
+    thirdParty,
   });
 }
+
+/** 卓内のページなら、卓のレイアウトの loader が返す視点変更の選択肢（管理者モード中だけ） */
+const useAdminViewpoints = (): AdminViewpoints | null => {
+  const matches = useMatches();
+  const game = matches.find((m) => m.id === "routes/games.$gameUuid");
+  const data = game?.loaderData as
+    { adminViewpoints?: AdminViewpoints | null } | undefined;
+  return data?.adminViewpoints ?? null;
+};
 
 export default function WithHeaderLayout({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate();
@@ -85,20 +106,26 @@ export default function WithHeaderLayout({ loaderData }: Route.ComponentProps) {
   const impersonateFetcher = useFetcher();
   // 送信中は送った値を先に反映して、切替・解除の反応を待たせない
   const impersonateForm = impersonateFetcher.formData;
+  const pendingIntent = impersonateForm?.get("intent");
   const impersonateUsername = (() => {
     if (!adminMode) return null;
-    if (impersonateForm?.get("intent") === "set")
-      return String(impersonateForm.get("username"));
-    if (impersonateForm?.get("intent") === "clear") return null;
+    if (pendingIntent === "set")
+      return String(impersonateForm?.get("username"));
+    if (pendingIntent === "clear" || pendingIntent === "third_party")
+      return null;
     return loaderData.impersonateUsername;
   })();
+  const thirdParty =
+    adminMode &&
+    (pendingIntent != null
+      ? pendingIntent === "third_party"
+      : loaderData.thirdParty);
+  const adminViewpoints = useAdminViewpoints();
   // 送信中は切り替え先の情報がまだないので、アイコンを出さない
   const impersonateUser =
     adminMode && !impersonateForm ? loaderData.impersonateUser : null;
   // 送信中は前回のエラーを出さない
-  const impersonateError = impersonateForm
-    ? null
-    : loaderData.impersonateError;
+  const impersonateError = impersonateForm ? null : loaderData.impersonateError;
 
   return (
     <div className="app-frame">
@@ -116,7 +143,10 @@ export default function WithHeaderLayout({ loaderData }: Route.ComponentProps) {
             navigate("/mypage");
           }}
           onLogout={() => {
-            logoutFetcher.submit(null, { method: "post", action: "/auth/logout" });
+            logoutFetcher.submit(null, {
+              method: "post",
+              action: "/auth/logout",
+            });
           }}
           adminMode={adminMode}
           onAdminModeChange={(enabled) => {
@@ -128,6 +158,14 @@ export default function WithHeaderLayout({ loaderData }: Route.ComponentProps) {
           impersonateUsername={impersonateUsername}
           impersonateUser={impersonateUser}
           impersonateError={impersonateError}
+          impersonateThirdParty={thirdParty}
+          onImpersonateThirdParty={() => {
+            impersonateFetcher.submit(
+              { intent: "third_party" },
+              { method: "post", action: "/admin-impersonate" },
+            );
+          }}
+          adminViewpoints={adminViewpoints}
           onImpersonate={(username) => {
             impersonateFetcher.submit(
               { intent: "set", username },

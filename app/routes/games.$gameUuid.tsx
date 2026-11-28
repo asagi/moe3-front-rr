@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Outlet, useLocation, useMatches } from "react-router";
+import type { AdminViewpoints } from "~/components/admin-header/AdminHeader";
 import { GameHeader, type SeasonNav } from "~/components/game-nav/GameHeader";
 import { GameTabBar } from "~/components/game-nav/GameTabBar";
 import { isBoardEditable } from "~/lib/board";
@@ -7,6 +8,7 @@ import { summarizeChannels, unreadCandidatesOf } from "~/lib/chat";
 import { loadSeasonMessages, resolveChatViewer } from "~/lib/chat.server";
 import {
   type GameDetail,
+  POWERS,
   gameNumberLabel,
   isOffGameSeason,
   isRecruiting,
@@ -59,7 +61,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     ordersEnabled: !isRecruiting(game),
     // 盤面の編集は、卓主か管理者モード中の管理者が、開戦前夜かメインフェイズのときだけ
     maintenanceEnabled:
-      isBoardEditable(game) && (await canMaintainGame(request, context, game)),
+      isBoardEditable(game) && (await canMaintainGame(context, game)),
     // ターンの中のページで卓ヘッダに出すシーズン（?season= が不正ならページ側で 404 にする）
     season: (() => {
       try {
@@ -74,8 +76,37 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     phase: game.status === "in_progress" ? phaseLabel(game.phase_kind) : null,
     // タブバーのチャットに未読の印を出すための材料
     chatUnread: await loadChatUnread(request, context, game),
+    // 管理者用ヘッダの視点変更で選べる国（管理者モード中だけ）
+    adminViewpoints: adminViewpointsOf(context, game),
   };
 }
+
+/**
+ * 管理者モード中なら、視点変更で選べる国を返す（そうでなければ null）。
+ * サイトヘッダのレイアウトが useMatches で読んで、管理者用ヘッダに渡す
+ */
+const adminViewpointsOf = (
+  context: Route.LoaderArgs["context"],
+  game: GameDetail,
+): AdminViewpoints | null => {
+  const state = context.get(meContext);
+  if (state.kind !== "ok" || !state.adminMode) return null;
+  return {
+    faceType: game.regulation.face_type,
+    powers: POWERS.flatMap(({ code }) => {
+      const player = game.players.find((p) => p.power === code);
+      return player
+        ? [
+            {
+              power: code,
+              username: player.user.username,
+              eliminated: player.is_eliminated,
+            },
+          ]
+        : [];
+    }),
+  };
+};
 
 /**
  * タブバーの未読の印の材料（最新のシーズンの、見ている人のチャンネルの発言）。
@@ -89,10 +120,13 @@ const loadChatUnread = async (
 ) => {
   const season = game.seasons.at(-1) ?? null;
   if (season == null || !isWritableSeason(game, season)) return null;
-  const viewer = await resolveChatViewer(request, context, game);
+  const viewer = await resolveChatViewer(context, game);
   if (viewer.kind !== "channels") return null;
   const messages = await loadSeasonMessages(context, game, season);
-  const channels = summarizeChannels(messages, isOffGameSeason(season) ? null : viewer.power);
+  const channels = summarizeChannels(
+    messages,
+    isOffGameSeason(season) ? null : viewer.power,
+  );
   return {
     candidates: unreadCandidatesOf(
       messages,
@@ -107,7 +141,10 @@ const loadChatUnread = async (
  * 卓ヘッダのシーズン切り替えのリンク先。
  * 今のページのまま ?season= だけを変える（最新のシーズンは ?season= を付けない）
  */
-const useSeasonNav = (season: string | null, seasons: string[]): SeasonNav | undefined => {
+const useSeasonNav = (
+  season: string | null,
+  seasons: string[],
+): SeasonNav | undefined => {
   const location = useLocation();
   if (season == null) return undefined;
   const index = seasons.indexOf(season);
@@ -135,9 +172,11 @@ const useSeasonNav = (season: string | null, seasons: string[]): SeasonNav | und
  */
 const useLastChatPath = (gameUuid: string, season: string | null) => {
   const location = useLocation();
-  const [last, setLast] = useState<{ gameUuid: string; path: string; season: string | null } | null>(
-    null,
-  );
+  const [last, setLast] = useState<{
+    gameUuid: string;
+    path: string;
+    season: string | null;
+  } | null>(null);
   useEffect(() => {
     if (!location.pathname.startsWith(`/games/${gameUuid}/chat`)) return;
     setLast({
@@ -146,7 +185,9 @@ const useLastChatPath = (gameUuid: string, season: string | null) => {
       season: new URLSearchParams(location.search).get("season"),
     });
   }, [gameUuid, location.pathname, location.search]);
-  return last && last.gameUuid === gameUuid && last.season === season ? last.path : null;
+  return last && last.gameUuid === gameUuid && last.season === season
+    ? last.path
+    : null;
 };
 
 export default function GameLayout({ loaderData }: Route.ComponentProps) {
@@ -165,27 +206,38 @@ export default function GameLayout({ loaderData }: Route.ComponentProps) {
   const seasonParam = new URLSearchParams(location.search).get("season");
   const headerRef = useRef<HTMLDivElement>(null);
   useStickyHeight(headerRef, "--game-header-height");
-  const seasonNav = useSeasonNav(seasonal ? loaderData.season : null, loaderData.seasons);
+  const seasonNav = useSeasonNav(
+    seasonal ? loaderData.season : null,
+    loaderData.seasons,
+  );
   const unreadCounts = useUnreadCounts(
     loaderData.gameUuid,
     loaderData.chatUnread?.candidates ?? null,
     loaderData.chatUnread?.latest ?? null,
   );
-  const chatTo = useLastChatPath(loaderData.gameUuid, seasonal ? seasonParam : null);
+  const chatTo = useLastChatPath(
+    loaderData.gameUuid,
+    seasonal ? seasonParam : null,
+  );
 
   return (
     // 画面下のタブバーに隠れないよう、下に余白を取る
     <div className="w-full pb-[calc(56px+env(safe-area-inset-bottom))]">
       {/* 卓ヘッダはサイトヘッダのすぐ下に固定する（高さを測るまでは、管理者の帯がないときの 47px） */}
       {/* 地図の情報カード（z-index 20）より上、サイトヘッダ（30）より下 */}
-      <div ref={headerRef} className="sticky top-(--site-header-height,47px) z-[25]">
+      <div
+        ref={headerRef}
+        className="sticky top-(--site-header-height,47px) z-[25]"
+      >
         <GameHeader
           numberLabel={loaderData.numberLabel}
           title={title}
           seasonNav={seasonNav}
           // 過去のシーズンにはフェイズ名を出さない
           phase={
-            seasonal && loaderData.season != null && loaderData.season === loaderData.seasons.at(-1)
+            seasonal &&
+            loaderData.season != null &&
+            loaderData.season === loaderData.seasons.at(-1)
               ? loaderData.phase
               : null
           }

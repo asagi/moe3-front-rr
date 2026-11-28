@@ -3,7 +3,6 @@ import { ApiError, getGameLogs } from "~/lib/api.server";
 import { type GameDetail, type PowerCode, isEnded } from "~/lib/game";
 import { withAssignedPowers, assignedPowersOf } from "~/lib/chat";
 import { meContext } from "~/lib/me.server";
-import { getSessionStorage } from "~/lib/session.server";
 
 /**
  * チャットをどの画面で見るか。
@@ -11,7 +10,7 @@ import { getSessionStorage } from "~/lib/session.server";
  *   - 参加者: power は担当国（決まる前は null でオープンチャンネルだけ）
  *   - 参加者でない管理者モード中の管理者: power は null でオープンチャンネルだけ。
  *     独り言や密談を見るには、関わっているアカウントに視点変更する
- * - viewer: 第三者・終了した卓。第三者用ログビューアーで見る
+ * - viewer: 第三者・終了した卓。第三者用ログビューアーで見る（管理者モードの視点変更で「第三者」を選んだときも）
  *
  * canPostAsAdmin は、オープンチャンネルに管理人発言を書き込めるか
  */
@@ -32,7 +31,6 @@ export type ChatViewer =
  * 視点変更中は切り替え先のアカウントとして扱う（参加者でなければ第三者）
  */
 export const resolveChatViewer = async (
-  request: Request,
   context: Readonly<RouterContextProvider>,
   game: GameDetail,
 ): Promise<ChatViewer> => {
@@ -40,14 +38,10 @@ export const resolveChatViewer = async (
   const state = context.get(meContext);
   if (state.kind !== "ok") return { kind: "viewer" };
 
+  // 管理者モードの視点変更で「第三者」を選んでいれば、参加者でも第三者として見せる
+  if (state.thirdParty) return { kind: "viewer" };
   // 管理人発言は、視点変更していない管理者モード中の管理者だけ
-  let canPostAsAdmin = false;
-  if (!state.auth.impersonateUsername) {
-    const session = await getSessionStorage().getSession(
-      request.headers.get("Cookie"),
-    );
-    canPostAsAdmin = !!session.get("isAdmin") && !!session.get("adminMode");
-  }
+  const canPostAsAdmin = state.adminActive;
 
   const player = game.players.find(
     (p) => p.user.discord_user_id === state.me.discord_user_id,
@@ -64,11 +58,16 @@ export const resolveChatViewer = async (
   }
   // 参加者でない管理者は、オープンチャンネルだけのチャンネル一覧にする（管理人発言のため）
   if (canPostAsAdmin) {
-    return { kind: "channels", power: null, username, eliminated: false, canPostAsAdmin };
+    return {
+      kind: "channels",
+      power: null,
+      username,
+      eliminated: false,
+      canPostAsAdmin,
+    };
   }
   return { kind: "viewer" };
 };
-
 
 /** シーズンのメッセージを取得する */
 export const loadSeasonMessages = async (
@@ -92,26 +91,30 @@ export const loadSeasonMessages = async (
   }
 };
 
-
 /** SSE をつなぎ直すきっかけ（見ている人が変わったら変わる） */
-export const streamConnectionKey = (viewer: Extract<ChatViewer, { kind: "channels" }>) =>
-  `${viewer.username}:${viewer.power ?? "-"}:${viewer.canPostAsAdmin}`;
+export const streamConnectionKey = (
+  viewer: Extract<ChatViewer, { kind: "channels" }>,
+) => `${viewer.username}:${viewer.power ?? "-"}:${viewer.canPostAsAdmin}`;
 
 /** 発言 API のエラーコードごとの文言 */
 const POST_ERROR_MESSAGES: Record<string, string> = {
-  unauthorized: "ログイン情報を確認できませんでした。もう一度ログインしてください。",
+  unauthorized:
+    "ログイン情報を確認できませんでした。もう一度ログインしてください。",
   invalid_kind: "このチャンネルには書き込めません。",
   invalid_recipients: "宛先が正しくありません。",
   empty_context: "発言を入力してください。",
   context_too_long: "発言は 2000 文字までです。",
   not_a_player: "この卓の参加者ではないため、書き込めません。",
   power_eliminated: "担当国が滅亡したため、密談には書き込めません。",
-  admin_post_not_allowed: "管理人発言は、視点変更していない管理者モード中だけできます。",
+  admin_post_not_allowed:
+    "管理人発言は、視点変更していない管理者モード中だけできます。",
   game_not_accepting_messages: "この卓にはもう書き込めません。",
-  phase_not_accepting_messages: "撤退フェイズと調整フェイズのあいだは書き込めません。",
+  phase_not_accepting_messages:
+    "撤退フェイズと調整フェイズのあいだは書き込めません。",
   not_found: "卓が見つかりませんでした。",
 };
 
 /** 発言 API のエラーを画面に出す文言にする */
 export const postErrorMessage = (e: ApiError) =>
-  POST_ERROR_MESSAGES[e.code] ?? `発言に失敗しました（${e.code}）: ${e.message}`;
+  POST_ERROR_MESSAGES[e.code] ??
+  `発言に失敗しました（${e.code}）: ${e.message}`;

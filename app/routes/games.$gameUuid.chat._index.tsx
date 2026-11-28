@@ -109,7 +109,7 @@ const viewerSelf = (
  */
 export async function loader({ request, context }: Route.LoaderArgs) {
   const game = requireGame(context);
-  const viewer = await resolveChatViewer(request, context, game);
+  const viewer = await resolveChatViewer(context, game);
   const season = resolveSeason(request, game);
   const messages = season
     ? await loadSeasonMessages(context, game, season)

@@ -3,8 +3,9 @@ import { getSessionStorage } from "~/lib/session.server";
 import type { Route } from "./+types/admin-impersonate";
 
 /**
- * 「視点変更」の対象ユーザー名をセッションに保存・解除する
- * （フォーム値 intent: "set" | "clear"、set のときは username も送る）
+ * 「視点変更」の対象をセッションに保存・解除する
+ * （フォーム値 intent: "set" | "third_party" | "clear"、set のときは username も送る）。
+ * third_party は、ユーザーに切り替えず第三者として見る
  * 存在チェックは API 側で行う（存在しなければ本人の視点に戻してエラーを出す）
  */
 export async function action({ request }: Route.ActionArgs) {
@@ -24,8 +25,14 @@ export async function action({ request }: Route.ActionArgs) {
       throw data("ユーザー名を入力してください", { status: 400 });
     }
     session.set("impersonateUsername", username);
+    session.unset("viewAsThirdParty");
+  } else if (intent === "third_party") {
+    // 第三者として見る（ユーザー名の視点変更とは同時に使わない）
+    session.unset("impersonateUsername");
+    session.set("viewAsThirdParty", true);
   } else if (intent === "clear") {
     session.unset("impersonateUsername");
+    session.unset("viewAsThirdParty");
   } else {
     throw data("不正なリクエストです", { status: 400 });
   }

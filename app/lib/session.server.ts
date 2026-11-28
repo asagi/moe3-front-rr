@@ -11,6 +11,11 @@ export interface SessionData {
   adminMode: boolean;
   /** 「視点変更」で表示する対象のユーザー名（管理者モード中のみ有効） */
   impersonateUsername: string;
+  /**
+   * 「視点変更」で第三者として見るか（管理者モード中のみ有効。impersonateUsername とは同時に立てない）。
+   * API は本人のまま呼び、画面側で参加者でも管理者モードでもない人として扱う
+   */
+  viewAsThirdParty: boolean;
 }
 
 let storage: ReturnType<typeof createCookieSessionStorage<SessionData>>;
@@ -38,11 +43,20 @@ export const getSessionStorage = () => {
 export const getApiAuth = (session: Session<SessionData>): ApiAuth | null => {
   const accessToken = session.get("accessToken");
   if (!accessToken) return null;
-  const adminMode = !!session.get("isAdmin") && !!session.get("adminMode");
+  const adminMode = isAdminModeSession(session);
   return {
     accessToken,
-    impersonateUsername: adminMode
-      ? (session.get("impersonateUsername") ?? null)
-      : null,
+    impersonateUsername:
+      adminMode && !session.get("viewAsThirdParty")
+        ? (session.get("impersonateUsername") ?? null)
+        : null,
   };
 };
+
+/** 管理者モード中の管理者のセッションか */
+export const isAdminModeSession = (session: Session<SessionData>) =>
+  !!session.get("isAdmin") && !!session.get("adminMode");
+
+/** 管理者モード中に、視点変更で第三者として見ているか */
+export const isThirdPartySession = (session: Session<SessionData>) =>
+  isAdminModeSession(session) && !!session.get("viewAsThirdParty");

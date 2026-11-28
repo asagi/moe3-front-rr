@@ -50,7 +50,7 @@ const requireMaintainer = async (
   context: Route.LoaderArgs["context"],
 ) => {
   const game = requireGame(context);
-  if (!(await canMaintainGame(request, context, game))) {
+  if (!(await canMaintainGame(context, game))) {
     throw redirect(`/games/${params.gameUuid}`);
   }
   return game;

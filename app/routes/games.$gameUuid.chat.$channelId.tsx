@@ -190,7 +190,7 @@ const loadChannel = async (
   const season = resolveSeason(request, game);
   // 書き込めないシーズン（終わったシーズン・撤退フェイズ・調整フェイズ）は、参加者もログビューアーで見る
   if (!isWritableSeason(game, season)) throw redirect(listPath);
-  const viewer = await resolveChatViewer(request, context, game);
+  const viewer = await resolveChatViewer(context, game);
   if (viewer.kind === "viewer") throw redirect(listPath);
   const myPower = viewer.power;
   const isMember =

@@ -1,4 +1,8 @@
-import { AdminHeader, type ImpersonateUser } from "~/components/admin-header/AdminHeader";
+import {
+  AdminHeader,
+  type AdminViewpoints,
+  type ImpersonateUser,
+} from "~/components/admin-header/AdminHeader";
 import { DiscordLoginButton } from "~/components/discord-login-button/DiscordLoginButton";
 import { UserMenu } from "~/components/user-menu/UserMenu";
 import styles from "./Header.module.css";
@@ -28,6 +32,11 @@ export interface HeaderProps {
   impersonateError?: string | null;
   onImpersonate?: (username: string) => void;
   onClearImpersonate?: () => void;
+  /** 視点変更で第三者として見ているか */
+  impersonateThirdParty?: boolean;
+  onImpersonateThirdParty?: () => void;
+  /** 卓内のページなら、視点変更に選べる国（管理者用ヘッダに選択リストを出す） */
+  adminViewpoints?: AdminViewpoints | null;
 }
 
 export const Header = ({
@@ -43,6 +52,9 @@ export const Header = ({
   impersonateError,
   onImpersonate,
   onClearImpersonate,
+  impersonateThirdParty = false,
+  onImpersonateThirdParty,
+  adminViewpoints = null,
 }: HeaderProps) => (
   <header>
     <div className={styles["header"]}>
@@ -85,6 +97,9 @@ export const Header = ({
         impersonateError={impersonateError}
         onImpersonate={onImpersonate}
         onClearImpersonate={onClearImpersonate}
+        thirdParty={impersonateThirdParty}
+        onThirdParty={onImpersonateThirdParty}
+        viewpoints={adminViewpoints}
       />
     )}
   </header>
