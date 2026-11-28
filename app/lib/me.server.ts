@@ -8,6 +8,13 @@ import {
 } from "~/lib/api.server";
 import { type SessionData, getApiAuth } from "~/lib/session.server";
 
+/**
+ * 視点変更のユーザー名として API に送れるか。
+ * Discord のユーザー名は半角の英小文字・数字・_・. だけなので、空白を含まない半角の英数字と記号に限る
+ */
+export const isValidImpersonateUsername = (username: string) =>
+  /^[\x21-\x7e]+$/.test(username);
+
 /** リクエスト中のログインユーザーの取得結果 */
 export type MeState =
   | { kind: "loggedOut" }
@@ -45,8 +52,21 @@ export const loadMe = async (
       const me = await getMe(auth);
       return { kind: "ok", me, self: me, auth, impersonateError: null };
     }
-    // 視点変更中は、ヘッダに出す本人の情報も並行して取る
     const ownAuth = { ...auth, impersonateUsername: null };
+    // HTTP ヘッダに載せられない文字（日本語や空白など）を含むユーザー名は、API を呼ばずに本人として表示する。
+    // そのまま送ると fetch が例外を投げ、毎回ログアウトした表示になってしまう
+    if (!isValidImpersonateUsername(auth.impersonateUsername)) {
+      const self = await getMe(ownAuth);
+      return {
+        kind: "ok",
+        me: self,
+        self,
+        auth: ownAuth,
+        impersonateError:
+          "ユーザー名には半角の英数字と記号だけが使えます（空白・全角文字は使えません）",
+      };
+    }
+    // 視点変更中は、ヘッダに出す本人の情報も並行して取る
     const [target, self] = await Promise.allSettled([
       getMe(auth),
       getMe(ownAuth),

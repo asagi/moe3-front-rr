@@ -81,6 +81,8 @@ export async function loader({ request }: Route.LoaderArgs) {
   );
   session.set("accessToken", accessToken);
   session.set("isAdmin", isAdmin);
+  // ログインし直したら視点変更は外す（前のセッションに不正な値が残っていても入り直せるように）
+  session.unset("impersonateUsername");
   headers.append("Set-Cookie", await sessionStorage.commitSession(session));
 
   return redirect("/", { headers });
